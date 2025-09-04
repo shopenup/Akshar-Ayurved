@@ -948,7 +948,20 @@
     "@babel/parser" "^7.27.2"
     "@babel/types" "^7.27.1"
 
-"@babel/traverse@^7.24.5", "@babel/traverse@7.25.6":
+"@babel/traverse@^7.24.5", "@babel/traverse@^7.27.1", "@babel/traverse@^7.28.3":
+  version "7.28.3"
+  resolved "https://registry.npmjs.org/@babel/traverse/-/traverse-7.28.3.tgz"
+  integrity sha512-7w4kZYHneL3A6NP2nxzHvT3HCZ7puDZZjFMqDpBPECub79sTtSO5CGXDkKrTQq8ksAwfD/XI2MRFX23njdDaIQ==
+  dependencies:
+    "@babel/code-frame" "^7.27.1"
+    "@babel/generator" "^7.28.3"
+    "@babel/helper-globals" "^7.28.0"
+    "@babel/parser" "^7.28.3"
+    "@babel/template" "^7.27.2"
+    "@babel/types" "^7.28.2"
+    debug "^4.3.1"
+
+"@babel/traverse@7.25.6":
   version "7.25.6"
   resolved "https://registry.npmjs.org/@babel/traverse/-/traverse-7.25.6.tgz"
   integrity sha512-9Vrcx5ZW6UwK5tvqsj0nGpp/XzqthkT0dqIc9g1AdtygFToNtTF67XzYS//dm+SAK9cp3B9R4ZO/46p63SCjlQ==
@@ -960,32 +973,6 @@
     "@babel/types" "^7.25.6"
     debug "^4.3.1"
     globals "^11.1.0"
-
-"@babel/traverse@^7.27.1":
-  version "7.28.3"
-  resolved "https://registry.npmjs.org/@babel/traverse/-/traverse-7.28.3.tgz"
-  integrity sha512-7w4kZYHneL3A6NP2nxzHvT3HCZ7puDZZjFMqDpBPECub79sTtSO5CGXDkKrTQq8ksAwfD/XI2MRFX23njdDaIQ==
-  dependencies:
-    "@babel/code-frame" "^7.27.1"
-    "@babel/generator" "^7.28.3"
-    "@babel/helper-globals" "^7.28.0"
-    "@babel/parser" "^7.28.3"
-    "@babel/template" "^7.27.2"
-    "@babel/types" "^7.28.2"
-    debug "^4.3.1"
-
-"@babel/traverse@^7.28.3":
-  version "7.28.3"
-  resolved "https://registry.npmjs.org/@babel/traverse/-/traverse-7.28.3.tgz"
-  integrity sha512-7w4kZYHneL3A6NP2nxzHvT3HCZ7puDZZjFMqDpBPECub79sTtSO5CGXDkKrTQq8ksAwfD/XI2MRFX23njdDaIQ==
-  dependencies:
-    "@babel/code-frame" "^7.27.1"
-    "@babel/generator" "^7.28.3"
-    "@babel/helper-globals" "^7.28.0"
-    "@babel/parser" "^7.28.3"
-    "@babel/template" "^7.27.2"
-    "@babel/types" "^7.28.2"
-    debug "^4.3.1"
 
 "@babel/types@^7.0.0", "@babel/types@^7.20.7", "@babel/types@^7.24.5", "@babel/types@^7.25.6", "@babel/types@^7.3.3", "@babel/types@7.25.6":
   version "7.25.6"
@@ -4437,10 +4424,10 @@
     "@shopenup/utils" "^1.0.10"
     ulid "^2.3.0"
 
-"@shopenup/order@^1.0.10":
-  version "1.0.10"
-  resolved "https://registry.npmjs.org/@shopenup/order/-/order-1.0.10.tgz"
-  integrity sha512-Gv9hzcsFo46RbFaJUVrlxsKMXu6MrJ2YyC1qhaXXVJLKLpYBhuQLHHZ9lzrNeObB6u+n05Ik1WZRSQClVDxjVg==
+"@shopenup/order@^1.0.11":
+  version "1.0.11"
+  resolved "https://registry.npmjs.org/@shopenup/order/-/order-1.0.11.tgz"
+  integrity sha512-BT6Lpk73HMXYQG7MJQbo3WcGBKp8MMX4ZuwRsxnBBNaUN8Mc67HumZoysP4PlubSq2w/WTbVNI8fAKaKXd+pcw==
 
 "@shopenup/payment-stripe@^1.0.10":
   version "1.0.10"
@@ -4479,10 +4466,10 @@
   resolved "https://registry.npmjs.org/@shopenup/sales-channel/-/sales-channel-1.0.10.tgz"
   integrity sha512-eDrkwI6arGSXZKcTdUgwJbDwYLeqMXZMAgg2feDb0l2i0Cd8q5IF/gHVizwWZ0BD6sWy8xGhwL/Ex9HnQ5GQeA==
 
-"@shopenup/shopenup@^1.0.10", "@shopenup/shopenup@1.0.10":
-  version "1.0.10"
-  resolved "https://registry.npmjs.org/@shopenup/shopenup/-/shopenup-1.0.10.tgz"
-  integrity sha512-XQleNGy5GbW0VUjxp75vEGJCNW7IBlbi7d6cvPJra6OuX/Ldmx/2taeIzjV94qc0PRM6zrAP/LRpbEIeuyvgyA==
+"@shopenup/shopenup@^1.0.10", "@shopenup/shopenup@1.0.11":
+  version "1.0.11"
+  resolved "https://registry.npmjs.org/@shopenup/shopenup/-/shopenup-1.0.11.tgz"
+  integrity sha512-lLc3omvgcqterto3jrAAUYVRGnz3cFnomO287wH+4ujBf9gQuMpPRVthZuC9gmcFSTXfd4McvdBv6CxHwGXgmA==
   dependencies:
     "@inquirer/checkbox" "^2.3.11"
     "@inquirer/input" "^2.2.9"
@@ -4518,7 +4505,7 @@
     "@shopenup/notification" "^1.0.10"
     "@shopenup/notification-local" "^1.0.10"
     "@shopenup/notification-sendgrid" "^1.0.10"
-    "@shopenup/order" "^1.0.10"
+    "@shopenup/order" "^1.0.11"
     "@shopenup/payment" "^1.0.10"
     "@shopenup/payment-stripe" "^1.0.10"
     "@shopenup/pricing" "^1.0.10"
@@ -5335,14 +5322,14 @@
     "@types/babel__template" "*"
     "@types/babel__traverse" "*"
 
-"@types/babel__generator@*":
+"@types/babel__generator@*", "@types/babel__generator@^7.27.0":
   version "7.27.0"
   resolved "https://registry.npmjs.org/@types/babel__generator/-/babel__generator-7.27.0.tgz"
   integrity sha512-ufFd2Xi92OAVPYsy+P4n7/U7e68fex0+Ee8gSG9KX7eo084CWiQ4sdxktvdl0bOPupXtVJPY19zk6EwWqUQ8lg==
   dependencies:
     "@babel/types" "^7.0.0"
 
-"@types/babel__template@*":
+"@types/babel__template@*", "@types/babel__template@^7.4.4":
   version "7.4.4"
   resolved "https://registry.npmjs.org/@types/babel__template/-/babel__template-7.4.4.tgz"
   integrity sha512-h/NUaSyG5EyxBIp8YRxo4RMe2/qQgvyowRwVMzhYhBCONbW8PUsg4lkFMrhgZhUe5z3L3MiLDuvyJ/CaPa2A8A==
@@ -5350,7 +5337,7 @@
     "@babel/parser" "^7.1.0"
     "@babel/types" "^7.0.0"
 
-"@types/babel__traverse@*", "@types/babel__traverse@^7.0.6":
+"@types/babel__traverse@*", "@types/babel__traverse@^7.0.6", "@types/babel__traverse@^7.28.0":
   version "7.28.0"
   resolved "https://registry.npmjs.org/@types/babel__traverse/-/babel__traverse-7.28.0.tgz"
   integrity sha512-8PvcXf70gTDZBgt9ptxJ8elBeBjcLOAcOtoO/mPJjtji1+CdGbHgm77om1GrsPxsiE+uXIpNSK64UYaIwQXd4Q==

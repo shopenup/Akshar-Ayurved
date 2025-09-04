@@ -20,6 +20,7 @@ import { getIconComponent } from '../utils/icons';
 import { Category, Collection, Product } from '../types/homepage';
 import { useNewArrivals, useCategories, useCollections } from '../hooks/useShopenupProducts';
 import { getCategoriesList } from '../lib/shopenup/categories';
+import { sdk } from '../lib/config';
 
 export default function HomePage() {
   // Use Shopenup product hooks
@@ -30,16 +31,59 @@ export default function HomePage() {
   const [categoriesLoading, setCategoriesLoading] = React.useState(true);
   const [categoriesError, setCategoriesError] = React.useState<string | null>(null);
 
+  // Function to get product count and thumbnail for a category
+  const getCategoryData = async (categoryId: string) => {
+    try {
+      const response = await sdk.client.fetch<{ count: number; products: any[] }>('/store/products', {
+        query: {
+          category_id: categoryId,
+          limit: 1,
+          offset: 0,
+          fields: 'thumbnail,images',
+        },
+        next: { tags: ['products'] },
+      });
+      
+      const productCount = response.count || 0;
+      const productThumbnail = response.products?.[0]?.thumbnail || 
+                              response.products?.[0]?.images?.[0]?.url || 
+                              null;
+      
+      return { productCount, productThumbnail };
+    } catch (error) {
+      console.error(`Error fetching data for category ${categoryId}:`, error);
+      return { productCount: 0, productThumbnail: null };
+    }
+  };
+
   React.useEffect(() => {
-    getCategoriesList()
-      .then(res => {
-        setCategories(res.product_categories || []);
+    const fetchCategoriesWithCounts = async () => {
+      try {
+        const res = await getCategoriesList();
+        console.log('Categories response:', res);
+        
+        const categoriesWithCounts = await Promise.all(
+          (res.product_categories || []).map(async (category: any) => {
+            const { productCount, productThumbnail } = await getCategoryData(category.id);
+            return {
+              ...category,
+              product_count: productCount,
+              product_thumbnail: productThumbnail
+            };
+          })
+        );
+        
+        console.log('Categories with counts:', categoriesWithCounts);
+        setCategories(categoriesWithCounts);
         setCategoriesLoading(false);
-      })
-      .catch(err => {
+      } catch (err: any) {
+        console.error('Categories error:', err);
         setCategoriesError(err.message);
         setCategoriesLoading(false);
-      });
+      }
+    };
+
+    fetchCategoriesWithCounts();
   }, []);
 
   const { collections: shopenupCollections, loading: collectionsLoading } = useCollections();
@@ -55,8 +99,8 @@ export default function HomePage() {
     ? categories.map((cat: any) => ({
       id: cat.id,
       name: cat.name,
-      image: cat.image || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(cat.name)}`,
-      count: cat.product_count || 0
+      image: cat.product_thumbnail || cat.image || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(cat.name)}`,
+      count: cat.product_count !== undefined ? cat.product_count : '...'
     }))
     : homepageData.categories;
 
@@ -106,16 +150,50 @@ export default function HomePage() {
         </div>
       ) : categories.length > 0 ? (
         <BannerCarousel 
-          banners={categories.slice(0, 2).map((category: any) => ({
-            id: category.id,
-            title: category.name,
-            subtitle: `Explore ${category.name}`,
-            description: category.description || `Discover our collection of ${category.name.toLowerCase()} products`,
-            image: category.image || `https://dummyimage.com/1200x400/4ade80/ffffff?text=${encodeURIComponent(category.name)}`,
-            buttonText: "Shop Now",
-            buttonLink: `/gallery`,
-            backgroundColor: "#009947"
-          }))}
+          banners={categories
+            .filter((category: any) => 
+              category.name.toLowerCase().includes('diabetic') || 
+              category.name.toLowerCase().includes('cosmetic') ||
+              category.name.toLowerCase().includes('premium')
+            )
+            .slice(0, 2)
+            .map((category: any, index: number) => {
+            // Map different background images based on category content
+            const getBackgroundImage = (categoryName: string, index: number) => {
+              const categoryLower = categoryName.toLowerCase();
+              
+              // Map specific categories to specific images
+              if (categoryLower.includes('diabetic') || categoryLower.includes('care')) {
+                return '/assets/banner2.jpg';
+              }
+              if (categoryLower.includes('cosmetic') || categoryLower.includes('beauty')) {
+                return '/assets/banner1.jpg';
+              }
+              if (categoryLower.includes('herb') || categoryLower.includes('natural')) {
+                return '/assets/banner-herbs.jpg';
+              }
+              if (categoryLower.includes('oil') || categoryLower.includes('massage')) {
+                return '/assets/banner-oils.jpg';
+              }
+              if (categoryLower.includes('supplement') || categoryLower.includes('vitamin')) {
+                return '/assets/banner-supplements.jpg';
+              }
+              
+              // Fallback to numbered images based on index
+              return `/assets/banner${index + 1}.jpg`;
+            };
+
+            return {
+              id: category.id,
+              title: category.name,
+              subtitle: `Explore ${category.name}`,
+              description: category.description || `Discover our collection of ${category.name.toLowerCase()} products`,
+              image: getBackgroundImage(category.name, index),
+              buttonText: "Shop Now",
+              buttonLink: `/gallery`,
+              backgroundColor: "#009947"
+            };
+          })}
           autoPlay={true}
           interval={5000}
           showArrows={true}
@@ -140,7 +218,7 @@ export default function HomePage() {
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">POPULAR CATEGORIES</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 items-stretch">
             {categoriesLoading ? (
               <div className="col-span-5 flex justify-center py-8">
                 <Spinner size="lg" />
@@ -154,21 +232,31 @@ export default function HomePage() {
                 <Link
                   key={category.id}
                   href={`/products/category/${category.id}`}
-                  className="group text-center"
+                  className="group text-center h-full flex flex-col"
                 >
-                  <div className="bg-white rounded-lg shadow-md p-4 mb-3 hover:shadow-lg transition-shadow">
-                    <Image
-                      src={category.image}
-                      alt={category.name}
-                      width={200}
-                      height={96}
-                      className="w-full object-cover rounded-lg mb-3"
-                    />
+                  <div className="bg-white rounded-lg shadow-md p-4 mb-3 hover:shadow-lg transition-shadow flex-1 flex flex-col">
+                    <div className="aspect-square w-full mb-3 overflow-hidden rounded-lg">
+                      <Image
+                        src={category.image}
+                        alt={category.name}
+                        width={200}
+                        height={200}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback to dummy image if product image fails to load
+                          e.currentTarget.src = `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(category.name)}`;
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-end">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors text-sm md:text-base line-clamp-2 mb-1">
+                        {category.name}
+                      </h3>
+                      <p className="text-sm text-gray-500">
+                        {typeof category.count === 'number' ? `${category.count} products` : 'Loading...'}
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
-                    {category.name}
-                  </h3>
-                  <p className="text-sm text-gray-500">{category.count} products</p>
                 </Link>
               ))
             )}
@@ -180,7 +268,7 @@ export default function HomePage() {
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12 text-gray-900">SHOP BY COLLECTION</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 items-stretch">
             {collectionsLoading ? (
               <div className="col-span-4 flex justify-center py-8">
                 <Spinner size="lg" />
@@ -190,21 +278,25 @@ export default function HomePage() {
                 <Link
                   key={collection.id}
                   href={`/products/collection/${collection.id}`}
-                  className="group text-center"
+                  className="group text-center h-full flex flex-col"
                 >
-                  <div className="bg-white rounded-lg shadow-md p-4 mb-3 hover:shadow-lg transition-shadow">
-                    <Image
-                      src={collection.image}
-                      alt={collection.name}
-                      width={200}
-                      height={96}
-                      className="w-full object-cover rounded-lg mb-3"
-                    />
+                  <div className="bg-white rounded-lg shadow-md p-4 mb-3 hover:shadow-lg transition-shadow flex-1 flex flex-col">
+                    <div className="aspect-square w-full mb-3 overflow-hidden rounded-lg">
+                      <Image
+                        src={collection.image}
+                        alt={collection.name}
+                        width={200}
+                        height={200}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 flex flex-col justify-end">
+                      <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors text-sm md:text-base line-clamp-2 mb-1">
+                        {collection.name}
+                      </h3>
+                      <p className="text-sm text-gray-500 line-clamp-2">{collection.description}</p>
+                    </div>
                   </div>
-                  <h3 className="font-semibold text-gray-900 group-hover:text-green-600 transition-colors">
-                    {collection.name}
-                  </h3>
-                  <p className="text-sm text-gray-500">{collection.description}</p>
                 </Link>
               ))
             )}
