@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Ayurveda-themed styles */
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  /* Ayurveda-themed buttons */
+  .btn-ayurveda {
+    @apply bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors duration-200;
+  }
+  
+  .btn-ayurveda-outline {
+    @apply border-2 border-green-600 text-green-600 px-6 py-3 rounded-lg font-semibold hover:bg-green-50 transition-colors duration-200;
+  }
+  
+  /* Dosha-specific styles */
+  .dosha-vata {
+    @apply bg-vata-50 border-vata-300 text-vata-700;
+  }
+  
+  .dosha-pitta {
+    @apply bg-pitta-50 border-pitta-300 text-pitta-700;
+  }
+  
+  .dosha-kapha {
+    @apply bg-kapha-50 border-kapha-300 text-kapha-700;
+  }
+  
+  /* Product cards */
+  .product-card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-200;
+  }
+  
+  /* Assessment form */
+  .assessment-option {
+    @apply w-full text-left p-4 border border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors duration-200 cursor-pointer;
+  }
+  
+  .assessment-option.selected {
+    @apply border-green-500 bg-green-50;
+  }
+  
+  /* Progress bar */
+  .progress-bar {
+    @apply w-full bg-gray-200 rounded-full h-2 overflow-hidden;
+  }
+  
+  .progress-fill {
+    @apply bg-green-500 h-2 rounded-full transition-all duration-300;
+  }
+  
+  /* Seasonal indicators */
+  .season-spring {
+    @apply bg-spring-50 border-spring-300 text-spring-700;
+  }
+  
+  .season-summer {
+    @apply bg-summer-50 border-summer-300 text-summer-700;
+  }
+  
+  .season-autumn {
+    @apply bg-autumn-50 border-autumn-300 text-autumn-700;
+  }
+  
+  .season-winter {
+    @apply bg-winter-50 border-winter-300 text-winter-700;
+  }
+}
+
+@layer utilities {
+  /* Text truncation */
+  .text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .text-truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Custom animations */
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  /* Custom shadows */
+  .shadow-ayurveda {
+    box-shadow: 0 4px 6px -1px rgba(34, 197, 94, 0.1), 0 2px 4px -1px rgba(34, 197, 94, 0.06);
+  }
+  
+  .shadow-dosha {
+    box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.1), 0 4px 6px -2px rgba(34, 197, 94, 0.05);
+  }
+}
+
+/* Custom keyframes */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive design utilities */
+@media (max-width: 640px) {
+  .mobile-hidden {
+    display: none;
+  }
+}
+
+@media (min-width: 641px) {
+  .desktop-hidden {
+    display: none;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
+  }
+}

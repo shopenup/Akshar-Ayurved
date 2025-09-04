@@ -1,0 +1,311 @@
+{
+  "categories": [
+    {
+      "id": "health-care-energy-booster",
+      "name": "Health Care & Energy Booster",
+      "image": "https://dummyimage.com/300x300/4ade80/ffffff?text=Health+Care",
+      "count": 45
+    }
+  ],
+  "collections": [
+    {
+      "id": "1",
+      "name": "Classical Range",
+      "image": "https://dummyimage.com/300x300/4ade80/ffffff?text=Classical+Range",
+      "description": "Traditional Ayurvedic formulations"
+    },
+    {
+      "id": "2",
+      "name": "Herbal Extracts",
+      "image": "https://dummyimage.com/300x300/22c55e/ffffff?text=Herbal+Extracts",
+      "description": "Pure herbal extracts and tinctures"
+    },
+    {
+      "id": "3",
+      "name": "Single Herbs",
+      "image": "https://dummyimage.com/300x300/16a34a/ffffff?text=Single+Herbs",
+      "description": "Individual herbs and spices"
+    },
+    {
+      "id": "4",
+      "name": "Wellness Kits",
+      "image": "https://dummyimage.com/300x300/15803d/ffffff?text=Wellness+Kits",
+      "description": "Complete wellness solutions"
+    }
+  ],
+  "products": {
+    "newArrivals": [
+      {
+        "id": "1",
+        "name": "Organic Ashwagandha Powder",
+        "price": 299,
+        "originalPrice": 399,
+        "image": "https://dummyimage.com/300x300/4ade80/ffffff?text=Ashwagandha",
+        "category": "Herbs",
+        "rating": 4.5,
+        "reviewCount": 128,
+        "inStock": true,
+        "isNew": true
+      },
+      {
+        "id": "2",
+        "name": "Turmeric Golden Milk",
+        "price": 199,
+        "image": "https://dummyimage.com/300x300/22c55e/ffffff?text=Turmeric+Milk",
+        "category": "Beverages",
+        "rating": 4.8,
+        "reviewCount": 89,
+        "inStock": true,
+        "isNew": true
+      },
+      {
+        "id": "3",
+        "name": "Neem Face Wash",
+        "price": 149,
+        "originalPrice": 199,
+        "image": "https://dummyimage.com/300x300/16a34a/ffffff?text=Neem+Face+Wash",
+        "category": "Skincare",
+        "rating": 4.2,
+        "reviewCount": 67,
+        "inStock": true,
+        "isNew": true
+      },
+      {
+        "id": "4",
+        "name": "Sandalwood Oil",
+        "price": 399,
+        "image": "https://dummyimage.com/300x300/15803d/ffffff?text=Sandalwood+Oil",
+        "category": "Essential Oils",
+        "rating": 4.7,
+        "reviewCount": 156,
+        "inStock": true,
+        "isNew": true
+      }
+    ],
+    "weightGainer": [
+      {
+        "id": "1",
+        "name": "START Weight Gainer",
+        "price": 799,
+        "originalPrice": 999,
+        "image": "https://dummyimage.com/300x300/166534/ffffff?text=Weight+Gainer",
+        "category": "Supplements",
+        "rating": 4.6,
+        "reviewCount": 234,
+        "inStock": true
+      },
+      {
+        "id": "2",
+        "name": "START Weight Gainer Plus",
+        "price": 999,
+        "image": "https://dummyimage.com/300x300/14532d/ffffff?text=Weight+Gainer+Plus",
+        "category": "Supplements",
+        "rating": 4.8,
+        "reviewCount": 189,
+        "inStock": true
+      }
+    ],
+    "ayurvedicMedicines": [
+      {
+        "id": "1",
+        "name": "Chyawanprash",
+        "price": 199,
+        "image": "https://dummyimage.com/300x300/4ade80/ffffff?text=Chyawanprash",
+        "category": "Traditional",
+        "rating": 4.5,
+        "reviewCount": 89,
+        "inStock": true
+      },
+      {
+        "id": "2",
+        "name": "Triphala Churna",
+        "price": 149,
+        "image": "https://dummyimage.com/300x300/22c55e/ffffff?text=Triphala+Churna",
+        "category": "Traditional",
+        "rating": 4.3,
+        "reviewCount": 67,
+        "inStock": true
+      },
+      {
+        "id": "3",
+        "name": "Ashwagandha Tablets",
+        "price": 249,
+        "image": "https://dummyimage.com/300x300/16a34a/ffffff?text=Ashwagandha+Tablets",
+        "category": "Traditional",
+        "rating": 4.6,
+        "reviewCount": 123,
+        "inStock": true
+      },
+      {
+        "id": "4",
+        "name": "Brahmi Capsules",
+        "price": 179,
+        "image": "https://dummyimage.com/300x300/15803d/ffffff?text=Brahmi+Capsules",
+        "category": "Traditional",
+        "rating": 4.4,
+        "reviewCount": 78,
+        "inStock": true
+      }
+    ]
+  },
+  "blogPosts": [
+    {
+      "id": "1",
+      "title": "Understanding Blood Pressure and Natural Remedies",
+      "excerpt": "Learn about natural ways to manage blood pressure through Ayurvedic practices and herbal remedies.",
+      "image": "https://dummyimage.com/400x250/4ade80/ffffff?text=Blood+Pressure+Remedies",
+      "author": "Dr. Priya Sharma",
+      "date": "Dec 15, 2024",
+      "readTime": "5 min read",
+      "category": "Health"
+    },
+    {
+      "id": "2",
+      "title": "The Power of Turmeric in Daily Wellness",
+      "excerpt": "Discover the incredible health benefits of turmeric and how to incorporate it into your daily routine.",
+      "image": "https://dummyimage.com/400x250/22c55e/ffffff?text=Turmeric+Wellness",
+      "author": "Ayurvedic Expert",
+      "date": "Dec 12, 2024",
+      "readTime": "4 min read",
+      "category": "Wellness"
+    },
+    {
+      "id": "3",
+      "title": "Seasonal Wellness: Winter Ayurvedic Practices",
+      "excerpt": "Essential Ayurvedic practices and remedies to stay healthy during the winter season.",
+      "image": "https://dummyimage.com/400x250/16a34a/ffffff?text=Winter+Wellness",
+      "author": "Wellness Coach",
+      "date": "Dec 10, 2024",
+      "readTime": "6 min read",
+      "category": "Seasonal"
+    }
+  ],
+  "testimonials": [
+    {
+      "id": "1",
+      "name": "Priya Sharma",
+      "role": "Yoga Instructor",
+      "company": "Wellness Studio",
+      "content": "The Ashwagandha powder has been a game-changer for my stress management. I feel more balanced and energized throughout the day.",
+      "rating": 5,
+      "avatar": "https://dummyimage.com/100x100/4ade80/ffffff?text=PS"
+    },
+    {
+      "id": "2",
+      "name": "Rajesh Kumar",
+      "role": "Fitness Trainer",
+      "company": "Health Club",
+      "content": "I've been using their turmeric products for months now. The quality is exceptional and I can feel the difference in my overall health.",
+      "rating": 5,
+      "avatar": "https://dummyimage.com/100x100/22c55e/ffffff?text=RK"
+    },
+    {
+      "id": "3",
+      "name": "Anjali Patel",
+      "role": "Nutritionist",
+      "company": "Holistic Health",
+      "content": "As a nutritionist, I recommend their products to my clients. The organic certification and traditional preparation methods are impressive.",
+      "rating": 4,
+      "avatar": "https://dummyimage.com/100x100/16a34a/ffffff?text=AP"
+    }
+  ],
+  "certifications": [
+    {
+      "id": "1",
+      "name": "GMP Certified",
+      "image": "https://dummyimage.com/128x128/4ade80/ffffff?text=GMP",
+      "alt": "GMP Certified"
+    },
+    {
+      "id": "2",
+      "name": "ISO Certified",
+      "image": "https://dummyimage.com/128x128/22c55e/ffffff?text=ISO",
+      "alt": "ISO Certified"
+    },
+    {
+      "id": "3",
+      "name": "Organic Certified",
+      "image": "https://dummyimage.com/128x128/16a34a/ffffff?text=ORGANIC",
+      "alt": "Organic Certified"
+    },
+    {
+      "id": "4",
+      "name": "Ayurvedic Certified",
+      "image": "https://dummyimage.com/128x128/15803d/ffffff?text=AYURVEDA",
+      "alt": "Ayurvedic Certified"
+    }
+  ],
+  "featureHighlights": [
+    {
+      "id": "1",
+      "icon": "fire",
+      "text": "100% Natural"
+    },
+    {
+      "id": "2",
+      "icon": "check-circle",
+      "text": "GMP Certified"
+    },
+    {
+      "id": "3",
+      "icon": "lock-closed",
+      "text": "Secure Payment"
+    }
+  ],
+  "promotionalBanners": {
+    "weightGainer": {
+      "title": "START Weight Gainer",
+      "subtitle": "₹ 799.00 - ₹ 999.00",
+      "description": "Powerful Ayurvedic Formula to Manage Weight",
+      "buttonText": "Shop Now",
+      "buttonLink": "/products/1",
+      "backgroundColor": "#f0fdf4"
+    },
+    "digestiveHealth": {
+      "title": "Digestive Health Formula",
+      "subtitle": "Powerful Ayurvedic Formula to improve digestive health and bowel movements",
+      "description": "Natural solution for better digestion and gut health",
+      "buttonText": "Shop Now",
+      "buttonLink": "/products/2",
+      "backgroundColor": "#f0fdf4",
+      "image": "https://dummyimage.com/300x300/166534/ffffff?text=Digestive+Health"
+    },
+    "healthcareNature": {
+      "title": "HEALTHCARE THROUGH NATURE",
+      "subtitle": "Discover the power of authentic Ayurvedic formulations for holistic wellness",
+      "description": "Experience the healing power of nature with our traditional Ayurvedic products",
+      "buttonText": "View All Products",
+      "buttonLink": "/products",
+      "backgroundColor": "gradient-green",
+      "image": "https://dummyimage.com/400x300/14532d/ffffff?text=Healthcare+Through+Nature"
+    }
+  },
+  "productCategories": {
+    "ayurvedicMedicines": {
+      "title": "AYURVEDIC MEDICINES",
+      "description": "Traditional Ayurvedic formulations for holistic wellness"
+    },
+    "feverMalariaDengue": {
+      "title": "FEVER, MALARIA, DENGUE WELLNESS",
+      "description": "Natural remedies for fever, malaria, and dengue prevention and treatment"
+    },
+    "healthWellness": {
+      "title": "HEALTH & WELLNESS",
+      "description": "Comprehensive health and wellness solutions"
+    },
+    "pilesWellness": {
+      "title": "PILES WELLNESS",
+      "description": "Natural solutions for piles and related conditions"
+    }
+  },
+  "trustStats": {
+    "customers": "15K+",
+    "products": "500+",
+    "years": "25+"
+  },
+  "newsletter": {
+    "title": "Subscribe to our newsletter",
+    "subtitle": "Get the latest updates on new products and special offers",
+    "placeholder": "Enter your email address"
+  }
+}

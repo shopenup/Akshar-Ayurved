@@ -1,0 +1,86 @@
+{
+  "core": {
+    "shopenup": "@shopenup/shopenup",
+    "framework": "@shopenup/framework",
+    "types": "@shopenup/types",
+    "utils": "@shopenup/utils",
+    "orchestration": "@shopenup/orchestration",
+    "modules-sdk": "@shopenup/modules-sdk",
+    "workflows-sdk": "@shopenup/workflows-sdk",
+    "js-sdk": "@shopenup/js-sdk",
+    "cli": "@shopenup/cli",
+    "create-shopenup-app": "@shopenup/create-shopenup-app"
+  },
+  "ecommerce": {
+    "product": "@shopenup/product",
+    "inventory": "@shopenup/inventory",
+    "order": "@shopenup/order",
+    "payment": "@shopenup/payment",
+    "customer": "@shopenup/customer",
+    "cart": "@shopenup/cart",
+    "pricing": "@shopenup/pricing",
+    "currency": "@shopenup/currency",
+    "tax": "@shopenup/tax",
+    "fulfillment": "@shopenup/fulfillment",
+    "sales-channel": "@shopenup/sales-channel",
+    "store": "@shopenup/store",
+    "region": "@shopenup/region",
+    "stock-location": "@shopenup/stock-location",
+    "promotion": "@shopenup/promotion",
+    "analytics": "@shopenup/analytics",
+    "user": "@shopenup/user",
+    "auth": "@shopenup/auth",
+    "api-key": "@shopenup/api-key",
+    "file": "@shopenup/file",
+    "notification": "@shopenup/notification",
+    "core-flows": "@shopenup/core-flows",
+    "index": "@shopenup/index"
+  },
+  "analytics": {
+    "analytics": "@shopenup/analytics",
+    "analytics-local": "@shopenup/analytics-local",
+    "analytics-posthog": "@shopenup/analytics-posthog",
+    "telemetry": "@shopenup/telemetry"
+  },
+  "infrastructure": {
+    "notification": "@shopenup/notification",
+    "event-bus-local": "@shopenup/event-bus-local",
+    "event-bus-redis": "@shopenup/event-bus-redis",
+    "cache-inmemory": "@shopenup/cache-inmemory",
+    "cache-redis": "@shopenup/cache-redis",
+    "workflow-engine-inmemory": "@shopenup/workflow-engine-inmemory",
+    "workflow-engine-redis": "@shopenup/workflow-engine-redis",
+    "locking": "@shopenup/locking",
+    "locking-redis": "@shopenup/locking-redis",
+    "locking-postgres": "@shopenup/locking-postgres",
+    "file-local": "@shopenup/file-local",
+    "file-s3": "@shopenup/file-s3",
+    "auth-emailpass": "@shopenup/auth-emailpass",
+    "auth-github": "@shopenup/auth-github",
+    "auth-google": "@shopenup/auth-google",
+    "telemetry": "@shopenup/telemetry",
+    "link-modules": "@shopenup/link-modules"
+  },
+  "admin": {
+    "admin-bundler": "@shopenup/admin-bundler",
+    "admin-sdk": "@shopenup/admin-sdk",
+    "admin-shared": "@shopenup/admin-shared",
+    "admin-vite-plugin": "@shopenup/admin-vite-plugin",
+    "dashboard": "@shopenup/dashboard",
+    "ui": "@shopenup/ui",
+    "ui-preset": "@shopenup/ui-preset",
+    "icons": "@shopenup/icons"
+  },
+  "providers": {
+    "payment-stripe": "@shopenup/payment-stripe",
+    "fulfillment-manual": "@shopenup/fulfillment-manual",
+    "notification-local": "@shopenup/notification-local",
+    "notification-sendgrid": "@shopenup/notification-sendgrid",
+    "analytics-local": "@shopenup/analytics-local",
+    "analytics-posthog": "@shopenup/analytics-posthog",
+    "shopenup-oas-cli": "@shopenup/shopenup-oas-cli"
+  },
+  "development": {
+    "test-utils": "@shopenup/test-utils"
+  }
+}

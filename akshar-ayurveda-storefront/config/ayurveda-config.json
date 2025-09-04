@@ -1,0 +1,208 @@
+{
+  "doshas": {
+    "vata": {
+      "elements": ["air", "ether"],
+      "qualities": ["dry", "light", "cold", "rough", "subtle", "mobile"],
+      "characteristics": [
+        "creative",
+        "quick-thinking",
+        "adaptable",
+        "enthusiastic",
+        "imaginative"
+      ],
+      "imbalances": [
+        "anxiety",
+        "insomnia",
+        "dry skin",
+        "constipation",
+        "irregular appetite"
+      ]
+    },
+    "pitta": {
+      "elements": ["fire", "water"],
+      "qualities": ["hot", "sharp", "light", "liquid", "oily", "spreading"],
+      "characteristics": [
+        "intelligent",
+        "focused",
+        "determined",
+        "courageous",
+        "natural leader"
+      ],
+      "imbalances": [
+        "irritability",
+        "inflammation",
+        "acid reflux",
+        "skin rashes",
+        "excessive heat"
+      ]
+    },
+    "kapha": {
+      "elements": ["earth", "water"],
+      "qualities": ["heavy", "slow", "cool", "oily", "smooth", "dense"],
+      "characteristics": [
+        "calm",
+        "patient",
+        "loving",
+        "forgiving",
+        "grounded"
+      ],
+      "imbalances": [
+        "weight gain",
+        "lethargy",
+        "congestion",
+        "slow digestion",
+        "attachment"
+      ]
+    }
+  },
+  "seasons": {
+    "spring": {
+      "dosha": "kapha",
+      "recommendations": [
+        "light foods",
+        "bitter and astringent tastes",
+        "detoxification",
+        "exercise"
+      ]
+    },
+    "summer": {
+      "dosha": "pitta",
+      "recommendations": [
+        "cooling foods",
+        "sweet and bitter tastes",
+        "avoid spicy foods",
+        "stay hydrated"
+      ]
+    },
+    "monsoon": {
+      "dosha": "vata",
+      "recommendations": [
+        "warm foods",
+        "sweet and sour tastes",
+        "oil massage",
+        "regular routine"
+      ]
+    },
+    "autumn": {
+      "dosha": "vata",
+      "recommendations": [
+        "nourishing foods",
+        "sweet and sour tastes",
+        "warm oil massage",
+        "gentle exercise"
+      ]
+    },
+    "winter": {
+      "dosha": "kapha",
+      "recommendations": [
+        "warming foods",
+        "pungent and bitter tastes",
+        "vigorous exercise",
+        "spice consumption"
+      ]
+    }
+  },
+  "productCategories": {
+    "herbs": {
+      "subcategories": [
+        "single-herbs",
+        "herbal-blends",
+        "powders",
+        "tablets",
+        "capsules"
+      ],
+      "doshaSpecific": true
+    },
+    "oils": {
+      "subcategories": [
+        "massage-oils",
+        "cooking-oils",
+        "essential-oils",
+        "medicated-oils"
+      ],
+      "doshaSpecific": true
+    },
+    "supplements": {
+      "subcategories": [
+        "vitamins",
+        "minerals",
+        "probiotics",
+        "antioxidants",
+        "amino-acids"
+      ],
+      "doshaSpecific": false
+    },
+    "wellness-products": {
+      "subcategories": [
+        "skincare",
+        "haircare",
+        "oral-care",
+        "body-care",
+        "aromatherapy"
+      ],
+      "doshaSpecific": true
+    },
+    "consultation": {
+      "subcategories": [
+        "dosha-assessment",
+        "health-consultation",
+        "diet-planning",
+        "lifestyle-coaching"
+      ],
+      "doshaSpecific": false
+    }
+  },
+  "healthGoals": {
+    "digestion": {
+      "doshaFocus": ["vata", "pitta"],
+      "products": ["digestive-herbs", "probiotics", "digestive-enzymes"]
+    },
+    "immunity": {
+      "doshaFocus": ["all"],
+      "products": ["immune-boosters", "vitamin-c", "zinc", "turmeric"]
+    },
+    "stress-relief": {
+      "doshaFocus": ["vata", "pitta"],
+      "products": ["ashwagandha", "brahmi", "jasmine", "lavender"]
+    },
+    "energy": {
+      "doshaFocus": ["kapha", "vata"],
+      "products": ["ginseng", "maca", "rhodiola", "vitamin-b12"]
+    },
+    "sleep": {
+      "doshaFocus": ["vata", "pitta"],
+      "products": ["valerian", "passionflower", "chamomile", "melatonin"]
+    },
+    "weight-management": {
+      "doshaFocus": ["kapha"],
+      "products": ["guggulu", "triphala", "ginger", "cinnamon"]
+    },
+    "skin-health": {
+      "doshaFocus": ["pitta"],
+      "products": ["neem", "aloe-vera", "sandalwood", "turmeric"]
+    },
+    "joint-health": {
+      "doshaFocus": ["vata"],
+      "products": ["ashwagandha", "guggulu", "sesame-oil", "boswellia"]
+    }
+  },
+  "assessment": {
+    "questionCategories": [
+      "physical-characteristics",
+      "mental-characteristics",
+      "digestive-patterns",
+      "sleep-patterns",
+      "emotional-tendencies",
+      "lifestyle-preferences"
+    ],
+    "questionCount": 20,
+    "scoringMethod": "weighted-average"
+  },
+  "recommendations": {
+    "maxProducts": 12,
+    "categoriesPerRecommendation": 3,
+    "seasonalWeight": 0.3,
+    "doshaWeight": 0.5,
+    "healthGoalWeight": 0.2
+  }
+}
