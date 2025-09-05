@@ -168,6 +168,8 @@ export default function ProductCategoryPage() {
       
       // Find the product
       const product = products.find(p => p.id === productId);
+      console.log(`product: `, product);
+      
       if (!product) {
         showToast('Product not found', 'error');
         return;

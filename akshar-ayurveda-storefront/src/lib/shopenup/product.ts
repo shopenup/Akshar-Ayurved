@@ -7,16 +7,19 @@ export interface Product {
   description?: string;
   price: number;
   originalPrice?: number;
-  images: string[];
+  original_price?: number;
+  images: string[] | { url: string }[];
   thumbnail?: string;
-  category: string;
+  category: string | { name: string };
   type?: {
     value: string;
     label: string;
   };
   rating?: number;
   reviewCount?: number;
+  review_count?: number;
   inStock: boolean;
+  in_stock?: boolean;
   variants?: ProductVariant[];
   tags?: string[];
   metadata?: Record<string, unknown>;
@@ -31,6 +34,13 @@ export interface ProductVariant {
   originalPrice?: number;
   sku?: string;
   inventoryQuantity: number;
+  inventory_quantity?: number;
+  in_stock?: boolean;
+  rating?: number;
+  review_count?: number;
+  calculated_price?: {
+    calculated_amount: number;
+  };
   options: Record<string, string>;
 }
 

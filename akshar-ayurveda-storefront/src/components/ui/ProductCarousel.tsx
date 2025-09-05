@@ -184,7 +184,8 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
                             <Button
                               variant="primary"
                               size="sm"
-                              onClick={() => {
+                              onClick={(e) => {
+                                e?.stopPropagation();
                                 onAddToCart(product.id);
                               }}
                               disabled={product.inStock === false}

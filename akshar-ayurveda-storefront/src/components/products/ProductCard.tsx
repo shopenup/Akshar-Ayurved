@@ -1,7 +1,6 @@
 import React from 'react';
 import Image from 'next/image';
 import { Card, Badge, Button } from '../ui';
-import Link from 'next/link';
 
 interface ProductCardProps {
   product: {
@@ -28,19 +27,27 @@ const ProductCard: React.FC<ProductCardProps> = ({
   product,
   onAddToCart,
   onAddToFavorites,
-
+  onProductClick,
   showActions = true,
   className = '',
 }) => {
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+    e.preventDefault();
+    e.nativeEvent.stopImmediatePropagation();
     onAddToCart?.(product.id);
   };
 
 
-  const handleAddToFavorites = (e: React.MouseEvent) => {
+  const handleAddToFavorites = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+    e.preventDefault();
+    e.nativeEvent.stopImmediatePropagation();
     onAddToFavorites?.(product.id);
+  };
+
+  const handleCardClick = () => {
+    onProductClick?.(product.id);
   };
 
   const discountPercentage = product.originalPrice 
@@ -48,11 +55,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
     : 0;
 
   return (
-    <Link href={`/products/${product.id}`}  legacyBehavior>
-        <Card 
-          className={`overflow-hidden ${className}`}
-          hover={true}
-        >
+    <Card 
+      className={`overflow-hidden cursor-pointer ${className}`}
+      hover={true}
+      onClick={handleCardClick}
+    >
           {/* Product Image */}
           <div className="relative w-full h-48">
             <Image
@@ -170,8 +177,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </div>
             )}
           </div>
-        </Card>
-    </Link>
+    </Card>
   );
 };
 

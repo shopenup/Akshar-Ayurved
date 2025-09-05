@@ -13,7 +13,8 @@ import {
   WhatsAppFloat,
   BackToTop,
   Button,
-  Spinner
+  Spinner,
+  useToast
 } from '../components/ui';
 import homepageData from '../data/homepage-data.json';
 import { getIconComponent } from '../utils/icons';
@@ -21,15 +22,21 @@ import { Category, Collection, Product } from '../types/homepage';
 import { useNewArrivals, useCategories, useCollections } from '../hooks/useShopenupProducts';
 import { getCategoriesList } from '../lib/shopenup/categories';
 import { sdk } from '../lib/config';
+import { useCountryCode } from '@hooks/country-code';
+import { useAddLineItem } from '@hooks/cart';
 
 export default function HomePage() {
   // Use Shopenup product hooks
   const { products: newArrivals, loading: newArrivalsLoading, error: newArrivalsError } = useNewArrivals(8);
+  const { showToast } = useToast();
+  const countryCode = useCountryCode() || 'in';
+  const { mutateAsync: addLineItem, isPending: isAddingToCart } = useAddLineItem();
   // Remove useCategories hook
   // const { categories: shopenupCategories, loading: categoriesLoading, error: categoriesError } = useCategories();
   const [categories, setCategories] = React.useState<any[]>([]);
   const [categoriesLoading, setCategoriesLoading] = React.useState(true);
   const [categoriesError, setCategoriesError] = React.useState<string | null>(null);
+  
 
   // Function to get product count and thumbnail for a category
   const getCategoryData = async (categoryId: string) => {
@@ -116,8 +123,56 @@ export default function HomePage() {
     window.location.href = `/products/${productId}`;
   };
 
-  const handleAddToCart = (productId: string) => {
-    console.log('Add to cart:', productId);
+  // const handleAddToCart = (productId: string) => {
+  //   console.log('Add to cart:', productId);
+  // };
+
+  const handleAddToCart = async (productId: string) => {
+    try {
+      // Find the product
+      const product = newArrivals?.find(p => p.id === productId);
+      console.log(`product: `, product);
+      
+      if (!product) {
+        showToast('Product not found', 'error');
+        return;
+      }
+
+      // Check if product is in stock
+      // if (!product.inStock) {
+      //   showToast('Product is out of stock', 'error');
+      //   return;
+      // }
+
+      // Get the first variant ID (most products have only one variant)
+      // We need to fetch the product details to get the variant ID
+      const productResponse = await sdk.client.fetch<{ product: any }>(
+        `/store/products/${productId}`,
+        {
+          next: { tags: ['products'] },
+        }
+      );
+
+      const variantId = productResponse.product?.variants?.[0]?.id;
+      if (!variantId) {
+        console.error('No variant found for product:', productId);
+        showToast('Product variant not found', 'error');
+        return;
+      }
+
+      
+      await addLineItem({
+        variantId,
+        quantity: 1,
+        countryCode
+      });
+
+      showToast(`${product.title} added to cart`, 'success');
+
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      showToast('Failed to add product to cart', 'error');
+    }
   };
 
   const handleNewsletterSubmit = async (email: string) => {
@@ -359,11 +414,11 @@ export default function HomePage() {
                   name: product.title,
                   price: product.price,
                   originalPrice: product.originalPrice,
-                  image: product.thumbnail || product.images?.[0] || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
-                  category: product.category?.name || 'General',
-                  rating: product.variants?.[0]?.rating || 0,
-                  reviewCount: product.variants?.[0]?.review_count || 0,
-                  inStock: product.variants?.[0]?.in_stock !== false
+                  image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : product.images?.[0]?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
+                  category: typeof product.category === 'string' ? product.category : product.category?.name || 'General',
+                  rating: product.rating || 0,
+                  reviewCount: product.reviewCount || product.review_count || 0,
+                  inStock: product.inStock || product.in_stock !== false
                 };
               })}
               autoPlay={true}
@@ -508,11 +563,11 @@ export default function HomePage() {
                   name: product.title,
                   price: price,
                   originalPrice: product.originalPrice,
-                  image: product.thumbnail || product.images?.[0]?.url || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
-                  category: product.category?.name || 'General',
-                  rating: product.rating,
-                  reviewCount: product.review_count,
-                  inStock: product.variants?.[0]?.inventory_quantity > 0 || product.in_stock !== false
+                  image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as { url: string })?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
+                  category: typeof product.category === 'string' ? product.category : (product.category as { name: string })?.name || 'General',
+                  rating: product.rating || 0,
+                  reviewCount: product.reviewCount || product.review_count || 0,
+                  inStock: ((product.variants?.[0]?.inventoryQuantity ?? 0) > 0 || (product.variants?.[0]?.inventory_quantity ?? 0) > 0) || product.inStock || product.in_stock !== false
                 };
               })}
               autoPlay={true}
@@ -565,11 +620,11 @@ export default function HomePage() {
                   name: product.title,
                   price: price,
                   originalPrice: product.originalPrice,
-                  image: product.thumbnail || product.images?.[0]?.url || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
-                  category: product.category?.name || 'General',
-                  rating: product.rating,
-                  reviewCount: product.review_count,
-                  inStock: product.variants?.[0]?.inventory_quantity > 0 || product.in_stock !== false
+                  image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as { url: string })?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
+                  category: typeof product.category === 'string' ? product.category : (product.category as { name: string })?.name || 'General',
+                  rating: product.rating || 0,
+                  reviewCount: product.reviewCount || product.review_count || 0,
+                  inStock: ((product.variants?.[0]?.inventoryQuantity ?? 0) > 0 || (product.variants?.[0]?.inventory_quantity ?? 0) > 0) || product.inStock || product.in_stock !== false
                 };
               })}
               autoPlay={true}
@@ -622,11 +677,11 @@ export default function HomePage() {
                   name: product.title,
                   price: price,
                   originalPrice: product.originalPrice,
-                  image: product.thumbnail || product.images?.[0]?.url || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
-                  category: product.category?.name || 'General',
-                  rating: product.rating,
-                  reviewCount: product.review_count,
-                  inStock: product.variants?.[0]?.inventory_quantity > 0 || product.in_stock !== false
+                  image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as { url: string })?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
+                  category: typeof product.category === 'string' ? product.category : (product.category as { name: string })?.name || 'General',
+                  rating: product.rating || 0,
+                  reviewCount: product.reviewCount || product.review_count || 0,
+                  inStock: ((product.variants?.[0]?.inventoryQuantity ?? 0) > 0 || (product.variants?.[0]?.inventory_quantity ?? 0) > 0) || product.inStock || product.in_stock !== false
                 };
               })}
               autoPlay={true}
