@@ -5,6 +5,7 @@ import { useAppContext } from '../context/AppContext'
 import { z } from "zod"
 import { useLogin } from '../hooks/customer'
 import { EyeIcon, EyeOffIcon } from '../utils/icons'
+import Link from 'next/link';
 
 const loginFormSchema = z.object({
   email: z.string().email(),
@@ -120,9 +121,9 @@ export default function LoginForm({ className, redirectUrl, handleCheckout }: Lo
               </div>
 
               <div className="text-sm">
-                <a href="/forgot-password" className="text-green-600 hover:text-green-500">
+                <Link href="/forgot-password" className="text-green-600 hover:text-green-500">
                   Forgot your password?
-                </a>
+                </Link>
               </div>
             </div>
 
@@ -139,18 +140,18 @@ export default function LoginForm({ className, redirectUrl, handleCheckout }: Lo
             <div className="text-center">
               <p className="text-sm text-gray-600">
                 Don&apos;t have an account?{' '}
-                <a href="/register" className="text-green-600 hover:text-green-500 font-medium">
+                <Link href="/register" className="text-green-600 hover:text-green-500 font-medium">
                   Sign up here
-                </a>
+                </Link>
               </p>
             </div>
           </form>
         </Card>
 
         <div className="text-center">
-          <a href="/" className="text-green-600 hover:text-green-500 text-sm">
+          <Link href="/" className="text-green-600 hover:text-green-500 text-sm">
             ← Back to Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

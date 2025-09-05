@@ -1,6 +1,7 @@
 import React from 'react';
 import Image from 'next/image';
 import { Card, Badge, Button } from '../ui';
+import Link from 'next/link';
 
 interface ProductCardProps {
   product: {
@@ -41,16 +42,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
     onAddToFavorites?.(product.id);
   };
 
-  const handleProductClick = () => {
-    // Navigate to single product page
-    window.location.href = `/products/${product.id}`;
-  };
-
   const discountPercentage = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
   return (
+    <Link href={`/products/${product.id}`} legacyBehavior>
     <Card 
       className={`overflow-hidden ${className}`}
       hover={true}
@@ -158,7 +155,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-green-600">
-              ₹{(product.price || 0).toFixed(2)}
+            ₹{(product.price || 0).toFixed(2)}
             </span>
             {product.originalPrice && product.originalPrice > (product.price || 0) && (
               <span className="text-sm text-gray-500 line-through">
@@ -184,6 +181,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         )}
       </div>
     </Card>
+    </Link>
   );
 };
 
