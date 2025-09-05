@@ -100,7 +100,7 @@ export default function Navigation({
   const navItems = [
     { name: 'Home', href: '/' },
     { name: 'About Us', href: '/about' },
-    { name: 'Blogs', href: '/blogs' },
+    // { name: 'Blogs', href: '/blogs' },
     { name: 'Gallery', href: '/gallery' },
     { name: 'Contact Us', href: '/contact' }
   ];
@@ -170,8 +170,8 @@ export default function Navigation({
                 </Link>
               ))}
 
-              {/* Products Dropdown */}
-              <div className="relative products-dropdown">
+              {/* Products Dropdown - Commented out for now */}
+              {/* <div className="relative products-dropdown">
                 <button
                   onClick={toggleProductsDropdown}
                   className={`px-1 xl:px-2 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium transition-colors ${
@@ -202,7 +202,7 @@ export default function Navigation({
                   )}
                 </button>
 
-                                {isProductsDropdownOpen && (
+                {isProductsDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-72 xl:w-80 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
                     {categoriesLoading ? (
                       <div className="px-3 xl:px-4 py-2 text-sm text-gray-500">
@@ -221,7 +221,6 @@ export default function Navigation({
                       </div>
                     ) : (
                       <>
-                        {/* All Products Link */}
                         <Link
                           href="/products"
                           className="block px-3 xl:px-4 py-2 text-sm text-gray-700 hover:bg-green-50 hover:text-green-600 border-b border-gray-100"
@@ -233,7 +232,6 @@ export default function Navigation({
                           </div>
                         </Link>
                         
-                        {/* Category Links */}
                         {categories.map((category) => (
                           <Link
                             key={category.id}
@@ -251,7 +249,19 @@ export default function Navigation({
                     )}
                   </div>
                 )}
-              </div>
+              </div> */}
+
+              {/* Simple Products Link */}
+              <Link
+                href="/products"
+                className={`px-1 xl:px-2 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium transition-colors ${
+                  router.pathname.startsWith('/products')
+                    ? 'text-green-600 bg-green-50'
+                    : 'text-gray-700 hover:text-green-600 hover:bg-green-50'
+                }`}
+              >
+                Products
+              </Link>
             </div>
 
             {/* User Actions */}

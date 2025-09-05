@@ -38,9 +38,9 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
   // Function to get background image based on banner index
   const getBackgroundImage = (index: number) => {
     const backgroundImages = [
-      '/assets/banner1.jpg',
-      '/assets/banner2.png',
-      '/assets/banner2.jpeg', // fallback for additional banners
+      '/assets/banner1.webp',
+      '/assets/banner2.jpg',
+      // '/assets/banner2.jpeg', // fallback for additional banners
     ];
     return backgroundImages[index] || backgroundImages[0];
   };

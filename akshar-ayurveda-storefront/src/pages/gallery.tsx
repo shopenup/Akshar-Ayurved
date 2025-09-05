@@ -192,15 +192,33 @@ export default function GalleryPage() {
             <div className="text-center py-12 text-red-600">{error}</div>
           ) : (
             <ProductGrid
-              products={products.map((product: any) => ({
-                id: product.id,
-                name: product.title,
-                description: product.description,
-                price: product.price,
-                image: product.thumbnail || product.images?.[0],
-                category: product.category || product.type?.value,
-                tags: product.tags,
-              }))}
+              products={products.map((product: any) => {
+                // Try to get price from different sources
+                let price = 0;
+                
+                // Check calculated_price first (most common)
+                if (product.variants?.[0]?.calculated_price?.calculated_amount) {
+                  price = product.variants[0].calculated_price.calculated_amount;
+                }
+                // Fallback to direct price
+                else if (product.price) {
+                  price = product.price;
+                }
+                
+                return {
+                  id: product.id,
+                  name: product.title,
+                  description: product.description,
+                  price: price,
+                  image: product.thumbnail || product.images?.[0]?.url || '',
+                  images: product.images?.map((img: any) => img.url).filter(Boolean) || [],
+                  category: product.category?.name || product.type?.label || '',
+                  tags: product.tags || [],
+                  rating: product.rating,
+                  reviewCount: product.review_count,
+                  inStock: product.variants?.[0]?.inventory_quantity > 0 || product.in_stock !== false
+                };
+              })}
               columns={4}
               showActions={false}
             />
