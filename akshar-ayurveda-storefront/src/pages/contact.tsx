@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import { Hero, Section, ContactForm, Card } from '../components';
+import Link from 'next/link';
+import Hero from '../components/layout/Hero';
+import Section from '../components/layout/Section';
+import ContactForm from '../components/forms/ContactForm';
+import Card from '../components/ui/Card';
 
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);

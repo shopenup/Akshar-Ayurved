@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from './index';
+import Link from 'next/link';
 
 interface Banner {
   id: string;
@@ -159,15 +160,19 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
                     )}
 
                     {banner.buttonText && banner.buttonLink && (
-                      <a href={banner.buttonLink}>
-                        <Button
-                          variant="custom"
-                          size="lg"
-                          className="bg-white text-gray-900 hover:bg-gray-100 border border-white focus:ring-white focus:ring-offset-2"
-                        >
+                      banner.buttonLink && banner.buttonLink.startsWith('http') ? (
+                        <a href={banner.buttonLink} target="_blank" rel="noopener noreferrer">
                           {banner.buttonText}
-                        </Button>
-                      </a>
+                        </a>
+                      ) : banner.buttonLink && banner.buttonLink.startsWith('mailto:') ? (
+                        <a href={banner.buttonLink}>{banner.buttonText}</a>
+                      ) : banner.buttonLink && banner.buttonLink.startsWith('tel:') ? (
+                        <a href={banner.buttonLink}>{banner.buttonText}</a>
+                      ) : (
+                        <Link href={banner.buttonLink} legacyBehavior>
+                          <a>{banner.buttonText}</a>
+                        </Link>
+                      )
                     )}
                   </div>
 
