@@ -167,7 +167,7 @@ export default function HomePage() {
                   return '/assets/banner2.jpg';
                 }
                 if (categoryLower.includes('cosmetic') || categoryLower.includes('beauty')) {
-                  return '/assets/banner1.jpg';
+                  return '/assets/banner1.webp';
                 }
                 if (categoryLower.includes('herb') || categoryLower.includes('natural')) {
                   return '/assets/banner-herbs.jpg';

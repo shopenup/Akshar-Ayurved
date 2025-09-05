@@ -9,6 +9,8 @@ import Section from '@components/layout/Section';
 import { Button } from '@components/ui';
 import { useToast } from '@components/ui';
 import { useAppContext } from '@context/AppContext';
+import { useAddLineItem } from '@hooks/cart';
+import { useCountryCode } from '@hooks/country-code';
 
 interface Product {
   id: string;
@@ -39,6 +41,8 @@ export default function ProductCategoryPage() {
   const { id } = router.query;
   const { showToast } = useToast();
   const { updateCartCount } = useAppContext();
+  const countryCode = useCountryCode() || 'in';
+  const { mutateAsync: addLineItem, isPending: isAddingToCart } = useAddLineItem();
   
   const [category, setCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -46,67 +50,14 @@ export default function ProductCategoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [cartItems, setCartItems] = useState<any[]>([]);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) {
       fetchCategoryAndProducts();
-      loadCartItems();
     }
   }, [id]);
 
-  // Listen for cart updates from other pages
-  useEffect(() => {
-    const handleCartUpdate = () => {
-      loadCartItems();
-    };
-
-    window.addEventListener('cartUpdated', handleCartUpdate);
-    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
-  }, []);
-
-  // Load cart items from localStorage
-  const loadCartItems = () => {
-    try {
-      const savedCart = localStorage.getItem('cart');
-      if (savedCart) {
-        const items = JSON.parse(savedCart);
-        setCartItems(items);
-        
-        // Update global cart count
-        const totalItems = items.reduce((sum: number, item: any) => sum + item.quantity, 0);
-        updateCartCount(totalItems);
-      } else {
-        // Initialize empty cart
-        setCartItems([]);
-        updateCartCount(0);
-      }
-    } catch (error) {
-      console.error('Error loading cart:', error);
-      setCartItems([]);
-      updateCartCount(0);
-    }
-  };
-
-  // Save cart items to localStorage
-  const saveCartItems = (items: any[]) => {
-    try {
-      localStorage.setItem('cart', JSON.stringify(items));
-      setCartItems(items);
-      
-      // Update global cart count
-      const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
-      updateCartCount(totalItems);
-      
-      // Dispatch cart update event for other components
-      window.dispatchEvent(new CustomEvent('cartUpdated', { 
-        detail: { cartItems: items } 
-      }));
-    } catch (error) {
-      console.error('Error saving cart:', error);
-    }
-  };
 
   const fetchCategoryAndProducts = async () => {
     try {
@@ -140,7 +91,6 @@ export default function ProductCategoryPage() {
         category_id: id as string
       };
       
-      console.log('Fetching products for category:', id, 'with query:', query);
       
       const productsResponse = await sdk.client.fetch<{ products: any[]; count: number }>(
         '/store/products',
@@ -150,8 +100,6 @@ export default function ProductCategoryPage() {
         }
       );
       
-      console.log('API Response:', productsResponse);
-      console.log('Total products returned:', productsResponse.products?.length || 0);
 
       const formattedProducts: Product[] = (productsResponse.products || []).map((product: any) => {
         // Try to get price from different sources
@@ -166,14 +114,6 @@ export default function ProductCategoryPage() {
           price = product.price;
         }
         
-        console.log('Product price mapping:', {
-          id: product.id,
-          title: product.title,
-          directPrice: product.price,
-          variants: product.variants,
-          calculated_price: product.variants?.[0]?.calculated_price,
-          finalPrice: price
-        });
         
         return {
           id: product.id,
@@ -239,33 +179,30 @@ export default function ProductCategoryPage() {
         return;
       }
 
-      // Check if product is already in cart
-      const existingItem = cartItems.find(item => item.id === productId);
-      
-      if (existingItem) {
-        // Update quantity
-        const updatedItems = cartItems.map(item =>
-          item.id === productId
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-        saveCartItems(updatedItems);
-        showToast(`${product.name} added to cart`, 'success');
-      } else {
-        // Add new item to cart
-        const newItem = {
-          id: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.image,
-          quantity: 1,
-          inStock: product.inStock
-        };
-        
-        const updatedItems = [...cartItems, newItem];
-        saveCartItems(updatedItems);
-        showToast(`${product.name} added to cart`, 'success');
+      // Get the first variant ID (most products have only one variant)
+      // We need to fetch the product details to get the variant ID
+      const productResponse = await sdk.client.fetch<{ product: any }>(
+        `/store/products/${productId}`,
+        {
+          next: { tags: ['products'] },
+        }
+      );
+
+      const variantId = productResponse.product?.variants?.[0]?.id;
+      if (!variantId) {
+        console.error('No variant found for product:', productId);
+        showToast('Product variant not found', 'error');
+        return;
       }
+
+      
+      await addLineItem({
+        variantId,
+        quantity: 1,
+        countryCode
+      });
+
+      showToast(`${product.name} added to cart`, 'success');
 
     } catch (error) {
       console.error('Error adding to cart:', error);
@@ -416,15 +353,15 @@ export default function ProductCategoryPage() {
         {/* Products Section */}
         <Section>
           {filteredProducts.length > 0 ? (
-            <ProductGrid
-              products={filteredProducts}
-              columns={4}
-              showActions={true}
-              onAddToCart={handleAddToCart}
-              onAddToFavorites={handleAddToFavorites}
-              onProductClick={handleProductClick}
-              addingToCart={addingToCart}
-            />
+              <ProductGrid
+                products={filteredProducts}
+                columns={4}
+                showActions={true}
+                onAddToCart={handleAddToCart}
+                onAddToFavorites={handleAddToFavorites}
+                onProductClick={handleProductClick}
+                addingToCart={addingToCart}
+              />
           ) : (
             <div className="text-center py-12">
               <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">

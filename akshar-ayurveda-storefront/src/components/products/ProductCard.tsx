@@ -37,6 +37,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     onAddToCart?.(product.id);
   };
 
+
   const handleAddToFavorites = (e: React.MouseEvent) => {
     e.stopPropagation();
     onAddToFavorites?.(product.id);
@@ -47,8 +48,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     : 0;
 
   return (
-    <Link href={`/products/${product.id}`} passHref legacyBehavior>
-      <a style={{ display: 'block', height: '100%' }}>
+    <Link href={`/products/${product.id}`}  legacyBehavior>
         <Card 
           className={`overflow-hidden ${className}`}
           hover={true}
@@ -171,7 +171,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
             )}
           </div>
         </Card>
-      </a>
     </Link>
   );
 };

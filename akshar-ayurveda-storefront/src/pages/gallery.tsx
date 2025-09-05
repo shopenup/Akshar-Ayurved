@@ -225,7 +225,7 @@ export default function GalleryPage() {
           )}
         </Section>
         {/* CTA Section */}
-        <Section className='!bg-green-600' padding="lg">
+        {/* <Section className='!bg-green-600' padding="lg">
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
               Ready to Experience Authentic Ayurveda?
@@ -250,7 +250,7 @@ export default function GalleryPage() {
               </Button>
             </div>
           </div>
-        </Section>
+        </Section> */}
       </div>
     </>
   );

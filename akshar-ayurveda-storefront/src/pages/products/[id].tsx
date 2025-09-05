@@ -362,7 +362,7 @@ export default function ProductPage() {
               >
                 📷 Gallery View
               </button>
-              {product.images && product.images.length > 1 && (
+              {/* {product.images && product.images.length > 1 && (
                 <button
                   onClick={() => setIs360ViewActive(true)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -373,7 +373,7 @@ export default function ProductPage() {
                 >
                   🔄 Gallery View
                 </button>
-              )}
+              )} */}
             </div>
 
             {/* Main Image or Gallery View */}
