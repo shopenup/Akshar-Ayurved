@@ -158,9 +158,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <span className="text-lg font-bold text-green-600">
-            {product.originalPrice !== undefined ? `₹${product.originalPrice.toFixed(2)}` : ''}
+              ₹{(product.price || 0).toFixed(2)}
             </span>
-            {product.originalPrice && (
+            {product.originalPrice && product.originalPrice > (product.price || 0) && (
               <span className="text-sm text-gray-500 line-through">
                 ₹{product.originalPrice.toFixed(2)}
               </span>

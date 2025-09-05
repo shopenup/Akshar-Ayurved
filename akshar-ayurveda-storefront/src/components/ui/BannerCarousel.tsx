@@ -7,7 +7,7 @@ interface Banner {
   title: string;
   subtitle?: string;
   description?: string;
-  image: string;
+  image?: string;
   buttonText?: string;
   buttonLink?: string;
   backgroundColor?: string;
@@ -39,8 +39,8 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
   const getBackgroundImage = (index: number) => {
     const backgroundImages = [
       '/assets/banner1.webp',
-      '/assets/banner2.png',
-      '/assets/banner2.jpeg', // fallback for additional banners
+      '/assets/banner2.jpg',
+      // '/assets/banner2.jpeg', // fallback for additional banners
     ];
     return backgroundImages[index] || backgroundImages[0];
   };
@@ -99,9 +99,9 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
             style={{ backgroundColor: banner.backgroundColor }}
           >
             {/* Background Image */}
-            <div className="absolute inset-0 h-full w-full">
+            <div className="absolute inset-0 h-full w-full bg-green-50">
               <Image
-                src={getBackgroundImage(index)}
+                src={banner.image || '/assets/banner-bg.jpg'}
                 alt="Banner Background"
                 fill
                 className="object-cover object-center"
@@ -124,65 +124,49 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
                   }
                 }}
               />
-              <div className="absolute inset-0 bg-black bg-opacity-30"></div>
+              {/* Removed overlay to show clean background image */}
             </div>
 
             {/* Content */}
             <div className="relative z-10 flex items-center h-full">
               <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-                <div className="grid lg:grid-cols-2 gap-8 items-center">
-                  {/* Text Content */}
-                  <div className="text-center lg:text-left">
-                    <h2
-                      className="text-4xl md:text-6xl font-bold mb-4 leading-tight"
-                      style={{ color: banner.textColor || 'white' }}
+                <div className="text-left max-w-2xl">
+                  <h2
+                    className="text-4xl md:text-6xl font-bold mb-4 leading-tight"
+                    style={{ color: banner.textColor || '#1a5f3a' }}
+                  >
+                    {banner.title}
+                  </h2>
+
+                  {banner.subtitle && (
+                    <h3
+                      className="text-xl md:text-2xl font-semibold mb-4"
+                      style={{ color: banner.textColor || '#1a5f3a' }}
                     >
-                      {banner.title}
-                    </h2>
+                      {banner.subtitle}
+                    </h3>
+                  )}
 
-                    {banner.subtitle && (
-                      <h3
-                        className="text-xl md:text-2xl font-semibold mb-4"
-                        style={{ color: banner.textColor || 'white' }}
+                  {banner.description && (
+                    <p
+                      className="text-lg md:text-xl mb-8"
+                      style={{ color: banner.textColor || '#1a5f3a' }}
+                    >
+                      {banner.description}
+                    </p>
+                  )}
+
+                  {banner.buttonText && banner.buttonLink && (
+                    <a href={banner.buttonLink}>
+                      <Button
+                        variant="custom"
+                        size="lg"
+                        className="bg-green-800 text-white hover:bg-green-700 border border-green-800 focus:ring-green-800 focus:ring-offset-2"
                       >
-                        {banner.subtitle}
-                      </h3>
-                    )}
-
-                    {banner.description && (
-                      <p
-                        className="text-lg md:text-xl mb-8 max-w-2xl"
-                        style={{ color: banner.textColor || 'white' }}
-                      >
-                        {banner.description}
-                      </p>
-                    )}
-
-                    {banner.buttonText && banner.buttonLink && (
-                      <a href={banner.buttonLink}>
-                        <Button
-                          variant="custom"
-                          size="lg"
-                          className="bg-white text-gray-900 hover:bg-gray-100 border border-white focus:ring-white focus:ring-offset-2"
-                        >
-                          {banner.buttonText}
-                        </Button>
-                      </a>
-                    )}
-                  </div>
-
-                  {/* Image/Visual Element */}
-                  <div className="hidden lg:block">
-                    <div className="relative h-80">
-                      <Image
-                        src={banner.image}
-                        alt={banner.title}
-                        fill
-                        className="object-contain"
-                        sizes="(max-width: 1024px) 0vw, 50vw"
-                      />
-                    </div>
-                  </div>
+                        {banner.buttonText}
+                      </Button>
+                    </a>
+                  )}
                 </div>
               </div>
             </div>

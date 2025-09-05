@@ -1,6 +1,7 @@
 import React from 'react';
 import Head from 'next/head';
 import Image from 'next/image';
+import Link from 'next/link';
 
 
 export default function AboutPage() {
@@ -30,41 +31,18 @@ export default function AboutPage() {
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                  Our Mission
-                </h2>
-                <p className="text-lg text-gray-600 mb-6">
-                  At AKSHAR AYURVED, we are committed to making authentic Ayurvedic medicines 
-                  and wellness products accessible to everyone. Our mission is to preserve the 
-                  ancient wisdom of Ayurveda while adapting it to modern lifestyles.
-                </p>
-                <p className="text-lg text-gray-600">
-                  We believe in the power of natural healing and strive to provide products that 
-                  not only treat symptoms but address the root cause of health issues, promoting 
-                  overall wellness and balance.
-                </p>
-              </div>
-              <div className="bg-white rounded-lg shadow-lg p-8">
-                <h3 className="text-2xl font-bold text-green-600 mb-4">Our Vision</h3>
+              <div className="bg-white rounded-lg shadow-lg p-8 h-full flex flex-col">
+                <h3 className="text-2xl font-bold text-green-600 mb-4">Our Mission</h3>
                 <p className="text-gray-600 mb-4">
-                  To become the most trusted platform for Ayurvedic wellness, empowering 
-                  individuals to take control of their health through natural, time-tested solutions.
+                  To become a global ayurvedic healthcare organization and to be recognized as domestic and internationally by providing research based, affordable quality pure and genuine ayurvedic products for larger global population.
                 </p>
-                <div className="space-y-3">
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-600 rounded-full mr-3"></div>
-                    <span className="text-gray-700">Authentic Ayurvedic Products</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-600 rounded-full mr-3"></div>
-                    <span className="text-gray-700">Expert Consultation</span>
-                  </div>
-                  <div className="flex items-center">
-                    <div className="w-2 h-2 bg-green-600 rounded-full mr-3"></div>
-                    <span className="text-gray-700">Personalized Wellness Plans</span>
-                  </div>
-                </div>
+
+              </div>
+              <div className="bg-white rounded-lg shadow-lg p-8 h-full flex flex-col">
+                <p className="text-gray-600 mb-4">
+                  <h3 className="text-2xl font-bold text-green-600 mb-4">Our Vision</h3>
+                  Along with the progress of science, it is our endeavor to provide the best Ayurvedic medicine to the patient according to today's circumstances by converting the old principles of Ayurveda medicines into new forms for new diseases, so that we can present formulations through our continuous research work. While doing so, we can contribute to the service of the suffering human being.
+                </p>
               </div>
             </div>
           </div>
@@ -83,7 +61,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Authenticity</h3>
                 <p className="text-gray-600">
-                  We source only the purest and most authentic Ayurvedic ingredients, 
+                  We source only the purest and most authentic Ayurvedic ingredients,
                   ensuring every product meets the highest standards of quality and efficacy.
                 </p>
               </div>
@@ -93,7 +71,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Wellness First</h3>
                 <p className="text-gray-600">
-                  Your health and wellness are our top priority. We provide personalized 
+                  Your health and wellness are our top priority. We provide personalized
                   recommendations and expert guidance to support your wellness journey.
                 </p>
               </div>
@@ -103,7 +81,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Trust & Transparency</h3>
                 <p className="text-gray-600">
-                  We believe in complete transparency about our products, ingredients, 
+                  We believe in complete transparency about our products, ingredients,
                   and processes, building lasting trust with our community.
                 </p>
               </div>
@@ -126,7 +104,7 @@ export default function AboutPage() {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Dr. Rajesh Kumar</h3>
                   <p className="text-green-600 font-medium mb-3">Chief Ayurvedic Physician</p>
                   <p className="text-gray-600 text-sm">
-                    With over 20 years of experience in Ayurvedic medicine, Dr. Kumar leads 
+                    With over 20 years of experience in Ayurvedic medicine, Dr. Kumar leads
                     our medical team and ensures all products meet traditional standards.
                   </p>
                 </div>
@@ -139,7 +117,7 @@ export default function AboutPage() {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Dr. Priya Sharma</h3>
                   <p className="text-green-600 font-medium mb-3">Research & Development</p>
                   <p className="text-gray-600 text-sm">
-                    Dr. Sharma specializes in modernizing traditional Ayurvedic formulations 
+                    Dr. Sharma specializes in modernizing traditional Ayurvedic formulations
                     while maintaining their therapeutic efficacy and safety standards.
                   </p>
                 </div>
@@ -152,7 +130,7 @@ export default function AboutPage() {
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Amit Patel</h3>
                   <p className="text-green-600 font-medium mb-3">Customer Wellness Advisor</p>
                   <p className="text-gray-600 text-sm">
-                    Amit helps customers find the right products and provides personalized 
+                    Amit helps customers find the right products and provides personalized
                     wellness guidance based on individual health needs and dosha profiles.
                   </p>
                 </div>
@@ -170,31 +148,31 @@ export default function AboutPage() {
                   Our Story
                 </h2>
                 <p className="text-lg text-gray-600 mb-6">
-                  ShopenUp Ayurveda was born from a deep passion for natural healing and 
-                  a desire to make authentic Ayurvedic medicines accessible to everyone. 
-                  Our founder, having experienced the transformative power of Ayurveda 
-                  firsthand, envisioned a platform that would bridge the gap between 
+                  ShopenUp Ayurveda was born from a deep passion for natural healing and
+                  a desire to make authentic Ayurvedic medicines accessible to everyone.
+                  Our founder, having experienced the transformative power of Ayurveda
+                  firsthand, envisioned a platform that would bridge the gap between
                   traditional wisdom and modern convenience.
                 </p>
                 <p className="text-lg text-gray-600 mb-6">
-                  What started as a small family business has grown into a trusted 
-                  destination for Ayurvedic wellness, serving thousands of customers 
-                  across India. We remain committed to our roots while embracing 
+                  What started as a small family business has grown into a trusted
+                  destination for Ayurvedic wellness, serving thousands of customers
+                  across India. We remain committed to our roots while embracing
                   innovation to better serve our community.
                 </p>
                 <div className="bg-white rounded-lg p-6 shadow-md">
                   <h3 className="text-xl font-semibold text-green-600 mb-3">Our Commitment</h3>
                   <p className="text-gray-600">
-                    Every product we offer is carefully selected and tested to ensure 
-                    it meets our high standards for quality, safety, and effectiveness. 
-                    We work directly with certified Ayurvedic practitioners and 
+                    Every product we offer is carefully selected and tested to ensure
+                    it meets our high standards for quality, safety, and effectiveness.
+                    We work directly with certified Ayurvedic practitioners and
                     traditional manufacturers to bring you the best of Ayurveda.
                   </p>
                 </div>
               </div>
-              <div className="bg-white rounded-lg shadow-lg p-8">
+              <div className="bg-white rounded-lg shadow-lg p-8 h-full flex flex-col">
                 <h3 className="text-2xl font-bold text-green-600 mb-6">Why Choose Us?</h3>
-                <div className="space-y-4">
+                <div className="space-y-4 flex-1">
                   <div className="flex items-start">
                     <div className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center mr-3 mt-1">
                       <span className="text-white text-sm">✓</span>
@@ -248,7 +226,7 @@ export default function AboutPage() {
                 We maintain the highest standards of quality and authenticity through various certifications and rigorous testing processes.
               </p>
             </div>
-            
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               {[
                 {
@@ -305,16 +283,16 @@ export default function AboutPage() {
               Start Your Wellness Journey Today
             </h2>
             <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
-              Join thousands of customers who have transformed their health with our 
+              Join thousands of customers who have transformed their health with our
               authentic Ayurvedic products and expert guidance.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+              <Link href="/products" className="bg-white text-green-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
                 Explore Products
-              </button>
-              <button className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition-colors">
+              </Link>
+              <Link href="/contact" className="border border-white text-white px-8 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition-colors">
                 Contact Us
-              </button>
+              </Link>
             </div>
           </div>
         </section>
