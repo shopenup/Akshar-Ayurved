@@ -235,10 +235,10 @@ export default function ProductsPage() {
     
     // Note: Cart addition logic is commented out - only showing toast
     // Uncomment the following code if you want actual cart functionality:
-    /*
+    
     try {
       // Get the first variant ID (most products have only one variant)
-      const variantId = product.variants?.[0]?.id;
+      const variantId = product?.variants?.[0]?.id;
       if (!variantId) {
         console.error('No variant found for product:', productId);
         return;
@@ -257,7 +257,7 @@ export default function ProductsPage() {
       console.error('Error adding to cart:', error);
       showToast('Failed to add item to cart. Please try again.', 'error');
     }
-    */
+    
   };
 
   const handleFilterChange = (key: keyof FilterState, value: any) => {
