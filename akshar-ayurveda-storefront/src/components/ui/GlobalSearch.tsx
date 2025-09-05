@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
+import { sdk } from '@lib/config';
 
 interface Product {
   id: string;
@@ -22,99 +23,139 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [results, setResults] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
   const router = useRouter();
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sample product data - in a real app, this would come from an API
-  const allProducts: Product[] = [
-    {
-      id: '1',
-      name: 'Chyawanprash',
-      price: 299,
-      originalPrice: 399,
-      image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=300&h=300&fit=crop',
-      category: 'Immunity Boosters',
-      description: 'Traditional Ayurvedic immunity booster with natural herbs',
-      inStock: true
-    },
-    {
-      id: '2',
-      name: 'Ashwagandha Capsules',
-      price: 599,
-      originalPrice: 799,
-      image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=300&h=300&fit=crop',
-      category: 'Stress Relief',
-      description: 'Natural stress relief and energy booster capsules',
-      inStock: true
-    },
-    {
-      id: '3',
-      name: 'Triphala Churna',
-      price: 199,
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop',
-      category: 'Digestive Health',
-      description: 'Natural digestive supplement for better gut health',
-      inStock: true
-    },
-    {
-      id: '4',
-      name: 'Brahmi Tablets',
-      price: 449,
-      image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=300&h=300&fit=crop',
-      category: 'Brain Health',
-      description: 'Memory and brain health supplement tablets',
-      inStock: true
-    },
-    {
-      id: '5',
-      name: 'Shatavari Powder',
-      price: 399,
-      originalPrice: 499,
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop',
-      category: 'Women\'s Health',
-      description: 'Women\'s health and wellness powder',
-      inStock: true
-    },
-    {
-      id: '6',
-      name: 'Giloy Tablets',
-      price: 349,
-      image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=300&h=300&fit=crop',
-      category: 'Immunity Boosters',
-      description: 'Natural immunity booster with Giloy extract',
-      inStock: true
-    },
-    {
-      id: '7',
-      name: 'Turmeric Capsules',
-      price: 259,
-      image: 'https://images.unsplash.com/photo-1615485925600-97bc0106aaf2?w=300&h=300&fit=crop',
-      category: 'Anti-inflammatory',
-      description: 'Pure turmeric capsules for inflammation relief',
-      inStock: true
-    },
-    {
-      id: '8',
-      name: 'Neem Tablets',
-      price: 199,
-      image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=300&h=300&fit=crop',
-      category: 'Skin Health',
-      description: 'Natural blood purifier and skin health tablets',
-      inStock: false
-    }
-  ];
+
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        console.log('GlobalSearch - Fetching products...');
+        
+        // Try different API endpoints
+        let productsData;
+        try {
+          productsData = await sdk.client.fetch('/products', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+        } catch (firstError) {
+          console.log('GlobalSearch - First API call failed, trying alternative...');
+          try {
+            productsData = await sdk.client.fetch('/store/products', {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+          } catch (secondError) {
+            console.log('GlobalSearch - Second API call failed, trying direct fetch...');
+            productsData = await fetch('/api/products').then(res => res.json());
+          }
+        }
+        
+        console.log('GlobalSearch - Products data:', productsData);
+
+        let productsArray: any[] = [];
+        if (Array.isArray(productsData)) {
+          productsArray = productsData;
+        } else if (productsData && typeof productsData === 'object') {
+          if (Array.isArray((productsData as any).products)) {
+            productsArray = (productsData as any).products;
+          } else if (Array.isArray((productsData as any).data)) {
+            productsArray = (productsData as any).data;
+          }
+        }
+
+        if (productsArray.length > 0) {
+          const mappedProducts = productsArray.map((product: any) => ({
+            id: product.id,
+            name: product.title || product.name || 'Untitled Product',
+            originalPrice: product.variants?.[0]?.original_price || product.original_price,
+            image: product.images?.[0]?.url || product.thumbnail || '/assets/placeholder-product.jpg',
+            category: product.categories?.[0]?.name || product.category?.name || 'Uncategorized',
+            description: product.description || product.subtitle || '',
+            inStock: product.variants?.[0]?.inventory_quantity > 0 || product.in_stock !== false,
+            price: product.variants?.[0]?.calculated_price?.calculated_amount || product.price || 0,
+          }));
+          
+          setAllProducts(mappedProducts);
+          console.log('GlobalSearch - Mapped products:', mappedProducts);
+        }
+      } catch (error) {
+        console.error('GlobalSearch - Error fetching products:', error);
+        // Fallback to sample products if API fails
+        const fallbackProducts = [
+          {
+            id: 'fallback-1',
+            name: 'Chyawanprash',
+            price: 299,
+            originalPrice: 399,
+            image: '/assets/placeholder-product.jpg',
+            category: 'Immunity Boosters',
+            description: 'Traditional Ayurvedic immunity booster',
+            inStock: true
+          },
+          {
+            id: 'fallback-2',
+            name: 'Ashwagandha Capsules',
+            price: 599,
+            originalPrice: 799,
+            image: '/assets/placeholder-product.jpg',
+            category: 'Stress Relief',
+            description: 'Natural stress relief capsules',
+            inStock: true
+          },
+          {
+            id: 'fallback-3',
+            name: 'Triphala Churna',
+            price: 199,
+            image: '/assets/placeholder-product.jpg',
+            category: 'Digestive Health',
+            description: 'Natural digestive supplement',
+            inStock: true
+          }
+        ];
+        setAllProducts(fallbackProducts);
+        console.log('GlobalSearch - Using fallback products:', fallbackProducts);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   // Search function
   const searchProducts = (searchQuery: string): Product[] => {
     if (!searchQuery.trim()) return [];
     
+    console.log('GlobalSearch - Searching for:', searchQuery);
+    console.log('GlobalSearch - Available products:', allProducts.length);
+    console.log('GlobalSearch - All products:', allProducts);
+    
     const query = searchQuery.toLowerCase();
-    return allProducts.filter(product => 
-      product.name.toLowerCase().includes(query) ||
-      product.category.toLowerCase().includes(query) ||
-      product.description.toLowerCase().includes(query)
-    ).slice(0, 6); // Limit to 6 results for dropdown
+    const filteredProducts = allProducts.filter(product => {
+      const nameMatch = product.name?.toLowerCase().includes(query);
+      const categoryMatch = product.category?.toLowerCase().includes(query);
+      const descriptionMatch = product.description?.toLowerCase().includes(query);
+      
+      console.log('GlobalSearch - Product:', product.name, {
+        nameMatch,
+        categoryMatch,
+        descriptionMatch,
+        productName: product.name,
+        productCategory: product.category
+      });
+      
+      return nameMatch || categoryMatch || descriptionMatch;
+    });
+    
+    console.log('GlobalSearch - Filtered results:', filteredProducts);
+    return filteredProducts.slice(0, 6); // Limit to 6 results for dropdown
   };
 
   // Handle search input change
@@ -243,16 +284,8 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
                     />
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-gray-900 truncate">{product.name}</h4>
-                      <p className="text-sm text-gray-500 truncate">{product.category}</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <span className="text-base font-bold text-green-600">₹{product.price}</span>
-                        {product.originalPrice && (
-                          <span className="text-sm text-gray-400 line-through">₹{product.originalPrice}</span>
-                        )}
-                        {!product.inStock && (
-                          <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded-full">Out of Stock</span>
-                        )}
-                      </div>
+                      {/* <p className="text-sm text-gray-500 truncate">{product.originalPrice}</p> */}
+                      
                     </div>
                   </button>
                 ))}

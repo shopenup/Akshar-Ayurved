@@ -1,9 +1,32 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Map } from '../ui';
+import { getCategoriesList } from '@lib/shopenup/categories';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const [categories, setCategories] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const categoriesData = await getCategoriesList();
+        console.log('Footer - Categories data:', categoriesData);
+        
+        // Filter and limit to first 5 categories for footer
+        const filteredCategories = categoriesData
+          ?.product_categories?.filter((cat: any) => cat.is_active !== false)
+          ?.slice(0, 5) || [];
+        
+        setCategories(filteredCategories);
+      } catch (error) {
+        console.error('Error fetching categories for footer:', error);
+        setCategories([]);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const socialMediaLinks = [
     {
@@ -88,11 +111,11 @@ export default function Footer() {
                   Products
                 </Link>
               </li>
-              <li>
+              {/* <li>
                 <Link href="/blogs" className="text-gray-300 hover:text-green-400 transition-colors">
                   Blogs
                 </Link>
-              </li>
+              </li> */}
               <li>
                 <Link href="/gallery" className="text-gray-300 hover:text-green-400 transition-colors">
                   Gallery
@@ -110,31 +133,16 @@ export default function Footer() {
           <div>
             <h4 className="text-lg font-semibold mb-4">Product Categories</h4>
             <ul className="space-y-2">
-              <li>
-                <Link href="/products/bone-joints-pain-reliever" className="text-gray-300 hover:text-green-400 transition-colors">
-                  Bone Joints & Pain Reliever
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/diabetes-care" className="text-gray-300 hover:text-green-400 transition-colors">
-                  Diabetes Care
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/fat-burner" className="text-gray-300 hover:text-green-400 transition-colors">
-                  Fat Burner
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/health-care-energy-booster" className="text-gray-300 hover:text-green-400 transition-colors">
-                  Health Care & Energy Booster
-                </Link>
-              </li>
-              <li>
-                <Link href="/products/premium-cosmetics" className="text-gray-300 hover:text-green-400 transition-colors">
-                  Premium Cosmetics
-                </Link>
-              </li>
+              {categories.map((category) => (
+                <li key={category.id}>
+                  <Link 
+                    href={`/products/category/${category.id}`} 
+                    className="text-gray-300 hover:text-green-400 transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
         </div>
@@ -155,7 +163,7 @@ export default function Footer() {
         <div className="mt-8 border-t border-gray-700 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             {/* Social Media */}
-            <div className="flex space-x-4 mb-4 md:mb-0">
+            {/* <div className="flex space-x-4 mb-4 md:mb-0">
               {socialMediaLinks.map((social) => (
                 <a
                   key={social.platform}
@@ -169,7 +177,7 @@ export default function Footer() {
                   </svg>
                 </a>
               ))}
-            </div>
+            </div> */}
 
             {/* Legal Links */}
             <div className="flex flex-wrap justify-center space-x-6 text-sm">

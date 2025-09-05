@@ -66,10 +66,11 @@ const ShippingAddress = ({
 
   const formData = useWatch({ control })
 
-  const countriesInRegion = useMemo(
-    () => cart?.region?.countries?.map((c) => c.iso_2),
-    [cart?.region]
-  )
+  const countriesInRegion = useMemo(() => {
+    console.log('Cart region data:', cart?.region)
+    console.log('Countries in region:', cart?.region?.countries)
+    return cart?.region?.countries?.map((c) => c.iso_2)
+  }, [cart?.region])
 
   // check if customer has saved addresses that are in the current region
   const addressesInRegion = useMemo(
@@ -266,7 +267,6 @@ const ShippingAddress = ({
                         value={address.id}
                         className="gap-4"
                         key={address.id}
-                        id={address.id}
                       >
                         <UiRadioBox />
                         <UiRadioLabel>
@@ -353,10 +353,12 @@ const ShippingAddress = ({
           <CountrySelectField
             name="shipping_address.country_code"
             selectProps={{
+              placeholder: "Country",
               autoComplete: "country",
               region: cart?.region,
               selectedKey: formData["shipping_address.country_code"] || null,
               onSelectionChange: (value) => {
+                console.log('Country selected:', value)
                 handleChange({
                   target: {
                     name: "shipping_address.country_code",
@@ -388,17 +390,14 @@ const ShippingAddress = ({
           value={checked ? "on" : "off"}
         />
         <UiCheckbox
-          name="same_as_billing"
           isSelected={checked}
-          onChange={() => {
+          onPress={() => {
             setValue("same_as_billing", checked ? "off" : "on")
             onChange()
           }}
           data-testid="billing-address-checkbox"
         >
-          <UiCheckboxBox>
-            <UiCheckboxIcon />
-          </UiCheckboxBox>
+          <UiCheckboxBox isSelected={checked} />
           <UiCheckboxLabel>
             Billing address same as shipping address
           </UiCheckboxLabel>

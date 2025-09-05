@@ -193,7 +193,9 @@ const BillingAddress = ({
             <UiModalOverlay isOpen={false} onClose={function (): void {
                 throw new Error("Function not implemented.")
               } }>
-              <UiModal>
+              <UiModal isOpen={false} onClose={function (): void {
+                throw new Error("Function not implemented.")
+              } }>
                 <UiDialog>
                   <p className="text-md mb-10">Change address</p>
                   <ReactAria.RadioGroup
@@ -257,7 +259,6 @@ const BillingAddress = ({
                         value={address.id}
                         className="gap-4"
                         key={address.id}
-                        id={address.id}
                       >
                         <UiRadioBox />
                         <UiRadioLabel>
@@ -285,8 +286,12 @@ const BillingAddress = ({
                   <div className="flex justify-between">
                     <UiDialogTrigger>
                       <Button>Add new address</Button>
-                      <UiModalOverlay>
-                        <UiModal>
+                      <UiModalOverlay isOpen={false} onClose={function (): void {
+                        throw new Error("Function not implemented.")
+                      } }>
+                        <UiModal isOpen={false} onClose={function (): void {
+                          throw new Error("Function not implemented.")
+                        } }>
                           <UiDialog>
                             <UpsertAddressForm
                               region={cart?.region}
@@ -353,22 +358,23 @@ const BillingAddress = ({
             }}
             data-testid="billing-city-input"
           />
-          <CountrySelectField
-            name="billing_address.country_code"
-            selectProps={{
-              autoComplete: "country",
-              region: cart?.region,
-              selectedKey: formData.billing_address?.country_code || null,
-              onSelectionChange: (value) =>
-                handleChange({
-                  target: {
-                    name: "billing_address.country_code",
-                    value: `${value}`,
-                  },
-                }),
-            }}
-            data-testid="billing-country-select"
-          />
+                     {/* <CountrySelectField
+             name="billing_address.country_code"
+             selectProps={{
+               placeholder: "Country",
+               autoComplete: "country",
+               region: cart?.region,
+               selectedKey: formData.billing_address?.country_code || null,
+               onSelectionChange: (value) =>
+                 handleChange({
+                   target: {
+                     name: "billing_address.country_code",
+                     value: `${value}`,
+                   },
+                 }),
+             }}
+             data-testid="billing-country-select"
+           /> */}
           <InputField
             placeholder="State / Province"
             name="billing_address.province"
