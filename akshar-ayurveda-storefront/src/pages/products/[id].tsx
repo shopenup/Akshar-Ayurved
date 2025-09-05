@@ -377,22 +377,60 @@ export default function ProductPage() {
             </div>
 
             {/* Main Image or Gallery View */}
-            <div className="relative w-full h-96 rounded-lg overflow-hidden mb-4 bg-gray-100">
+            <div className="relative w-full h-96 rounded-lg overflow-hidden mb-4 bg-white flex items-center justify-center border border-gray-200 shadow-md">
               {is360ViewActive && product.images && product.images.length > 1 ? (
-                <div className="w-full h-full flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-gray-600 mb-2">Gallery View</p>
-                    <p className="text-sm text-gray-500">Multiple product images available</p>
-                  </div>
-                </div>
+                (() => {
+                  // Extract valid image URLs
+                  const validImages = Array.isArray(product.images)
+                    ? product.images
+                        .map((img: any) =>
+                          typeof img === 'string'
+                            ? img
+                            : img && typeof img === 'object' && 'url' in img && typeof img.url === 'string'
+                            ? img.url
+                            : undefined
+                        )
+                        .filter(
+                          (url): url is string =>
+                            !!url &&
+                            typeof url === 'string' &&
+                            url !== 'null' &&
+                            url !== 'undefined'
+                        )
+                    : [];
+                  return (
+                    <Product360View
+                      images={validImages}
+                      productName={product.title}
+                      className="w-full h-full"
+                      autoRotate={true}
+                      autoRotateSpeed={1500}
+                    />
+                  );
+                })()
               ) : (
                 <>
                   {(() => {
-                    // Ensure images is an array and has valid string values
-                    const validImages = Array.isArray(product.images) 
-                      ? product.images.filter(img => img && typeof img === 'string' && img !== 'null' && img !== 'undefined')
+                    // Ensure images is an array and extract URLs from objects or strings
+                    // Fix type error by allowing for possible image object shape
+                    const validImages = Array.isArray(product.images)
+                      ? product.images
+                          .map((img: any) =>
+                            typeof img === 'string'
+                              ? img
+                              : (img && typeof img === 'object' && 'url' in img && typeof img.url === 'string')
+                                ? img.url
+                                : undefined
+                          )
+                          .filter(
+                            (url): url is string =>
+                              !!url &&
+                              typeof url === 'string' &&
+                              url !== 'null' &&
+                              url !== 'undefined'
+                          )
                       : [];
-                    
+
                     const imageSrc = validImages[activeImageIndex] || product.thumbnail;
                     console.log('Valid images array:', validImages);
                     console.log('Main image source:', imageSrc);
@@ -407,7 +445,7 @@ export default function ProductPage() {
                           src={imageSrc}
                           alt={product.title}
                           fill
-                          className="object-cover"
+                          className="object-contain"
                           sizes="(max-width: 1024px) 100vw, 50vw"
                           onError={(e) => {
                             console.error('Image failed to load:', imageSrc);
@@ -461,15 +499,43 @@ export default function ProductPage() {
             
             {/* Thumbnail Images - Only show in gallery view */}
             {!is360ViewActive && (() => {
-              const validImages = Array.isArray(product.images) 
-                ? product.images.filter(img => img && typeof img === 'string' && img !== 'null' && img !== 'undefined')
+              const validImages = Array.isArray(product.images)
+                ? product.images
+                    .map((img: any) =>
+                      typeof img === 'string'
+                        ? img
+                        : img && typeof img === 'object' && 'url' in img
+                        ? (img as { url?: string }).url
+                        : undefined
+                    )
+                    .filter(
+                      (url): url is string =>
+                        !!url &&
+                        typeof url === 'string' &&
+                        url !== 'null' &&
+                        url !== 'undefined'
+                    )
                 : [];
               return validImages.length > 1;
             })() && (
               <div className="flex space-x-2 overflow-x-auto">
                 {(() => {
-                  const validImages = Array.isArray(product.images) 
-                    ? product.images.filter(img => img && typeof img === 'string' && img !== 'null' && img !== 'undefined')
+                  const validImages = Array.isArray(product.images)
+                    ? product.images
+                        .map((img: any) =>
+                          typeof img === 'string'
+                            ? img
+                            : img && typeof img === 'object' && 'url' in img
+                            ? (img as { url?: string }).url
+                            : undefined
+                        )
+                        .filter(
+                          (url): url is string =>
+                            !!url &&
+                            typeof url === 'string' &&
+                            url !== 'null' &&
+                            url !== 'undefined'
+                        )
                     : [];
                   return validImages.map((image, index) => (
                     <button
@@ -485,7 +551,7 @@ export default function ProductPage() {
                           alt={`${product.title} ${index + 1}`}
                           width={80}
                           height={80}
-                          className="object-cover w-full h-full"
+                          className="object-contain w-full h-full"
                           onError={(e) => {
                             console.error('Thumbnail failed to load:', image);
                             e.currentTarget.style.display = 'none';
