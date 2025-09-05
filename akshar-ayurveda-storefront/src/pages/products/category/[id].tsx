@@ -1,268 +1,508 @@
-// import React, { useState } from 'react';
-// import { useRouter } from 'next/router';
-// import { GetStaticPaths, GetStaticProps } from 'next';
-// import { getCategoriesList } from '../../../lib/shopenup/categories';
-// import { ProductGrid } from '@components/products';
-// import { ProductFilter, ProductSearch } from '@components/ecommerce';
-// import { Button, Badge } from '@components/ui';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
+import { sdk } from '@lib/config';
+import { getCategoriesList } from '@lib/shopenup/categories';
+import { ProductGrid } from '@components/products';
+import Hero from '@components/layout/Hero';
+import Section from '@components/layout/Section';
+import { Button } from '@components/ui';
+import { useToast } from '@components/ui';
+import { useAppContext } from '@context/AppContext';
 
-// // Mock products data
-// const mockProducts = [
-//   {
-//     id: '1',
-//     name: 'Ashwagandha Churna - Natural Stress Relief',
-//     description: 'Traditional Ayurvedic powder for stress relief and energy boost',
-//     price: 299,
-//     originalPrice: 399,
-//     image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=300&h=300&fit=crop',
-//     category: 'health-care-energy-booster',
-//     tags: ['Stress Relief', 'Energy', 'Natural'],
-//     rating: 4.5,
-//     reviewCount: 128,
-//     inStock: true,
-//   },
-//   {
-//     id: '2',
-//     name: 'Triphala Churna - Digestive Health',
-//     description: 'Three-fruit blend for digestive health and detoxification',
-//     price: 199,
-//     originalPrice: 249,
-//     image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=300&h=300&fit=crop',
-//     category: 'natural-antacid',
-//     tags: ['Digestive', 'Detox', 'Natural'],
-//     rating: 4.8,
-//     reviewCount: 95,
-//     inStock: true,
-//   },
-//   {
-//     id: '3',
-//     name: 'Neem Oil - Natural Skin Care',
-//     description: 'Pure neem oil for skin care and hair health',
-//     price: 150,
-//     image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=300&h=300&fit=crop',
-//     category: 'premium-cosmetics',
-//     tags: ['Skin Care', 'Hair Care', 'Natural'],
-//     rating: 4.2,
-//     reviewCount: 67,
-//     inStock: true,
-//   },
-//   {
-//     id: '4',
-//     name: 'Brahmi Vati - Memory Enhancement',
-//     description: 'Traditional formulation for memory and cognitive function',
-//     price: 350,
-//     image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=300&h=300&fit=crop',
-//     category: 'ras-rasayan',
-//     tags: ['Memory', 'Cognitive', 'Brain Health'],
-//     rating: 4.6,
-//     reviewCount: 89,
-//     inStock: false,
-//   },
-//   {
-//     id: '5',
-//     name: 'Guggulu Vati - Joint Health',
-//     description: 'Natural joint support and pain relief formulation',
-//     price: 280,
-//     originalPrice: 320,
-//     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop',
-//     category: 'bone-joints-pain-reliever',
-//     tags: ['Joint Health', 'Pain Relief', 'Natural'],
-//     rating: 4.4,
-//     reviewCount: 156,
-//     inStock: true,
-//   },
-//   {
-//     id: '6',
-//     name: 'Gurmar Churna - Blood Sugar Control',
-//     description: 'Natural blood sugar management and diabetes support',
-//     price: 220,
-//     image: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?w=300&h=300&fit=crop',
-//     category: 'diabetes-care',
-//     tags: ['Blood Sugar', 'Diabetes', 'Natural'],
-//     rating: 4.7,
-//     reviewCount: 203,
-//     inStock: true,
-//   },
-// ];
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  image: string;
+  images?: string[];
+  category: string;
+  tags?: string[];
+  rating?: number;
+  reviewCount?: number;
+  inStock: boolean;
+}
 
-// interface ProductCategoryPageProps {
-//   category: {
-//     id: string;
-//     name: string;
-//     description: string;
-//     imageUrl: string;
-//     productCount: number;
-//     isActive: boolean;
-//   };
-//   products: typeof mockProducts;
-// }
+interface Category {
+  id: string;
+  name: string;
+  description: string;
+  image?: string;
+  productCount: number;
+  isActive: boolean;
+}
 
-// export default function ProductCategoryPage({ category, products }: ProductCategoryPageProps) {
-//   const router = useRouter();
-//   const [filteredProducts, setFilteredProducts] = useState(products);
-//   const [searchQuery, setSearchQuery] = useState('');
+export default function ProductCategoryPage() {
+  const router = useRouter();
+  const { id } = router.query;
+  const { showToast } = useToast();
+  const { updateCartCount } = useAppContext();
+  
+  const [category, setCategory] = useState<Category | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
-//   const handleSearch = (query: string) => {
-//     setSearchQuery(query);
-//     if (!query.trim()) {
-//       setFilteredProducts(products);
-//       return;
-//     }
+  useEffect(() => {
+    if (id) {
+      fetchCategoryAndProducts();
+      loadCartItems();
+    }
+  }, [id]);
+
+  // Listen for cart updates from other pages
+  useEffect(() => {
+    const handleCartUpdate = () => {
+      loadCartItems();
+    };
+
+    window.addEventListener('cartUpdated', handleCartUpdate);
+    return () => window.removeEventListener('cartUpdated', handleCartUpdate);
+  }, []);
+
+  // Load cart items from localStorage
+  const loadCartItems = () => {
+    try {
+      const savedCart = localStorage.getItem('cart');
+      if (savedCart) {
+        const items = JSON.parse(savedCart);
+        setCartItems(items);
+        
+        // Update global cart count
+        const totalItems = items.reduce((sum: number, item: any) => sum + item.quantity, 0);
+        updateCartCount(totalItems);
+      } else {
+        // Initialize empty cart
+        setCartItems([]);
+        updateCartCount(0);
+      }
+    } catch (error) {
+      console.error('Error loading cart:', error);
+      setCartItems([]);
+      updateCartCount(0);
+    }
+  };
+
+  // Save cart items to localStorage
+  const saveCartItems = (items: any[]) => {
+    try {
+      localStorage.setItem('cart', JSON.stringify(items));
+      setCartItems(items);
+      
+      // Update global cart count
+      const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+      updateCartCount(totalItems);
+      
+      // Dispatch cart update event for other components
+      window.dispatchEvent(new CustomEvent('cartUpdated', { 
+        detail: { cartItems: items } 
+      }));
+    } catch (error) {
+      console.error('Error saving cart:', error);
+    }
+  };
+
+  const fetchCategoryAndProducts = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch categories
+      const categoriesResponse = await getCategoriesList();   
+      const categoryData = categoriesResponse.product_categories.find((cat: any) => cat.id === id);
+      
+      if (!categoryData) {
+        setError('Category not found');
+        setLoading(false);
+        return;
+      }
+
+      // Set category info first
+      setCategory({
+        id: categoryData.id,
+        name: categoryData.name,
+        description: categoryData.description || '',
+        image: (categoryData as any).thumbnail || '',
+        productCount: 0, // Will be updated after fetching products
+        isActive: (categoryData as any).is_active !== undefined ? (categoryData as any).is_active : true
+      });
+
+      // Fetch products for this category from API
+      const query: any = {
+        limit: 100,
+        offset: 0,
+        fields: '*variants.calculated_price',
+        category_id: id as string
+      };
+      
+      console.log('Fetching products for category:', id, 'with query:', query);
+      
+      const productsResponse = await sdk.client.fetch<{ products: any[]; count: number }>(
+        '/store/products',
+        {
+          query,
+          next: { tags: ['products'] },
+        }
+      );
+      
+      console.log('API Response:', productsResponse);
+      console.log('Total products returned:', productsResponse.products?.length || 0);
+
+      const formattedProducts: Product[] = (productsResponse.products || []).map((product: any) => {
+        // Try to get price from different sources
+        let price = 0;
+        
+        // Check calculated_price first (most common)
+        if (product.variants?.[0]?.calculated_price?.calculated_amount) {
+          price = product.variants[0].calculated_price.calculated_amount;
+        }
+        // Fallback to direct price
+        else if (product.price) {
+          price = product.price;
+        }
+        
+        console.log('Product price mapping:', {
+          id: product.id,
+          title: product.title,
+          directPrice: product.price,
+          variants: product.variants,
+          calculated_price: product.variants?.[0]?.calculated_price,
+          finalPrice: price
+        });
+        
+        return {
+          id: product.id,
+          name: product.title,
+          description: product.description || '',
+          price: price,
+          originalPrice: product.original_price,
+          image: product.thumbnail || product.images?.[0]?.url || '',
+          images: product.images?.map((img: any) => img.url).filter(Boolean) || [],
+          category: product.category?.name || product.type?.label || '',
+          tags: product.tags || [],
+          rating: product.rating,
+          reviewCount: product.review_count,
+          inStock: product.variants?.[0]?.inventory_quantity > 0 || product.in_stock !== false
+        };
+      });
+
+      setProducts(formattedProducts);
+      setFilteredProducts(formattedProducts);
+      
+      // Update category with actual product count
+      setCategory(prev => prev ? {
+        ...prev,
+        productCount: formattedProducts.length
+      } : null);
+    } catch (err) {
+      console.error('Error fetching category data:', err);
+      setError('Failed to load category data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!query.trim()) {
+      setFilteredProducts(products);
+      return;
+    }
     
-//     const filtered = products.filter(product =>
-//       product.name.toLowerCase().includes(query.toLowerCase()) ||
-//       product.description.toLowerCase().includes(query.toLowerCase()) ||
-//       product.tags?.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
-//     );
-//     setFilteredProducts(filtered);
-//   };
+    const filtered = products.filter(product =>
+      product.name.toLowerCase().includes(query.toLowerCase()) ||
+      product.description.toLowerCase().includes(query.toLowerCase()) ||
+      product.tags?.some(tag => tag.toLowerCase().includes(query.toLowerCase()))
+    );
+    setFilteredProducts(filtered);
+  };
 
-//   const [selectedCategory, setSelectedCategory] = useState('all');
+  const handleAddToCart = async (productId: string) => {
+    try {
+      setAddingToCart(productId);
+      
+      // Find the product
+      const product = products.find(p => p.id === productId);
+      if (!product) {
+        showToast('Product not found', 'error');
+        return;
+      }
 
-//   const handleCategoryChange = (category: string) => {
-//     setSelectedCategory(category);
-//     if (category === 'all') {
-//       setFilteredProducts(products);
-//     } else {
-//       const filtered = products.filter(product => product.category === category);
-//       setFilteredProducts(filtered);
-//     }
-//   };
+      // Check if product is in stock
+      if (!product.inStock) {
+        showToast('Product is out of stock', 'error');
+        return;
+      }
 
-//   const handleAddToCart = (productId: string) => {
-//     // Handle add to cart logic
-//     console.log('Adding to cart:', productId);
-//   };
+      // Check if product is already in cart
+      const existingItem = cartItems.find(item => item.id === productId);
+      
+      if (existingItem) {
+        // Update quantity
+        const updatedItems = cartItems.map(item =>
+          item.id === productId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+        saveCartItems(updatedItems);
+        showToast(`${product.name} added to cart`, 'success');
+      } else {
+        // Add new item to cart
+        const newItem = {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          quantity: 1,
+          inStock: product.inStock
+        };
+        
+        const updatedItems = [...cartItems, newItem];
+        saveCartItems(updatedItems);
+        showToast(`${product.name} added to cart`, 'success');
+      }
 
-//   const handleAddToFavorites = (productId: string) => {
-//     // Handle add to favorites logic
-//     console.log('Adding to favorites:', productId);
-//   };
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      showToast('Failed to add product to cart', 'error');
+    } finally {
+      setAddingToCart(null);
+    }
+  };
 
-//   const handleProductClick = (productId: string) => {
-//     router.push(`/products/${productId}`);
-//   };
+  const handleAddToFavorites = (productId: string) => {
+    try {
+      const product = products.find(p => p.id === productId);
+      if (!product) {
+        showToast('Product not found', 'error');
+        return;
+      }
 
-//   if (!category) {
-//     return (
-//       <div className="min-h-screen bg-gray-50 py-12">
-//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//           <div className="text-center">
-//             <h1 className="text-2xl font-bold text-gray-900 mb-4">Category Not Found</h1>
-//             <p className="text-gray-600 mb-8">The category you&apos;re looking for doesn&apos;t exist.</p>
-//             <Button variant="primary" onClick={() => router.push('/')}>
-//               Back to Home
-//             </Button>
-//           </div>
-//         </div>
-//       </div>
-//     );
-//   }
+      // Get existing favorites
+      const savedFavorites = localStorage.getItem('favorites');
+      let favorites = savedFavorites ? JSON.parse(savedFavorites) : [];
 
-//   return (
-//     <div className="min-h-screen bg-gray-50">
-//       {/* Category Header */}
-//       <div className="bg-white border-b border-gray-200">
-//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-//           <div className="flex items-center space-x-4 mb-4">
-//             <Badge variant="primary" size="lg">
-//               {category.name}
-//             </Badge>
-//             <span className="text-gray-500">
-//               {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
-//             </span>
-//           </div>
-//           <h1 className="text-3xl font-bold text-gray-900 mb-2">{category.name}</h1>
-//           <p className="text-gray-600 max-w-3xl">{category.description}</p>
-//         </div>
-//       </div>
+      // Check if already in favorites
+      const isAlreadyFavorite = favorites.some((fav: any) => fav.id === productId);
+      
+      if (isAlreadyFavorite) {
+        // Remove from favorites
+        favorites = favorites.filter((fav: any) => fav.id !== productId);
+        showToast(`${product.name} removed from favorites`, 'success');
+      } else {
+        // Add to favorites
+        const favoriteItem = {
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image
+        };
+        favorites.push(favoriteItem);
+        showToast(`${product.name} added to favorites`, 'success');
+      }
 
-//       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-//         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-//           {/* Filters Sidebar */}
-//           <div className="lg:col-span-1">
-//             <ProductFilter
-//               categories={['all', ...Array.from(new Set(products.map(p => p.category)))]}
-//               selectedCategory={selectedCategory}
-//               onCategoryChange={handleCategoryChange}
-//               className="sticky top-8"
-//             />
-//           </div>
+      // Save favorites
+      localStorage.setItem('favorites', JSON.stringify(favorites));
 
-//           {/* Products Section */}
-//           <div className="lg:col-span-3">
-//             {/* Search and Sort */}
-//             <div className="mb-6">
-//               <ProductSearch
-//                 onSearch={handleSearch}
-//                 placeholder={`Search in ${category.name}...`}
-//               />
-//             </div>
+    } catch (error) {
+      console.error('Error managing favorites:', error);
+      showToast('Failed to update favorites', 'error');
+    }
+  };
 
-//             {/* Products Grid */}
-//             {filteredProducts.length > 0 ? (
-//               <ProductGrid
-//                 products={filteredProducts}
-//                 onAddToCart={handleAddToCart}
-//                 onAddToFavorites={handleAddToFavorites}
-//                 onProductClick={handleProductClick}
-//               />
-//             ) : (
-//               <div className="text-center py-12">
-//                 <div className="mb-4">
-//                   <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-//                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-//                   </svg>
-//                 </div>
-//                 <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-//                 <p className="text-gray-600 mb-4">
-//                   {searchQuery 
-//                     ? `No products match "${searchQuery}" in ${category.name}`
-//                     : `No products available in ${category.name}`
-//                   }
-//                 </p>
-//                 {searchQuery && (
-//                   <Button 
-//                     variant="secondary" 
-//                     onClick={() => {
-//                       setSearchQuery('');
-//                       setFilteredProducts(products);
-//                     }}
-//                   >
-//                     Clear Search
-//                   </Button>
-//                 )}
-//               </div>
-//             )}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
+  const handleProductClick = (productId: string) => {
+    router.push(`/products/${productId}`);
+  };
 
-// export const getStaticPaths: GetStaticPaths = async () => {
-//   const categories = await getCategoriesList();
-//   const paths = categories.product_categories.map((category: any) => ({
-//     params: { id: category.id },
-//   }));
-//   return { paths, fallback: false };
-// };
+  if (loading) {
+    return (
+      <>
+        <Head>
+          <title>Loading... - AKSHAR AYURVED</title>
+        </Head>
+        <div className="bg-gradient-to-br from-green-50 to-yellow-50 min-h-screen">
+          <Hero
+            title="Loading Category..."
+            subtitle="Please wait while we fetch the products"
+            backgroundGradient="bg-green-600"
+          />
+          <Section>
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading category...</p>
+            </div>
+          </Section>
+        </div>
+      </>
+    );
+  }
 
-// export const getStaticProps: GetStaticProps = async ({ params }) => {
-//   const categories = await getCategoriesList();
-//   const categoryId = params?.['id'] as string;
-//   const category = categories.product_categories.find((cat: any) => cat.id === categoryId);
+  if (error || !category) {
+    return (
+      <>
+        <Head>
+          <title>Category Not Found - AKSHAR AYURVED</title>
+        </Head>
+        <div className="bg-gradient-to-br from-green-50 to-yellow-50 min-h-screen">
+          <Hero
+            title="Category Not Found"
+            subtitle="The category you're looking for doesn't exist"
+            backgroundGradient="bg-green-600"
+          />
+          <Section>
+            <div className="text-center py-12">
+              <Button 
+                onClick={() => router.push('/products')}
+                variant="primary"
+                size="lg"
+              >
+                Back to Products
+              </Button>
+            </div>
+          </Section>
+        </div>
+      </>
+    );
+  }
 
-//   if (!category) {
-//     return { notFound: true };
-//   }
+  return (
+    <>
+      <Head>
+        <title>{category.name} - AKSHAR AYURVED</title>
+        <meta name="description" content={category.description} />
+      </Head>
+      
+      <div className="bg-gradient-to-br from-green-50 to-yellow-50 min-h-screen">
+        <Hero
+          title={category.name}
+          subtitle={category.description || `Explore our ${category.name} collection`}
+          backgroundGradient="bg-green-600"
+        />
+        
+        {/* Search and Filter Section */}
+        <Section background="white" padding="sm">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">
+                {category.name}
+              </span>
+              <span className="text-gray-500">
+                {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
+              </span>
+            </div>
+            
+            <div className="relative w-full md:w-80">
+              <input
+                type="text"
+                placeholder={`Search in ${category.name}...`}
+                value={searchQuery}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              />
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </Section>
 
-//   // TODO: Fetch products for this category from backend if needed
-//   return {
-//     props: {
-//       category,
-//       products: [], // Replace with real products if you fetch them
-//     },
-//   };
-// };
+        {/* Products Section */}
+        <Section>
+          {filteredProducts.length > 0 ? (
+            <ProductGrid
+              products={filteredProducts}
+              columns={4}
+              showActions={true}
+              onAddToCart={handleAddToCart}
+              onAddToFavorites={handleAddToFavorites}
+              onProductClick={handleProductClick}
+              addingToCart={addingToCart}
+            />
+          ) : (
+            <div className="text-center py-12">
+              <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+                <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Products Available</h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                {searchQuery 
+                  ? `We couldn't find any products matching "${searchQuery}" in ${category.name}.`
+                  : `Currently, there are no products available in the ${category.name} category.`
+                }
+              </p>
+              
+              {searchQuery ? (
+                <Button 
+                  onClick={() => {
+                    setSearchQuery('');
+                    setFilteredProducts(products);
+                  }}
+                  variant="primary"
+                  size="lg"
+                >
+                  Clear Search
+                </Button>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button 
+                    onClick={() => router.push('/products')}
+                    variant="primary"
+                    size="lg"
+                  >
+                    Browse All Products
+                  </Button>
+                  <Button 
+                    onClick={() => router.push('/')}
+                    variant="outline"
+                    size="lg"
+                  >
+                    Back to Home
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </Section>
+
+        {/* CTA Section */}
+        <Section className='!bg-green-600' padding="lg">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">
+              Explore More {category.name}
+            </h2>
+            <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
+              Discover our complete collection of authentic Ayurvedic products for your wellness journey.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="border-white text-white hover:bg-white hover:text-green-600"
+                onClick={() => router.push('/products')}
+              >
+                Browse All Products
+              </Button>
+              <Button 
+                variant="outline" 
+                size="lg"
+                className="border-white text-white hover:bg-white hover:text-green-600"
+                onClick={() => router.push('/')}
+              >
+                Back to Home
+              </Button>
+            </div>
+          </div>
+        </Section>
+      </div>
+    </>
+  );
+}
