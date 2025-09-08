@@ -313,41 +313,41 @@ const ShippingAddress = ({
           </UiDialogTrigger>
         </div>
       ) : (
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-8 ">
           <InputField
             placeholder="First name"
             name="shipping_address.first_name"
-            inputProps={{ autoComplete: "given-name" }}
+            inputProps={{ autoComplete: "given-name",className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full" }}
             data-testid="shipping-first-name-input"
           />
           <InputField
             placeholder="Last name"
             name="shipping_address.last_name"
-            inputProps={{ autoComplete: "family-name" }}
+            inputProps={{ autoComplete: "family-name",className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full" }}
             data-testid="shipping-last-name-input"
           />
           <InputField
             placeholder="Address"
             name="shipping_address.address_1"
-            inputProps={{ autoComplete: "address-line1" }}
+            inputProps={{ autoComplete: "address-line1",className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full" }}
             data-testid="shipping-address-input"
           />
           <InputField
             placeholder="Company"
             name="shipping_address.company"
-            inputProps={{ autoComplete: "organization" }}
+            inputProps={{ autoComplete: "organization",className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full" }}
             data-testid="shipping-company-input"
           />
           <InputField
             placeholder="Postal code"
             name="shipping_address.postal_code"
-            inputProps={{ autoComplete: "postal-code" }}
+            inputProps={{ autoComplete: "postal-code",className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full" }}
             data-testid="shipping-postal-code-input"
           />
           <InputField
             placeholder="City"
             name="shipping_address.city"
-            inputProps={{ autoComplete: "address-level2" }}
+            inputProps={{ autoComplete: "address-level2",className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full" }}
             data-testid="shipping-city-input"
           />
           <CountrySelectField
@@ -368,17 +368,20 @@ const ShippingAddress = ({
               },
             }}
             data-testid="shipping-country-select"
+            className="block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full"
           />
           <InputField
             placeholder="State / Province"
             name="shipping_address.province"
-            inputProps={{ autoComplete: "address-level1" }}
+            inputProps={{ autoComplete: "address-level1" ,className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full"
+        }}
             data-testid="shipping-province-input"
           />
           <InputField
             placeholder="Phone"
             name="shipping_address.phone"
-            inputProps={{ autoComplete: "tel" }}
+            inputProps={{ autoComplete: "tel",className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full"
+ }}
             data-testid="shipping-phone-input"
           />
         </div>

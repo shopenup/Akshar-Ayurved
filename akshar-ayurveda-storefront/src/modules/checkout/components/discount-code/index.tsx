@@ -34,11 +34,11 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
       <div className="flex max-sm:flex-col gap-x-6 gap-y-4 mb-8">
         <InputField
           name="code"
-          inputProps={{ autoFocus: false, className: "max-lg:h-12" }}
+          inputProps={{ autoFocus: false, className: "block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full" }}
           placeholder="Discount code"
           className="flex-1"
         />
-        <SubmitButton className="lg:h-auto max-h-14 grow-0 h-12">
+        <SubmitButton className="bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors ml-2 mt-1">
           Apply
         </SubmitButton>
       </div>

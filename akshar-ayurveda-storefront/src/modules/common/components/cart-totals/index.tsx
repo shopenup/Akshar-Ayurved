@@ -87,7 +87,7 @@ const CartTotals: React.FC<CartTotalsProps> = ({ cart }) => {
           <p>Total</p>
         </div>
         <div className="self-end">
-          <p>{convertToLocale({ amount: total ?? 0, currency_code })}</p>
+          <p className="text-green-600 font-bold">{convertToLocale({ amount: total ?? 0, currency_code })}</p>
         </div>
       </div>
       <div className="absolute h-full w-auto top-0 right-0 bg-black" />

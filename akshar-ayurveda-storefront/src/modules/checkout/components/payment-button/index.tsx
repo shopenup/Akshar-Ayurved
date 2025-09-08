@@ -55,7 +55,7 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     default:
       return (
         <Button
-          className="w-full"
+          className="w-full bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors"
           onClick={() => {
             selectPaymentMethod()
           }}
@@ -362,7 +362,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
       <Button
         disabled={notReady}
         onClick={handlePayment}
-        className="w-full"
+        className="bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors w-full"
       >
         Place order
       </Button>

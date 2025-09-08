@@ -97,7 +97,7 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
         <div>
           <p
             className={twJoin(
-              "transition-fontWeight duration-75",
+              "transition-fontWeight duration-75 text-green-800 font-semibold",
               isOpen && "font-semibold"
             )}
           >
@@ -110,6 +110,7 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
             onPress={() => {
               router.push("/checkout?step=delivery")
             }}
+             className={"text-green-600"}
           >
             Change
           </Button>
@@ -187,9 +188,10 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
                 )}
 
                 <SubmitButton
-                  className="mt-8"
+                  className="bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors mt-8"
                   isLoading={isPending}
                   isDisabled={isDisabled}
+                  
                 >
                   Next
                 </SubmitButton>
@@ -201,8 +203,8 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
       ) : cart?.shipping_address ? (
         <div className="flex flex-col gap-4">
           <div className="flex max-sm:flex-col flex-wrap gap-y-2 gap-x-12">
-            <div className="text-grayscale-500">Shipping address</div>
-            <div className="text-grayscale-600">
+            <div className="text-grayscale-500">Shipping address :</div>
+            <div className="text-grayscale-600 ml-3">
               {[
                 cart.shipping_address.first_name,
                 cart.shipping_address.last_name,
@@ -228,8 +230,8 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
           </div>
           {sameAsBilling || cart.billing_address ? (
             <div className="flex max-sm:flex-col flex-wrap gap-y-2 gap-x-17">
-              <div className="text-grayscale-500">Billing address</div>
-              <div className="text-grayscale-600">
+              <div className="text-grayscale-500">Billing address :</div>
+              <div className="text-grayscale-600 ml-2">
                 {sameAsBilling ? (
                   "Same as shipping address"
                 ) : (
