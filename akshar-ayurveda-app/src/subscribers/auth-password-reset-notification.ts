@@ -21,6 +21,7 @@ export default async function sendPasswordResetNotification({
     fields,
     filters: { email: data.entity_id },
   });
+  console.log("customers: ", customers);
   const customer = customers[0] as Pick<CustomerDTO, (typeof fields)[number]>;
 
   await notificationModuleService.createNotifications({
@@ -29,8 +30,14 @@ export default async function sendPasswordResetNotification({
     template:
       data.actor_type === "logged-in-customer"
         ? "auth-password-reset"
-        : "auth-forgot-password",
-    data: { customer, token: data.token },
+        : process.env.SENDGRID_CUSTOM_FORGET_PASSWORD_TEMP_ID,
+    data: 
+    { 
+      customer, 
+      store_name: process.env.STORE_NAME, 
+      store_url: `${process.env.STORE_URL}/reset-password?email=${customer.email}&token=${data.token}`, 
+      // token: data.token 
+    },
   });
 }
 

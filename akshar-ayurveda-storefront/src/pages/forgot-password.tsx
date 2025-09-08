@@ -2,21 +2,35 @@ import React, { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { Button, Input, Card } from '../components/ui';
+import { forgotPassword } from '@lib/shopenup/customer';
+
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      const result = await forgotPassword(null, { email });
+      
+      if (result.state === 'success') {
+        setIsSubmitted(true);
+      } else if (result.state === 'error') {
+        setError(result.error);
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
       setIsLoading(false);
-      setIsSubmitted(true);
-    }, 2000);
+    }
   };
 
   return (
@@ -38,6 +52,12 @@ export default function ForgotPasswordPage() {
           <Card className="p-8">
             {!isSubmitted ? (
               <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                    {error}
+                  </div>
+                )}
+                
                 <div>
                   <Input
                     label="Email Address"
@@ -80,7 +100,10 @@ export default function ForgotPasswordPage() {
                 <p className="text-sm text-gray-500">
                   Didn&apos;t receive the email? Check your spam folder or{' '}
                   <button
-                    onClick={() => setIsSubmitted(false)}
+                    onClick={() => {
+                      setIsSubmitted(false);
+                      setError('');
+                    }}
                     className="text-green-600 hover:text-green-500"
                   >
                     try again
