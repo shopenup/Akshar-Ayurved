@@ -193,7 +193,7 @@ const PaymentMethodButton = ({
 
   return (
     <Button
-      className="mt-6"
+      className="mt-6 bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors"
       onPress={handleSubmit}
       isLoading={isLoading}
       data-testid="submit-payment-button"

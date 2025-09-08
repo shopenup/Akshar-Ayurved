@@ -63,7 +63,7 @@ const Shipping = ({ cart }: { cart: StoreCart }) => {
         <div>
           <p
             className={twJoin(
-              "transition-fontWeight duration-75",
+              "transition-fontWeight duration-75 text-green-800 font-semibold",
               isOpen && "font-semibold"
             )}
           >
@@ -79,6 +79,7 @@ const Shipping = ({ cart }: { cart: StoreCart }) => {
               onPress={() => {
                 router.push("/checkout?step=shipping", { scroll: false })
               }}
+               className={"text-green-600"}
             >
               Change
             </Button>
@@ -130,6 +131,7 @@ const Shipping = ({ cart }: { cart: StoreCart }) => {
               onPress={handleSubmit}
               isLoading={isPending}
               isDisabled={!cart.shipping_methods?.[0]}
+              className={"bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors"}
             >
               Next
             </Button>
@@ -139,8 +141,8 @@ const Shipping = ({ cart }: { cart: StoreCart }) => {
         (cart.shipping_methods?.length ?? 0) > 0 &&
         selectedShippingMethod ? (
         <ul className="flex max-sm:flex-col flex-wrap gap-y-2 gap-x-28">
-          <li className="text-grayscale-500">Shipping</li>
-          <li className="text-grayscale-600">{selectedShippingMethod.name}</li>
+          <li className="text-grayscale-500">Shipping : </li>
+          <li className="text-grayscale-600 ml-2">{selectedShippingMethod.name}</li>
         </ul>
       ) : null}
     </>

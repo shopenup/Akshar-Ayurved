@@ -61,8 +61,8 @@ const Email = ({
           <div>
             <p
               className={twJoin(
-                "transition-fontWeight duration-75",
-                isOpen && "font-semibold"
+                "transition-fontWeight duration-75 text-green-800 font-semibold",
+                isOpen && "font-semibold",
               )}
             >
               1. Email
@@ -75,6 +75,7 @@ const Email = ({
             onPress={() => {
               router.push("/checkout?step=email")
             }}
+            className={"text-green-600"}
           >
             Change
           </Button>
@@ -99,13 +100,15 @@ const Email = ({
                   inputProps={{
                     autoComplete: "email",
                     title: "Enter a valid email address.",
+                    className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full",
                   }}
                   data-testid="shipping-email-input"
+                  
                 />
                 <SubmitButton
-                  className="mt-8"
                   isLoading={isPending}
                   isDisabled={!formValue}
+                  className="bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors mt-2"
                 >
                   Next
                 </SubmitButton>
@@ -116,7 +119,7 @@ const Email = ({
                   <div className="mt-4 text-center text-sm text-gray-500">
                     <p>
                       Already have an account?{" "}
-                      <span className="text-blue-600 underline cursor-pointer">
+                      <span className="text-green-600 underline cursor-pointer">
                         Log in
                       </span>
                       {" "}or continue as guest
@@ -129,8 +132,8 @@ const Email = ({
         </Form>
       ) : cart?.email ? (
         <ul className="flex max-sm:flex-col flex-wrap gap-y-2 gap-x-34">
-          <li className="text-grayscale-500">Email</li>
-          <li className="text-grayscale-600 break-all">{cart.email}</li>
+          <li className="text-grayscale-500">Email :</li>
+          <li className="text-grayscale-600 break-all ml-2">{cart.email}</li>
         </ul>
       ) : null}
     </>

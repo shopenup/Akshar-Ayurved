@@ -158,7 +158,7 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
         <div>
           <p
             className={twJoin(
-              "transition-fontWeight duration-75",
+              "transition-fontWeight duration-75 text-green-800 font-semibold",
               isOpen && "font-semibold"
             )}
           >
@@ -166,7 +166,7 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
           </p>
         </div>
         {!isOpen && paymentReady && (
-          <Button variant="link" onPress={handleEdit}>
+          <Button variant="link" onPress={handleEdit}  className={"text-green-600"}>
             Change
           </Button>
         )}

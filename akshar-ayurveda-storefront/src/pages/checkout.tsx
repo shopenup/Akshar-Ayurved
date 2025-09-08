@@ -148,7 +148,7 @@ function CheckoutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 text-center mb-2">Secure Checkout</h1>
+            <h1 className="text-3xl font-bold text-green-800 text-center mb-2">Secure Checkout</h1>
             <p className="text-gray-600 text-center">Complete your purchase in just a few steps</p>
           </div>
 
@@ -223,7 +223,7 @@ function CheckoutPage() {
 
             {/* Checkout Summary */}
             <div className="lg:col-span-1">
-              <div className="sticky top-8">
+              <div className="sticky top-8 bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8">
                 <CheckoutSummaryWrapper />
               </div>
             </div>

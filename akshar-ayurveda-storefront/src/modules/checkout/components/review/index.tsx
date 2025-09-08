@@ -28,7 +28,7 @@ const Review = ({ cart }: { cart: StoreCart }) => {
         <div>
           <p
             className={twJoin(
-              "transition-fontWeight duration-75",
+              "transition-fontWeight duration-75 text-green-800 font-semibold",
               isOpen && "font-semibold"
             )}
           >
@@ -45,6 +45,7 @@ const Review = ({ cart }: { cart: StoreCart }) => {
               onPress={() => {
                 router.push("/checkout?step=review", { scroll: false })
               }}
+               className={"text-green-600"}
             >
               View
             </Button>
