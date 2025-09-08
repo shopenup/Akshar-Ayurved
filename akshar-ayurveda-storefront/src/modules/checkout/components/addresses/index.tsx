@@ -201,68 +201,119 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
           }}
         </Form>
       ) : cart?.shipping_address ? (
-        <div className="flex flex-col gap-4">
-          <div className="flex max-sm:flex-col flex-wrap gap-y-2 gap-x-12">
-            <div className="text-grayscale-500">Shipping address :</div>
-            <div className="text-grayscale-600 ml-3">
-              {[
-                cart.shipping_address.first_name,
-                cart.shipping_address.last_name,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              <br />
-              {[
-                cart.shipping_address.address_1,
-                cart.shipping_address.address_2,
-              ]
-                .filter(Boolean)
-                .join(" ")}
-              <br />
-              {[cart.shipping_address.postal_code, cart.shipping_address.city]
-                .filter(Boolean)
-                .join(" ")}
-              <br />
-              {cart.shipping_address.country_code?.toUpperCase()}
-              <br />
-              {cart.shipping_address.phone}
-            </div>
+        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+          {/* Header with Change button */}
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+              <span className="text-green-600">📍</span>
+              Delivery Address
+            </h3>
+            <Button
+              variant="outline"
+              size="sm"
+              onPress={() => {
+                router.push("/checkout?step=delivery")
+              }}
+              className="text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300"
+            >
+              Change Address
+            </Button>
           </div>
-          {sameAsBilling || cart.billing_address ? (
-            <div className="flex max-sm:flex-col flex-wrap gap-y-2 gap-x-17">
-              <div className="text-grayscale-500">Billing address :</div>
-              <div className="text-grayscale-600 ml-2">
-                {sameAsBilling ? (
-                  "Same as shipping address"
-                ) : (
-                  <>
+
+          {/* Address Display */}
+          <div className="space-y-4">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <span className="text-green-600 text-sm font-medium">
+                    {cart.shipping_address.first_name?.[0]?.toUpperCase() || 'A'}
+                  </span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900 mb-2">
                     {[
-                      cart.billing_address?.first_name,
-                      cart.billing_address?.last_name,
+                      cart.shipping_address.first_name,
+                      cart.shipping_address.last_name,
                     ]
                       .filter(Boolean)
                       .join(" ")}
-                    <br />
-                    {[
-                      cart.billing_address?.address_1,
-                      cart.billing_address?.address_2,
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    <br />
-                    {[
-                      cart.billing_address?.postal_code,
-                      cart.billing_address?.city,
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                    <br />
-                    {cart.billing_address?.country_code?.toUpperCase()}
-                  </>
-                )}
+                  </h4>
+                  <div className="text-gray-600 space-y-1">
+                    <p>
+                      {[
+                        cart.shipping_address.address_1,
+                        cart.shipping_address.address_2,
+                      ]
+                        .filter(Boolean)
+                        .join(", ")}
+                    </p>
+                    <p>
+                      {[cart.shipping_address.city, cart.shipping_address.province]
+                        .filter(Boolean)
+                        .join(", ")} {cart.shipping_address.postal_code}
+                    </p>
+                    <p className="font-medium">
+                      {cart.shipping_address.country_code?.toUpperCase()}
+                    </p>
+                    {cart.shipping_address.phone && (
+                      <p className="text-sm text-gray-500">
+                        📞 {cart.shipping_address.phone}
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          ) : null}
+
+            {/* Billing Address */}
+            {sameAsBilling || cart.billing_address ? (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                    <span className="text-blue-600 text-sm font-medium">💳</span>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900 mb-2">Billing Address</h4>
+                    <div className="text-gray-600">
+                      {sameAsBilling ? (
+                        <p className="text-green-600 font-medium">Same as delivery address</p>
+                      ) : (
+                        <div className="space-y-1">
+                          <p>
+                            {[
+                              cart.billing_address?.first_name,
+                              cart.billing_address?.last_name,
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                          </p>
+                          <p>
+                            {[
+                              cart.billing_address?.address_1,
+                              cart.billing_address?.address_2,
+                            ]
+                              .filter(Boolean)
+                              .join(", ")}
+                          </p>
+                          <p>
+                            {[
+                              cart.billing_address?.city,
+                              cart.billing_address?.province,
+                            ]
+                              .filter(Boolean)
+                              .join(", ")} {cart.billing_address?.postal_code}
+                          </p>
+                          <p className="font-medium">
+                            {cart.billing_address?.country_code?.toUpperCase()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </>

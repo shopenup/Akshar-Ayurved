@@ -37,14 +37,14 @@ export const useCart = ({ enabled }: { enabled: boolean }) => {
     enabled,
     retry: 3, // Retry up to 3 times
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-    // Refetch when window gains focus to catch auth changes
-    refetchOnWindowFocus: true,
-    // Refetch every 30 seconds to keep cart data fresh
-    refetchInterval: 30000,
-    // Don't cache for too long to ensure fresh data
-    staleTime: 0,
-    // Always refetch when query is enabled
-    refetchOnMount: true,
+    // Reduce refetch frequency to avoid CORS issues
+    refetchOnWindowFocus: false,
+    // Reduce refetch interval to every 5 minutes instead of 30 seconds
+    refetchInterval: 300000,
+    // Cache for 2 minutes to reduce API calls
+    staleTime: 120000,
+    // Don't always refetch on mount
+    refetchOnMount: false,
     // Refetch when the component becomes visible again
     refetchOnReconnect: true,
   })

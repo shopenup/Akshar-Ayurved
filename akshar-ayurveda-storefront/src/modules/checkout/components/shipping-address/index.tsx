@@ -1,13 +1,8 @@
 import { HttpTypes } from "@shopenup/types"
-import React, { useEffect, useMemo } from "react"
-import * as ReactAria from "react-aria-components"
+import React, { useEffect, useMemo, useState } from "react"
 
 import compareAddresses from "@lib/util/compare-addresses"
-import { UpsertAddressForm } from "@modules/account/components/UpsertAddressForm"
 import { CountrySelectField, InputField } from "@components/Forms"
-import { UiDialogTrigger, UiDialog, UiCloseButton } from "@components/Dialog"
-import { UiModalOverlay, UiModal } from "@components/ui/Modal"
-import { UiRadio, UiRadioBox, UiRadioLabel } from "@components/ui/Radio"
 import { Icon } from "@components/Icon"
 import { Button } from "@components/Button"
 import { useCountryCode } from "hooks/country-code"
@@ -18,6 +13,8 @@ import {
   UiCheckboxLabel,
 } from "@components/ui/Checkbox"
 import { useFormContext, useWatch } from "react-hook-form"
+import { useAddressMutation } from "hooks/customer"
+import { toast } from "sonner"
 
 const isShippingAddressEmpty = (formData: {
   shipping_address?: Pick<
@@ -61,10 +58,28 @@ const ShippingAddress = ({
   onChange: () => void
 }) => {
   const countryCode = useCountryCode()
+  const [showNewAddressForm, setShowNewAddressForm] = useState(false)
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
+  const addAddress = useAddressMutation()
 
   const { setValue, control } = useFormContext()
 
   const formData = useWatch({ control })
+
+  // Debug logging
+  console.log('Customer addresses:', customer?.addresses)
+  console.log('Selected address ID:', selectedAddressId)
+  console.log('Form data:', formData)
+  console.log('Cart region:', cart?.region)
+  console.log('Cart region ID:', cart?.region?.id)
+  console.log('Cart region countries:', cart?.region?.countries)
+  console.log('Cart region countries ISO codes:', cart?.region?.countries?.map(c => ({ 
+    id: c.id, 
+    iso_2: c.iso_2, 
+    iso_3: c.iso_3, 
+    name: c.display_name,
+    numeric_code: c.num_code 
+  })))
 
   const countriesInRegion = useMemo(() => {
     console.log('Cart region data:', cart?.region)
@@ -73,13 +88,20 @@ const ShippingAddress = ({
   }, [cart?.region])
 
   // check if customer has saved addresses that are in the current region
-  const addressesInRegion = useMemo(
-    () =>
-      customer?.addresses.filter(
-        (a) => a.country_code && countriesInRegion?.includes(a.country_code)
-      ),
-    [customer?.addresses, countriesInRegion]
-  )
+  // If no region data is available, show all addresses
+  const addressesInRegion = useMemo(() => {
+    if (!customer?.addresses) return []
+    
+    // If no region data or countries, show all addresses
+    if (!countriesInRegion || countriesInRegion.length === 0) {
+      return customer.addresses
+    }
+    
+    // Filter addresses by region
+    return customer.addresses.filter(
+      (a) => a.country_code && countriesInRegion.includes(a.country_code)
+    )
+  }, [customer?.addresses, countriesInRegion])
 
   const setFormAddress = (
     address?: Pick<
@@ -101,6 +123,7 @@ const ShippingAddress = ({
         first_name: address?.first_name || "",
         last_name: address?.last_name || "",
         address_1: address?.address_1 || "",
+        address_2: address?.address_2 || "",
         company: address?.company || "",
         postal_code: address?.postal_code || "",
         city: address?.city || "",
@@ -112,38 +135,69 @@ const ShippingAddress = ({
   }
 
   useEffect(() => {
-    // Ensure cart is not null and has a shipping_address before setting form data
-    if (cart) {
-      if (cart.shipping_address) {
-        setFormAddress(cart.shipping_address)
-      } else if (
-        // If customer has saved addresses in the region and form data is empty
-        // set the first address in the region as the form data
-        customer &&
-        addressesInRegion &&
-        addressesInRegion.length &&
-        isShippingAddressEmpty(formData)
-      ) {
-        const defaultShippingAddress =
-          addressesInRegion.find((a) => a.is_default_shipping) ||
-          addressesInRegion[0]
-
-        setFormAddress({
-          first_name: defaultShippingAddress.first_name ?? undefined,
-          last_name: defaultShippingAddress.last_name ?? undefined,
-          address_1: defaultShippingAddress.address_1 ?? undefined,
-          address_2: defaultShippingAddress.address_2 ?? undefined,
-          company: defaultShippingAddress.company ?? undefined,
-          postal_code: defaultShippingAddress.postal_code ?? undefined,
-          city: defaultShippingAddress.city ?? undefined,
-          country_code: defaultShippingAddress.country_code ?? undefined,
-          province: defaultShippingAddress.province ?? undefined,
-          phone: defaultShippingAddress.phone ?? undefined,
-        })
+    console.log('useEffect triggered - cart:', cart, 'customer:', customer)
+    
+    // If customer has addresses and no address is selected yet, select the first one
+    if (customer?.addresses?.length && !selectedAddressId) {
+      console.log('Setting default address selection')
+      const defaultAddress = customer.addresses.find((a) => a.is_default_shipping) || customer.addresses[0]
+      console.log('Default address:', defaultAddress)
+      
+      setSelectedAddressId(defaultAddress.id)
+      
+      // Also set the form data
+      const regionCountry = cart?.region?.countries?.find(
+        (c) => c.iso_2 === defaultAddress.country_code
+      )
+      
+      // If country not found in region, use the first available country as fallback
+      let countryCodeToUse = defaultAddress.country_code || ""
+      if (!regionCountry && cart?.region?.countries?.length) {
+        const fallbackCountry = cart.region.countries[0]
+        countryCodeToUse = fallbackCountry.iso_2 || ""
+        console.warn(`Default address country ${defaultAddress.country_code} not found in region. Using fallback: ${fallbackCountry.iso_2} (${fallbackCountry.display_name})`)
+      }
+      
+      const addressData = {
+        first_name: defaultAddress.first_name || "",
+        last_name: defaultAddress.last_name || "",
+        address_1: defaultAddress.address_1 || "",
+        address_2: defaultAddress.address_2 || "",
+        company: defaultAddress.company || "",
+        postal_code: defaultAddress.postal_code || "",
+        city: defaultAddress.city || "",
+        country_code: countryCodeToUse || "",
+        province: defaultAddress.province || "",
+        phone: defaultAddress.phone || "",
+      }
+      
+      console.log('Setting form data:', addressData)
+      setValue("shipping_address", addressData)
+    }
+    
+    // If cart has shipping address, try to match it
+    if (cart?.shipping_address && customer?.addresses?.length) {
+      const matchingAddress = customer.addresses.find((a) => {
+        return (
+          a.first_name === cart.shipping_address?.first_name &&
+          a.last_name === cart.shipping_address?.last_name &&
+          a.address_1 === cart.shipping_address?.address_1 &&
+          a.address_2 === cart.shipping_address?.address_2 &&
+          a.city === cart.shipping_address?.city &&
+          a.postal_code === cart.shipping_address?.postal_code &&
+          a.country_code === cart.shipping_address?.country_code &&
+          a.province === cart.shipping_address?.province &&
+          a.phone === cart.shipping_address?.phone
+        )
+      })
+      
+      if (matchingAddress) {
+        console.log('Found matching address:', matchingAddress.id)
+        setSelectedAddressId(matchingAddress.id)
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cart, customer, addressesInRegion])
+  }, [cart, customer, selectedAddressId, setValue])
+
 
   const handleChange = (
     e:
@@ -156,161 +210,244 @@ const ShippingAddress = ({
   return (
     <>
       {customer &&
-      (addressesInRegion?.length || 0) > 0 &&
-      !isShippingAddressEmpty(formData) ? (
-        <div className="w-full border border-grayscale-200 rounded-xs p-4 flex flex-wrap gap-8 max-lg:flex-col mb-8">
-          <div className="flex flex-1 gap-8">
-            <Icon name="user" className="w-6 h-6 mt-2.5" />
-            <div className="flex flex-col gap-8 flex-1">
-              <div className="flex flex-wrap justify-between gap-6">
-                <div className="grow basis-0">
-                  <p className="text-xs text-grayscale-500 mb-1.5">Country</p>
-                  <p>
-                    {cart?.region?.countries?.find(
-                      (c) => c.iso_2 === formData.shipping_address.country_code
-                    )?.display_name || formData.shipping_address.country_code}
-                  </p>
-                </div>
-                <div className="grow basis-0">
-                  <p className="text-xs text-grayscale-500 mb-1.5">Address</p>
-                  <p>{formData.shipping_address.address_1}</p>
-                </div>
-              </div>
-              {formData.shipping_address.address_2 && (
-                <div>
-                  <p className="text-xs text-grayscale-500 mb-1.5">
-                    Apartment, suite, etc. (Optional)
-                  </p>
-                  <p>{formData.shipping_address.address_2}</p>
-                </div>
-              )}
-              <div className="flex flex-wrap justify-between gap-6">
-                <div className="grow basis-0">
-                  <p className="text-xs text-grayscale-500 mb-1.5">
-                    Postal Code
-                  </p>
-                  <p>{formData.shipping_address.postal_code}</p>
-                </div>
-                <div className="grow basis-0">
-                  <p className="text-xs text-grayscale-500 mb-1.5">City</p>
-                  <p>{formData.shipping_address.city}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <UiDialogTrigger>
-            <Button variant="outline" size="sm" className="shrink-0">
-              Change
+      customer.addresses &&
+      customer.addresses.length > 0 ? (
+        <div className="space-y-4 mb-8">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Select Delivery Address</h3>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="text-green-600 border-green-200 hover:bg-green-50"
+              onPress={() => {
+                setShowNewAddressForm(true)
+              }}
+            >
+              Add New Address
             </Button>
-            <UiModalOverlay>
-              <UiModal>
-                <UiDialog>
-                  <p className="text-md mb-10">Change address</p>
-                  <ReactAria.RadioGroup
-                    className="flex flex-col gap-4 mb-10"
-                    aria-label="Shipping methods"
-                    onChange={(value) => {
-                      const selectedAddress = addressesInRegion?.find(
-                        (a) => a.id === value
+          </div>
+          
+          <div className="space-y-4">
+            {customer?.addresses?.map((address) => {
+              const isSelected = address.id === selectedAddressId
+              console.log('Rendering address:', address.id, 'Selected:', selectedAddressId, 'IsSelected:', isSelected)
+              
+              return (
+                <div
+                  key={address.id}
+                  className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                    isSelected 
+                      ? 'border-green-500 bg-green-50' 
+                      : 'border-gray-200 hover:border-green-300'
+                  }`}
+                  onClick={() => {
+                    console.log('Address clicked:', address.id)
+                    console.log('Address country_code:', address.country_code)
+                    console.log('Cart region countries:', cart?.region?.countries)
+                    
+                    // Check if the address country is in the region
+                    const regionCountry = cart?.region?.countries?.find(
+                      (c) => c.iso_2 === address.country_code
+                    )
+                    
+                    console.log('Found region country:', regionCountry)
+                    
+                    // If country not found in region, use the first available country as fallback
+                    let countryCodeToUse = address.country_code || ""
+                    if (!regionCountry && cart?.region?.countries?.length) {
+                      const fallbackCountry = cart.region.countries[0]
+                      countryCodeToUse = fallbackCountry.iso_2 || ""
+                      console.warn(`Country ${address.country_code} not found in region. Using fallback: ${fallbackCountry.iso_2} (${fallbackCountry.display_name})`)
+                    }
+                    
+                    if (!regionCountry) {
+                      console.warn('Address country not found in region! Available countries:', 
+                        cart?.region?.countries?.map(c => ({ iso_2: c.iso_2, name: c.display_name }))
                       )
-                      if (selectedAddress) {
-                        setFormAddress({
-                          address_1: selectedAddress.address_1 ?? undefined,
-                          address_2: selectedAddress.address_2 ?? undefined,
-                          city: selectedAddress.city ?? undefined,
-                          company: selectedAddress.company ?? undefined,
-                          country_code:
-                            selectedAddress.country_code ?? undefined,
-                          first_name: selectedAddress.first_name ?? undefined,
-                          last_name: selectedAddress.last_name ?? undefined,
-                          phone: selectedAddress.phone ?? undefined,
-                          postal_code: selectedAddress.postal_code ?? undefined,
-                          province: selectedAddress.province ?? undefined,
-                        })
+                    }
+                    
+                    setSelectedAddressId(address.id)
+                    
+                    const addressData = {
+                      first_name: address.first_name || "",
+                      last_name: address.last_name || "",
+                      address_1: address.address_1 || "",
+                      address_2: address.address_2 || "",
+                      company: address.company || "",
+                      postal_code: address.postal_code || "",
+                      city: address.city || "",
+                      country_code: countryCodeToUse || "",
+                      province: address.province || "",
+                      phone: address.phone || "",
+                    }
+                    
+                    console.log('Setting address data:', addressData)
+                    setValue("shipping_address", addressData)
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center mt-1 ${
+                      isSelected 
+                        ? 'border-green-500 bg-green-500' 
+                        : 'border-gray-300'
+                    }`}>
+                      {isSelected && (
+                        <div className="w-2 h-2 bg-white rounded-full"></div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-gray-900 mb-2">
+                        {[address.first_name, address.last_name]
+                          .filter(Boolean)
+                          .join(" ")}
+                      </h4>
+                      <div className="text-gray-600 space-y-1">
+                        <p>{address.address_1}</p>
+                        {address.address_2 && <p>{address.address_2}</p>}
+                        <p>
+                          {[address.city, address.province]
+                            .filter(Boolean)
+                            .join(", ")} {address.postal_code}
+                        </p>
+                        <p className="font-medium">
+                    {cart?.region?.countries?.find(
+                            (c) => c.iso_2 === address.country_code
+                          )?.display_name || address.country_code}
+                  </p>
+                        {address.phone && (
+                          <p className="text-sm text-gray-500">📞 {address.phone}</p>
+                        )}
+                </div>
+                </div>
+              </div>
+                </div>
+              )
+            })}
+                </div>
+          
+          {/* New Address Form */}
+          {showNewAddressForm && (
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-gray-900">Add New Address</h4>
+                
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <InputField
+                  placeholder="First name"
+                  name="new_address.first_name"
+                  inputProps={{ required: true }}
+                />
+                <InputField
+                  placeholder="Last name"
+                  name="new_address.last_name"
+                  inputProps={{ required: true }}
+                />
+                <InputField
+                  placeholder="Address"
+                  name="new_address.address_1"
+                  inputProps={{ required: true }}
+                />
+                <InputField
+                  placeholder="Apartment, suite, etc."
+                  name="new_address.address_2"
+                />
+                <InputField
+                  placeholder="Company"
+                  name="new_address.company"
+                />
+                <InputField
+                  placeholder="City"
+                  name="new_address.city"
+                  inputProps={{ required: true }}
+                />
+                <InputField
+                  placeholder="Postal code"
+                  name="new_address.postal_code"
+                  inputProps={{ required: true }}
+                />  
+                <InputField
+                  placeholder="Province"
+                  name="new_address.province"
+                />
+                <CountrySelectField
+                  name="new_address.country_code"
+                  selectProps={{ region: cart?.region, isRequired: true }}
+                />
+                <InputField
+                  placeholder="Phone"
+                  name="new_address.phone"
+                />
+                <div className="col-span-2 flex justify-end gap-2"> 
+                  <Button
+                    variant="outline"
+                    onPress={() => setShowNewAddressForm(false)}
+                  >
+                    Cancel
+            </Button>
+                  <Button
+                    className="bg-green-600 hover:bg-green-700"
+                    onPress={async () => {
+                      try {
+                        const newAddressData = {
+                          first_name: (document.querySelector('input[name="new_address.first_name"]') as HTMLInputElement)?.value,
+                          last_name: (document.querySelector('input[name="new_address.last_name"]') as HTMLInputElement)?.value,
+                          address_1: (document.querySelector('input[name="new_address.address_1"]') as HTMLInputElement)?.value,
+                          address_2: (document.querySelector('input[name="new_address.address_2"]') as HTMLInputElement)?.value,
+                          company: (document.querySelector('input[name="new_address.company"]') as HTMLInputElement)?.value,
+                          city: (document.querySelector('input[name="new_address.city"]') as HTMLInputElement)?.value,
+                          postal_code: (document.querySelector('input[name="new_address.postal_code"]') as HTMLInputElement)?.value,
+                          province: (document.querySelector('input[name="new_address.province"]') as HTMLInputElement)?.value,
+                          country_code: (document.querySelector('select[name="new_address.country_code"]') as HTMLSelectElement)?.value,
+                          phone: (document.querySelector('input[name="new_address.phone"]') as HTMLInputElement)?.value,
+                        }
+                        
+                        const result = await addAddress.mutateAsync(newAddressData)
+                        
+                        // Set the newly added address as the selected address
+                        if (result.success) {
+                          // Find the correct country code format from region
+                          const regionCountry = cart?.region?.countries?.find(
+                            (c) => c.iso_2 === newAddressData.country_code
+                          )
+                          
+                          // If country not found in region, use the first available country as fallback
+                          let countryCodeToUse = newAddressData.country_code || "IN"
+                          if (!regionCountry && cart?.region?.countries?.length) {
+                            const fallbackCountry = cart.region.countries[0]
+                            countryCodeToUse = fallbackCountry.iso_2 || ""
+                            console.warn(`New address country ${newAddressData.country_code} not found in region. Using fallback: ${fallbackCountry.iso_2} (${fallbackCountry.display_name})`)
+                          }
+                          
+                          const addressData = {
+                            first_name: newAddressData.first_name || "",
+                            last_name: newAddressData.last_name || "",
+                            address_1: newAddressData.address_1 || "",
+                            address_2: newAddressData.address_2 || "",
+                            company: newAddressData.company || "",
+                            postal_code: newAddressData.postal_code || "",
+                            city: newAddressData.city || "",
+                            country_code: countryCodeToUse || "",
+                            province: newAddressData.province || "",
+                            phone: newAddressData.phone || "",
+                          }
+                          setValue("shipping_address", addressData)
+                        }
+                        
+                        setShowNewAddressForm(false)
+                        toast.success('Address added successfully!')  
+                      } catch (error) {
+                        toast.error('Failed to add address')
                       }
                     }}
-                    value={
-                      addressesInRegion?.find((a) =>
-                        compareAddresses(
-                          {
-                            first_name: a.first_name ?? "",
-                            last_name: a.last_name ?? "",
-                            address_1: a.address_1 ?? "",
-                            address_2: a.address_2 ?? "",
-                            company: a.company ?? "",
-                            postal_code: a.postal_code ?? "",
-                            city: a.city ?? "",
-                            country_code: a.country_code ?? "",
-                            province: a.province ?? "",
-                            phone: a.phone ?? "",
-                          },
-                          {
-                            first_name: formData.shipping_address.first_name,
-                            last_name: formData.shipping_address.last_name,
-                            address_1: formData.shipping_address.address_1,
-                            address_2: formData.shipping_address.address_2,
-                            company: formData.shipping_address.company,
-                            postal_code: formData.shipping_address.postal_code,
-                            city: formData.shipping_address.city,
-                            country_code:
-                              formData.shipping_address.country_code,
-                            province: formData.shipping_address.province,
-                            phone: formData.shipping_address.phone,
-                          }
-                        )
-                      )?.id
-                    }
                   >
-                    {addressesInRegion?.map((address) => (
-                      <UiRadio
-                        variant="outline"
-                        value={address.id}
-                        className="gap-4"
-                        key={address.id}
-                      >
-                        <UiRadioBox />
-                        <UiRadioLabel>
-                          {[address.first_name, address.last_name]
-                            .filter(Boolean)
-                            .join(" ")}
-                        </UiRadioLabel>
-                        <UiRadioLabel className="ml-auto text-grayscale-500 group-data-[selected=true]:font-normal">
-                          {[
-                            address.address_1,
-                            address.address_2,
-                            [address.postal_code, address.city]
-                              .filter(Boolean)
-                              .join(" "),
-                            cart?.region?.countries?.find(
-                              (c) => c.iso_2 === address.country_code
-                            )?.display_name || address.country_code,
-                          ]
-                            .filter(Boolean)
-                            .join(", ")}
-                        </UiRadioLabel>
-                      </UiRadio>
-                    ))}
-                  </ReactAria.RadioGroup>
-                  <div className="flex justify-between">
-                    <UiDialogTrigger>
-                      <Button>Add new address</Button>
-                      <UiModalOverlay>
-                        <UiModal>
-                          <UiDialog>
-                            <UpsertAddressForm
-                              region={cart?.region}
-                              defaultValues={{ country_code: countryCode }}
-                            />
-                          </UiDialog>
-                        </UiModal>
-                      </UiModalOverlay>
-                    </UiDialogTrigger>
-                    <UiCloseButton variant="outline">Close</UiCloseButton>
+                    Save Address
+                  </Button>
+                </div>
+              </div>
                   </div>
-                </UiDialog>
-              </UiModal>
-            </UiModalOverlay>
-          </UiDialogTrigger>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-4 mb-8 ">

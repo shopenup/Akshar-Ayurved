@@ -14,6 +14,17 @@ export const getAuthHeaders = async (): Promise<
   return {}
 }
 
+export const getCompleteHeaders = async (): Promise<Record<string, string>> => {
+  const authHeaders = await getAuthHeaders()
+  const publishableKey = process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || 'pk_03d087dc82a71a3723b4ebfc54024a1b7ad03ab5c58b15d27129f8c482bfac5f'
+
+  return {
+    ...authHeaders,
+    'x-publishable-api-key': publishableKey,
+    'Content-Type': 'application/json',
+  }
+}
+
 export const setAuthToken = async (token: string) => {
   Cookies.set("_shopenup_jwt", token, {
     expires: 7, // 7 days

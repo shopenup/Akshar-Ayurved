@@ -11,6 +11,7 @@ import {
   setCartId,
   removeCartId,
   clearAllCartData,
+  getCompleteHeaders,
 } from "@lib/shopenup/cookies"
 import { getRegion } from "@lib/shopenup/regions"
 import { addressesFormSchema } from "hooks/cart"
@@ -40,9 +41,10 @@ export async function retrieveCart() {
     // User is logged in - fetch customer's cart directly
     try {
       // Get customer data to ensure we have a valid session
+      const completeHeaders = await getCompleteHeaders()
       const customer = await sdk.client
         .fetch<{ customer: HttpTypes.StoreCustomer }>(`/store/customers/me`, {
-          headers: authHeaders,
+          headers: completeHeaders,
           cache: "no-store",
         })
         .then(({ customer }) => customer)
@@ -62,7 +64,7 @@ export async function retrieveCart() {
         // Try to fetch cart using stored cart ID
         const cart = await sdk.client
           .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${cartId}`, {
-            headers: authHeaders,
+            headers: completeHeaders,
             cache: "no-store",
           })
           .then(({ cart }) => cart)
@@ -80,34 +82,9 @@ export async function retrieveCart() {
         }
       }
 
-      // If no cart found, try to get customer's active cart
-      const customerCarts = await sdk.client
-        .fetch<{ carts: HttpTypes.StoreCart[] }>(`/store/customers/me/carts`, {
-          headers: authHeaders,
-          cache: "no-store",
-        })
-        .then(({ carts }) => carts)
-        .catch((error) => {
-          console.error('❌ Error fetching customer carts:', error)
-          return []
-        })
-
-      // Find the most recent active cart
-      const activeCart = customerCarts.find(cart => 
-        cart.items && cart.items.length > 0
-      )
-
-      if (activeCart) {
-        // Update cart ID in storage
-        await setCartId(activeCart.id)
-        
-        if (activeCart?.items && activeCart.items.length && activeCart.region_id) {
-          activeCart.items = await enrichLineItems(activeCart.items, activeCart.region_id)
-        }
-        
-        return activeCart
-      }
-
+      // If no cart found, skip the problematic endpoint and return null
+      // This avoids CORS preflight issues with /store/customers/me/carts
+      console.log('No cart found in storage, skipping customer carts fetch to avoid CORS issues')
       return null
 
     } catch (error) {
@@ -132,7 +109,7 @@ async function retrieveCartById() {
   const cart = await sdk.client
     .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${cartId}`, {
       next: { tags: ["cart"] },
-      headers: { ...(await getAuthHeaders()) },
+      headers: { ...(await getCompleteHeaders()) },
       cache: "no-store",
     })
     .then(({ cart }) => {
@@ -184,10 +161,11 @@ export async function getOrSetCart(input: unknown) {
           throw new Error(`Region not found for country code: ${countryCode}`)
         }
         
+        const completeHeaders = await getCompleteHeaders()
         const cartResp = await sdk.store.cart.create(
           { region_id: region.id },
           {},
-          authHeaders
+          completeHeaders
         )
         cart = cartResp.cart
         await setCartId(cart.id)
@@ -200,7 +178,7 @@ export async function getOrSetCart(input: unknown) {
             cart.id,
             { region_id: region.id },
             {},
-            authHeaders
+            await getCompleteHeaders()
           )
           revalidateTag("cart")
         }
@@ -225,7 +203,7 @@ export async function getOrSetCart(input: unknown) {
     const cartResp = await sdk.store.cart.create(
       { region_id: region.id },
       {},
-      await getAuthHeaders()
+      await getCompleteHeaders()
     )
     cart = cartResp.cart
 
@@ -238,7 +216,7 @@ export async function getOrSetCart(input: unknown) {
       cart.id,
       { region_id: region.id },
       {},
-      await getAuthHeaders()
+      await getCompleteHeaders()
     )
     revalidateTag("cart")
   }
@@ -252,13 +230,22 @@ async function updateCart(data: HttpTypes.StoreUpdateCart) {
     throw new Error("No existing cart found, please create one before updating")
   }
 
+  console.log('=== UPDATE CART DEBUG ===')
+  console.log('Cart ID:', cartId)
+  console.log('Update data:', data)
+  console.log('========================')
+
   return sdk.store.cart
-    .update(cartId, data, {}, await getAuthHeaders())
+    .update(cartId, data, {}, await getCompleteHeaders())
     .then(({ cart }) => {
+      console.log('Cart update successful:', cart)
       revalidateTag("cart")
       return cart
     })
-    .catch(shopenupError)
+    .catch((error) => {
+      console.error('Cart update failed:', error)
+      return shopenupError(error)
+    })
 }
 
 export async function addToCart({
@@ -306,7 +293,7 @@ export async function addToCart({
           quantity,
         },
         {},
-        await getAuthHeaders()
+        await getCompleteHeaders()
       )
     
     revalidateTag("cart")
@@ -314,7 +301,7 @@ export async function addToCart({
     // Verify the item was added by fetching the cart again
     const updatedCart = await sdk.client
       .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${cart.id}`, {
-        headers: { ...(await getAuthHeaders()) },
+        headers: { ...(await getCompleteHeaders()) },
         cache: "no-store",
       })
       .then(({ cart }) => cart)
@@ -358,7 +345,7 @@ export async function updateLineItem({
   }
 
   await sdk.store.cart
-    .updateLineItem(cartId, lineId, { quantity }, {}, await getAuthHeaders())
+      .updateLineItem(cartId, lineId, { quantity }, {}, await getCompleteHeaders())
     .then(() => {
       revalidateTag("cart")
     })
@@ -376,7 +363,7 @@ export async function deleteLineItem(lineId: unknown) {
   }
 
   await sdk.store.cart
-    .deleteLineItem(cartId, lineId, await getAuthHeaders())
+    .deleteLineItem(cartId, lineId, await getCompleteHeaders())
     .then(() => {
       revalidateTag("cart")
     })
@@ -404,7 +391,7 @@ export async function setShippingMethod({
       cartId,
       { option_id: shippingMethodId },
       {},
-      await getAuthHeaders()
+      await getCompleteHeaders()
     )
     .then(() => {
       revalidateTag("cart")
@@ -472,7 +459,7 @@ export async function initiatePaymentSession(provider_id: unknown) {
           provider_id,
         },
         {},
-        await getAuthHeaders()
+        await getCompleteHeaders()
       )
     
     console.log("✅ Payment session initiated successfully:", response)
@@ -546,16 +533,28 @@ export async function setAddresses(
       throw new Error("No existing cart found when setting addresses")
     }
 
-    await updateCart({
+    console.log('=== CART UPDATE DEBUG ===')
+    console.log('Form data received:', formData)
+    console.log('Shipping address:', formData.shipping_address)
+    console.log('Billing address:', formData.same_as_billing === "on" ? formData.shipping_address : formData.billing_address)
+    console.log('Same as billing:', formData.same_as_billing)
+    console.log('========================')
+
+    const updateData = {
       shipping_address: formData.shipping_address,
       billing_address:
         formData.same_as_billing === "on"
           ? formData.shipping_address
           : formData.billing_address,
-    })
+    }
+
+    console.log('Update data being sent:', updateData)
+
+    await updateCart(updateData)
     revalidateTag("shipping")
     return { success: true, error: null }
   } catch (e) {
+    console.error('Error in setAddresses:', e)
     return {
       success: false,
       error: e instanceof Error ? e.message : "Could not set addresses",
@@ -668,7 +667,7 @@ export async function placeOrder() {
 
   try {
     const cartRes = await sdk.store.cart
-      .complete(cartId, {}, await getAuthHeaders())
+      .complete(cartId, {}, await getCompleteHeaders())
       .then((cartRes) => {
         console.log('✅ Order completed successfully:', cartRes)
         revalidateTag("cart")
@@ -726,4 +725,3 @@ export async function updateRegion(countryCode: string, currentPath: string) {
 
   redirect(`/${countryCode}${currentPath}`)
 }
-  

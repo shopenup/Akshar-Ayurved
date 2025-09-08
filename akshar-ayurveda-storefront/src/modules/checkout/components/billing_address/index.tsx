@@ -100,13 +100,19 @@ const BillingAddress = ({
     () => cart?.region?.countries?.map((c) => c.iso_2),
     [cart?.region]
   )
-  const addressesInRegion = useMemo(
-    () =>
-      customer?.addresses.filter(
-        (a) => a.country_code && countriesInRegion?.includes(a.country_code)
-      ),
-    [customer?.addresses, countriesInRegion]
-  )
+  const addressesInRegion = useMemo(() => {
+    if (!customer?.addresses) return []
+    
+    // If no region data or countries, show all addresses
+    if (!countriesInRegion || countriesInRegion.length === 0) {
+      return customer.addresses
+    }
+    
+    // Filter addresses by region
+    return customer.addresses.filter(
+      (a) => a.country_code && countriesInRegion.includes(a.country_code)
+    )
+  }, [customer?.addresses, countriesInRegion])
   useEffect(() => {
     // Ensure cart is not null and has a billing_address before setting form data
     if (cart) {

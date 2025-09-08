@@ -16,7 +16,7 @@ const StepNavigation = ({ currentStep, onStepClick }: {
 }) => {
   const steps = [
     { step: 'email', label: 'Email', icon: '📧' },
-    { step: 'delivery', label: 'Delivery', icon: '📍' },
+    { step: 'delivery', label: 'Address', icon: '📍' },
     { step: 'shipping', label: 'Shipping', icon: '🚚' },
     { step: 'payment', label: 'Payment', icon: '💳' },
     { step: 'review', label: 'Review', icon: '✅' }
@@ -52,7 +52,7 @@ function CheckoutPage() {
   // Define checkout steps
   const checkoutSteps = [
     { step: 'email', label: 'Email', number: 1, icon: '📧' },
-    { step: 'delivery', label: 'Delivery', number: 2, icon: '📍' },
+    { step: 'delivery', label: 'Address', number: 2, icon: '📍' },
     { step: 'shipping', label: 'Shipping', number: 3, icon: '🚚' },
     { step: 'payment', label: 'Payment', number: 4, icon: '💳' },
     { step: 'review', label: 'Review', number: 5, icon: '✅' }
