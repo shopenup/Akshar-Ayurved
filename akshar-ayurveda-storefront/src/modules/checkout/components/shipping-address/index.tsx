@@ -368,7 +368,6 @@ const ShippingAddress = ({
               },
             }}
             data-testid="shipping-country-select"
-            className="block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full"
           />
           <InputField
             placeholder="State / Province"
