@@ -22,6 +22,7 @@ interface Product {
   updated_at: string | null;
   variants?: any[];
   tags?: string[];
+  categories?: any[];
   type?: {
     value: string;
     label: string;
@@ -71,7 +72,7 @@ export default function ProductsPage() {
       try {
         setCategoriesLoading(true);
         const cats = await getCategoriesList();
-        console.log('Categories fetched:', cats);
+        //console.log('Categories fetched:', cats);
         setCategories(cats.product_categories || []);
       } catch (err: any) {
         console.error('Error fetching categories:', err);
@@ -91,7 +92,7 @@ export default function ProductsPage() {
         const query: any = {
           limit: 100,
           offset: 0,
-          fields: '*variants.calculated_price',
+          fields: '*variants.calculated_price,*categories',
         };
         
         // Add category filter
@@ -104,19 +105,21 @@ export default function ProductsPage() {
           query.q = filters.searchQuery;
         }
         
-        console.log('Fetching products with query:', query);
+        //console.log('Fetching products with query:', query);
         
         const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
           '/store/products',
           {
             query,
             next: { tags: ['products'] },
+            // fields:{'*categories'}
           }
         );
         
         const sdkProducts = response.products || [];
-        console.log('Products fetched:', sdkProducts.length);
-        console.log('Raw products:', sdkProducts.map(p => ({ id: p.id, title: p.title, status: p.status, price: p.variants?.[0]?.calculated_price })));
+        console.log('sdkProducts', sdkProducts);
+        //console.log('Products fetched:', sdkProducts.length);
+        //console.log('Raw products:', sdkProducts.map(p => ({ id: p.id, title: p.title, status: p.status, price: p.variants?.[0]?.calculated_price })));
 
         // Map StoreProduct[] to Product[] by ensuring 'price' is present
         const mappedProducts = sdkProducts.map((p) => {
@@ -159,11 +162,12 @@ export default function ProductsPage() {
             updated_at: p.updated_at || '',
             variants: p.variants || [],
             tags: p.tags,
-            type: p.type
+            type: p.type,
+            categories: p.categories || [], // <-- ensure categories is mapped
           };
         });
 
-        console.log('Mapped products:', mappedProducts.map(p => ({ id: p.id, title: p.title, status: p.status, price: p.price })));
+        //console.log('Mapped products:', mappedProducts.map(p => ({ id: p.id, title: p.title, status: p.status, price: p.price })));
         setProducts(mappedProducts as Product[]);
       } catch (err: any) {
         console.error('Error fetching products:', err);
@@ -177,8 +181,8 @@ export default function ProductsPage() {
 
   // Filter and sort products
   const filteredAndSortedProducts = React.useMemo(() => {
-    console.log('Filtering products:', products.length, 'products');
-    console.log('Filter settings:', filters);
+    //console.log('Filtering products:', products.length, 'products');
+    //console.log('Filter settings:', filters);
     
     let filtered = products.filter(product => {
       // Temporarily disable all filters for debugging
@@ -186,21 +190,21 @@ export default function ProductsPage() {
       
       // Stock filter
       // if (filters.inStock && product.status !== 'published') {
-      //   console.log('Filtered out by stock:', product.title, 'status:', product.status);
+      //   //console.log('Filtered out by stock:', product.title, 'status:', product.status);
       //   return false;
       // }
       
       // Price range filter
       // const price = product.price || 0;
       // if (price < filters.priceRange[0] || price > filters.priceRange[1]) {
-      //   console.log('Filtered out by price:', product.title, 'price:', price, 'range:', filters.priceRange);
+      //   //console.log('Filtered out by price:', product.title, 'price:', price, 'range:', filters.priceRange);
       //   return false;
       // }
       
       // return true;
     });
 
-    console.log('After filtering:', filtered.length, 'products remain');
+    //console.log('After filtering:', filtered.length, 'products remain');
 
     // Sort products
     filtered.sort((a, b) => {
@@ -244,7 +248,7 @@ export default function ProductsPage() {
         return;
       }
 
-      console.log('Adding to cart:', { productId, variantId, quantity: 1 });
+      //console.log('Adding to cart:', { productId, variantId, quantity: 1 });
       
       await addLineItem({
         variantId,
@@ -252,7 +256,7 @@ export default function ProductsPage() {
         countryCode: 'in' // Default to India
       });
 
-      console.log('✅ Product added to cart successfully');
+      //console.log('✅ Product added to cart successfully');
     } catch (error) {
       console.error('Error adding to cart:', error);
       showToast('Failed to add item to cart. Please try again.', 'error');
@@ -409,7 +413,7 @@ export default function ProductsPage() {
                   </div>
 
                   {/* Stock Filter */}
-                  <div>
+                  {/* <div>
                     <h3 className="text-sm font-medium text-gray-900 mb-3">Availability</h3>
                     <label className="flex items-center">
                       <input
@@ -420,7 +424,7 @@ export default function ProductsPage() {
                       />
                       <span className="text-sm text-gray-700">In Stock Only</span>
                     </label>
-                  </div>
+                  </div> */}
 
                   {/* Sort Options */}
                   <div>
@@ -534,8 +538,9 @@ export default function ProductsPage() {
                       )}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                       {filteredAndSortedProducts.map((product) => (
+                        console.log(product),
                         <ProductCard
                           key={product.id}
                           product={product}

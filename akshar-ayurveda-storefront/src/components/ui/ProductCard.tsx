@@ -18,6 +18,10 @@ interface Product {
     value: string;
     label: string;
   };
+  categories?: {
+    id: string;
+    name: string;
+  }[];
 }
 
 interface ProductCardProps {
@@ -35,6 +39,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   showAddToCart = true,
   className = '',
 }) => {
+  console.log('product', product);
   const handleProductClick = () => {
     if (onProductClick) {
       onProductClick(product.id);
@@ -65,7 +70,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <img
           src={product.thumbnail || product.images?.[0] || '/placeholder-product.jpg'}
           alt={product.title}
-          className="w-full h-48 object-cover rounded-t-lg"
+          className="w-full h-48 object-contain rounded-t-lg"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder-product.jpg';
@@ -109,7 +114,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
       {/* Product Info */}
       <div className="p-4">
         <Badge variant="secondary" size="sm" className="mb-2">
-          {product.type?.value || 'General'}
+          {product.categories && product.categories.length > 0
+            ? product.categories[0].name
+            : 'General'}
         </Badge>
         
         <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">

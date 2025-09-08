@@ -178,7 +178,7 @@ export default function ProfilePage() {
             <nav className="flex space-x-8 border-b border-gray-200">
               {[
                 { id: 'profile', label: 'Profile', icon: '👤' },
-                { id: 'orders', label: 'Orders', icon: '📦' },
+                // { id: 'orders', label: 'Orders', icon: '📦' },
                 { id: 'addresses', label: 'Addresses', icon: '📍' },
                 { id: 'security', label: 'Security', icon: '🔒' }
               ].map((tab) => (
