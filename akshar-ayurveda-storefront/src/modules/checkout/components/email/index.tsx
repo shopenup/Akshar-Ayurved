@@ -15,6 +15,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import { useCustomer } from "hooks/customer"
 import { useSetEmail } from "hooks/cart"
 import { StoreCart } from "@shopenup/types"
+import Link from "next/link"
 
 export const emailFormSchema = z.object({
   email: z.string().min(3).email("Enter a valid email address."),
@@ -119,9 +120,9 @@ const Email = ({
                   <div className="mt-4 text-center text-sm text-gray-500">
                     <p>
                       Already have an account?{" "}
-                      <span className="text-green-600 underline cursor-pointer">
-                        Log in
-                      </span>
+                      <Link href="/login" className="text-green-600 hover:text-green-500 font-medium">
+                        Login
+                      </Link>
                       {" "}or continue as guest
                     </p>
                   </div>
