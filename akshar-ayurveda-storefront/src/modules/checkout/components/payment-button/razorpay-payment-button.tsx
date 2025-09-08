@@ -4,7 +4,7 @@ import Spinner from "@modules/common/icons/spinner"
 import React, { useCallback, useEffect, useState } from "react"
 import  {useRazorpay, RazorpayOrderOptions } from "react-razorpay"
 import { HttpTypes } from "@shopenup/types"
-import {  placeOrder,  } from "@lib/shopenup/cart"
+import { usePlaceOrder } from "@hooks/cart"
 import { CurrencyCode } from "react-razorpay/dist/constants/currency"
 import { sendOrderConfirmationSMS, triggerOrderPlacedEvent } from "@lib/services/sms-service"
 export const RazorpayPaymentButton = ({
@@ -23,12 +23,13 @@ export const RazorpayPaymentButton = ({
    } = useRazorpay();
   
   const [orderData,setOrderData] = useState({razorpayOrder:{id:""}})
+  const placeOrder = usePlaceOrder()
 
   
   console.log(`session_data: `+JSON.stringify(session))
   const onPaymentCompleted = async () => {
     try {
-      const result = await placeOrder();
+      const result = await placeOrder.mutateAsync(null);
       
       // Send SMS notification through subscriber system if order was successful
       if (result?.type === "order" && result.order) {
@@ -127,9 +128,44 @@ export const RazorpayPaymentButton = ({
    
     })
    razorpay.on("payment.authorized" as any, function (response: any) {
-    const authorizedCart = placeOrder().then(authorizedCart=>{
-    JSON.stringify(`authorized:`+ authorizedCart)
-    })
+    placeOrder.mutate(null, {
+      onSuccess: async (result) => {
+        console.log(`authorized: ${JSON.stringify(result)}`)
+        if (result?.type === "order" && result.order) {
+          // Send SMS notification through subscriber system
+          try {
+            if (cart.shipping_address?.phone) {
+              const phoneNumber = cart.shipping_address.phone.startsWith('+91') 
+                ? cart.shipping_address.phone 
+                : `+91${cart.shipping_address.phone}`;
+              
+              await triggerOrderPlacedEvent({
+                id: result.order.id,
+                customer: {
+                  phone: phoneNumber,
+                  email: cart.email || '',
+                  firstName: cart.shipping_address.first_name || '',
+                  lastName: cart.shipping_address.last_name || ''
+                },
+                total: cart.total || 0,
+                items: cart.items || [],
+                status: 'processing'
+              });
+              console.log('✅ SMS notification sent through subscriber system');
+            }
+          } catch (smsError) {
+            console.warn('⚠️ Failed to send SMS notification through subscriber:', smsError);
+          }
+          
+          // Redirect to order confirmation page
+          window.location.href = `/order-confirmation/${result.order.id}`;
+        }
+      },
+      onError: (error) => {
+        console.error('Order placement failed:', error);
+        setErrorMessage('Order placement failed. Please try again.');
+      }
+    });
     })
     // razorpay.on("payment.captured", function (response: any) {
 

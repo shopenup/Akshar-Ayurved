@@ -1,3 +1,4 @@
+import React from "react"
 import {
   addToCart,
   applyPromotions,
@@ -24,6 +25,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query"
 import { z } from "zod"
+import { useAppContext } from "@context/AppContext"
 
 export const useCart = ({ enabled }: { enabled: boolean }) => {
   return useQuery({
@@ -43,7 +45,30 @@ export const useCart = ({ enabled }: { enabled: boolean }) => {
     staleTime: 0,
     // Always refetch when query is enabled
     refetchOnMount: true,
+    // Refetch when the component becomes visible again
+    refetchOnReconnect: true,
   })
+}
+
+// Custom hook that ensures cart count is always synchronized with context
+export const useCartWithSync = ({ enabled }: { enabled: boolean }) => {
+  const { updateCartCount } = useAppContext()
+  const cartQuery = useCart({ enabled })
+  
+  // Update context whenever cart data changes
+  React.useEffect(() => {
+    if (updateCartCount) {
+      if (cartQuery.data?.items) {
+        const count = cartQuery.data.items.reduce((sum, item) => sum + item.quantity, 0)
+        updateCartCount(count)
+      } else {
+        // Cart is empty or null, set count to 0
+        updateCartCount(0)
+      }
+    }
+  }, [cartQuery.data, updateCartCount])
+  
+  return cartQuery
 }
 
 export const useCartQuantity = () => {
@@ -100,6 +125,12 @@ export const useUpdateLineItem = (
         exact: false,
         queryKey: ["cart"],
       })
+      
+      // Force refetch of cart data to ensure immediate updates
+      await queryClient.refetchQueries({
+        exact: false,
+        queryKey: ["cart"],
+      })
 
       await options?.onSuccess?.(...args)
     },
@@ -121,6 +152,12 @@ export const useDeleteLineItem = (
     },
     onSuccess: async function (...args) {
       await queryClient.invalidateQueries({
+        exact: false,
+        queryKey: ["cart"],
+      })
+      
+      // Force refetch of cart data to ensure immediate updates
+      await queryClient.refetchQueries({
         exact: false,
         queryKey: ["cart"],
       })
@@ -153,7 +190,7 @@ export const useAddLineItem = (
       return response
     },
     onSuccess: async function (...args) {
-      // Invalidate all cart-related queries
+      // Invalidate all cart-related queries immediately
       await queryClient.invalidateQueries({
         exact: false,
         queryKey: ["cart"],
@@ -163,6 +200,12 @@ export const useAddLineItem = (
       await queryClient.invalidateQueries({
         exact: false,
         queryKey: ["cart-quantity"],
+      })
+
+      // Force refetch of cart data to ensure immediate updates
+      await queryClient.refetchQueries({
+        exact: false,
+        queryKey: ["cart"],
       })
 
       await options?.onSuccess?.(...args)
@@ -390,6 +433,8 @@ export const usePlaceOrder = (
   >
 ) => {
   const queryClient = useQueryClient()
+  const { updateCartCount } = useAppContext()
+  
   return useMutation({
     mutationKey: ["place-order"],
     mutationFn: async () => {
@@ -398,10 +443,22 @@ export const usePlaceOrder = (
     },
     ...options,
     onSuccess: async function (...args) {
+      // Invalidate and refetch cart queries
       await queryClient.invalidateQueries({
         exact: false,
         queryKey: ["cart"],
       })
+      
+      // Force refetch to get updated cart data
+      await queryClient.refetchQueries({
+        exact: false,
+        queryKey: ["cart"],
+      })
+      
+      // Explicitly set cart count to 0 after successful order
+      if (updateCartCount) {
+        updateCartCount(0)
+      }
 
       await options?.onSuccess?.(...args)
     },

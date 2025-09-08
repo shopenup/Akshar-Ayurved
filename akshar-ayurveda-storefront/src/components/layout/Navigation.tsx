@@ -4,9 +4,9 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { getCategoriesList } from '@lib/shopenup/categories';
 import { GlobalSearch } from '../ui';
-import { useSignout } from '../../hooks/customer';
-import { useAppContext } from '../../context/AppContext';
-import { useCart } from '../../hooks/cart';
+import { useSignout } from '@hooks/customer';
+import { useAppContext } from '@context/AppContext';
+import { useCartWithSync } from '@hooks/cart';
 
 
 interface Category {
@@ -36,8 +36,8 @@ export default function Navigation({
   const { mutateAsync: signout, isPending: isSigningOut } = useSignout();
   const { resetAppState: contextResetAppState, updateCartCount: contextUpdateCartCount } = useAppContext();
   
-  // Use cart hook to get real-time cart data
-  const { data: cart } = useCart({ enabled: true });
+  // Use cart hook to get real-time cart data with automatic context sync
+  const { data: cart } = useCartWithSync({ enabled: true });
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
@@ -45,15 +45,8 @@ export default function Navigation({
   const [isProductsDropdownOpen, setIsProductsDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Calculate cart count from cart data
-  const currentCartCount = cart?.items ? cart.items.reduce((sum, item) => sum + item.quantity, 0) : 0;
-
-  // Update cart count in context when cart changes
-  useEffect(() => {
-    if (contextUpdateCartCount) {
-      contextUpdateCartCount(currentCartCount);
-    }
-  }, [currentCartCount, contextUpdateCartCount]);
+  // Use the cart count from context - it's automatically synced by useCartWithSync
+  const currentCartCount = cartItemCount;
 
   const toggleProductsDropdown = () => {
     setIsProductsDropdownOpen(!isProductsDropdownOpen);
@@ -395,7 +388,7 @@ export default function Navigation({
 
               {/* WhatsApp */}
               <a
-                href="https://wa.me/1234567890"
+                href="https://wa.me/9412721980"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-600 hover:text-green-600 transition-colors"

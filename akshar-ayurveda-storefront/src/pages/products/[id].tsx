@@ -7,10 +7,8 @@ import { sdk } from '@lib/config';
 import { HttpTypes } from '@shopenup/types';
 import ProductPrice from '@modules/products/components/product-price';
 import ProductActions from '@modules/products/components/product-actions';
-import { useAddLineItem, useCart } from '@hooks/cart';
-import { useAppContext } from '@context/AppContext';
+import { useAddLineItem, useCartWithSync } from '@hooks/cart';
 import { useCountryCode } from '@hooks/country-code';
-import { addToCart } from '@lib/shopenup/cart';
 
 // Product interface based on Shopenup API response
 interface Product {
@@ -77,22 +75,10 @@ interface Product {
 export default function ProductPage() {
   const router = useRouter();
   const { id } = router.query;
-  const { updateCartCount } = useAppContext();
   const { showToast } = useToast();
   const countryCode = useCountryCode();
-  const { data: cart } = useCart({ enabled: !!countryCode });
-  const addLineItemMutation = useAddLineItem({
-    onSuccess: () => {
-      // Update cart count immediately after successful addition
-      if (cart && cart.items) {
-        const newCount = cart.items.reduce((sum: number, item: any) => sum + item.quantity, 0) + quantity;
-        updateCartCount(newCount);
-      } else {
-        // If no existing cart, just add the new quantity
-        updateCartCount(quantity);
-      }
-    }
-  });
+  const { data: cart } = useCartWithSync({ enabled: !!countryCode });
+  const addLineItemMutation = useAddLineItem();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

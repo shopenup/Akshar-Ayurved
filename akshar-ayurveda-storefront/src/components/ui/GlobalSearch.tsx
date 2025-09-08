@@ -35,28 +35,20 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
       try {
         console.log('GlobalSearch - Fetching products...');
         
-        // Try different API endpoints
+        // Use the correct store products endpoint
         let productsData;
         try {
-          productsData = await sdk.client.fetch('/products', {
+          productsData = await sdk.client.fetch('/store/products', {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
+              'x-publishable-api-key': process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || 'pk_03d087dc82a71a3723b4ebfc54024a1b7ad03ab5c58b15d27129f8c482bfac5f',
             },
           });
-        } catch (firstError) {
-          console.log('GlobalSearch - First API call failed, trying alternative...');
-          try {
-            productsData = await sdk.client.fetch('/store/products', {
-              method: 'GET',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            });
-          } catch (secondError) {
-            console.log('GlobalSearch - Second API call failed, trying direct fetch...');
-            productsData = await fetch('/api/products').then(res => res.json());
-          }
+        } catch (error) {
+          console.log('GlobalSearch - API call failed:', error);
+          // Fallback to empty array if API fails
+          productsData = { products: [] };
         }
         
         console.log('GlobalSearch - Products data:', productsData);

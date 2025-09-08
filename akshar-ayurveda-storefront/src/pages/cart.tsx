@@ -1,36 +1,26 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { Button, Card, Badge } from '../components/ui';
-import { useAppContext } from '../context/AppContext';
-import { useCart, useUpdateLineItem, useDeleteLineItem } from '../hooks/cart';
-import { useCountryCode } from '../hooks/country-code';
-import { convertToLocale } from '../lib/util/money';
+import { Button, Card, Badge } from '@components/ui';
+import { useCartWithSync, useUpdateLineItem, useDeleteLineItem } from '@hooks/cart';
+import { useCountryCode } from '@hooks/country-code';
+import { convertToLocale } from '@lib/util/money';
 import { HttpTypes } from '@shopenup/types';
 
 export default function Cart() {
   const router = useRouter();
   const countryCode = useCountryCode() || 'in'; // Default to 'IN' if no country code found
-  const { updateCartCount } = useAppContext();
   
-  // Use the actual cart hooks - enable cart fetching even without country code
-  const { data: cart, isLoading: cartLoading, error: cartError } = useCart({ 
+  // Use the synchronized cart hook - enable cart fetching even without country code
+  const { data: cart, isLoading: cartLoading, error: cartError } = useCartWithSync({ 
     enabled: true // Always enable cart fetching
   });
   
   const updateLineItemMutation = useUpdateLineItem();
   const deleteLineItemMutation = useDeleteLineItem();
 
-  // Update cart count in context when cart changes
-  useEffect(() => {
-    if (cart?.items) {
-      const totalQuantity = cart.items.reduce((sum, item) => sum + item.quantity, 0);
-      updateCartCount(totalQuantity);
-    } else {
-      updateCartCount(0);
-    }
-  }, [cart, updateCartCount]);
+  // Cart count is automatically updated by useCartWithSync hook
 
   const updateQuantity = async (lineId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
