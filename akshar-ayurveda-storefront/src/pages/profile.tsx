@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Button, Card, Badge, Input, Textarea } from '../components/ui';
-import { useCustomer, useUpdateCustomer, useSignout } from '../hooks/customer';
+import { Button, Card, Badge, Input, Textarea, Modal } from '../components/ui';
+import { useCustomer, useUpdateCustomer, useSignout, useAddressMutation, useDeleteCustomerAddress } from '@hooks/customer';
+import { toast } from 'sonner';
 import { useAppContext } from '../context/AppContext';
 import { formatDate } from '@lib/util/date';
 
@@ -77,6 +78,26 @@ export default function ProfilePage() {
     last_name: '',
     phone: ''
   });
+
+  // Address add form state
+  const [isAddingAddress, setIsAddingAddress] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [addressForm, setAddressForm] = useState({
+    first_name: '',
+    last_name: '',
+    company: '',
+    address_1: '',
+    address_2: '',
+    city: '',
+    postal_code: '',
+    province: '',
+    country_code: 'IN',
+    phone: ''
+  });
+  const addAddress = useAddressMutation();
+  const updateAddress = useAddressMutation(editingAddressId || undefined);
+  const deleteAddress = useDeleteCustomerAddress();
+  const [deleteDialog, setDeleteDialog] = useState<{open: boolean; id?: string}>({ open: false });
 
   // Redirect if not logged in
   React.useEffect(() => {
@@ -200,105 +221,126 @@ export default function ProfilePage() {
 
           {/* Profile Tab */}
           {activeTab === 'profile' && (
-            <Card className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900">Personal Information</h2>
+            <Card className="p-0 overflow-hidden">
+              {/* Decorative header */}
+              <div className="h-20" />
+
+              <div className="p-6 -mt-14">
+                {/* Header with avatar, name and actions */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    {/* Avatar */}
+                    <div className="h-20 w-20 rounded-full ring-4 ring-white bg-emerald-600 flex items-center justify-center text-white text-2xl font-semibold shadow-md">
+                      {(customer.first_name?.[0] || 'A').toUpperCase()}
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-semibold text-gray-900">
+                        {customer.first_name} {customer.last_name}
+                      </h2>
+                      <div className="mt-1 flex items-center gap-2">
+                        <Badge variant="success">Member</Badge>
+                        <span className="text-gray-500 text-sm">Joined{' '}
+                          {customer.created_at ? (
+                            <ClientOnly fallback="Loading...">{formatDate(customer.created_at)}</ClientOnly>
+                          ) : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
                 {!isEditing && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(true)}
-                  >
+                    <div className="flex items-center gap-3">
+                      <Badge className="bg-gray-100 text-gray-700 border border-gray-200">
+                        {customer.email}
+                      </Badge>
+                      <Button variant="outline" onClick={() => setIsEditing(true)}>
                     Edit Profile
                   </Button>
+                    </div>
                 )}
               </div>
 
+                {/* Body */}
+                <div className="mt-8">
               {isEditing ? (
-                <form onSubmit={handleEditSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        First Name
-                      </label>
+                    <form onSubmit={handleEditSubmit} className="space-y-6">
+                      {/* Match display layout: info cards grid */}
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Left: editable details in cards */}
+                        <div className="lg:col-span-3 lg:col-start-1 space-y-6">
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                              <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">First Name</p>
                       <Input
                         value={editForm.first_name}
                         onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
+                                placeholder="Enter your first name"
                         required
                       />
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Last Name
-                      </label>
+                            <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                              <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Last Name</p>
                       <Input
                         value={editForm.last_name}
                         onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
+                                placeholder="Enter your last name"
                         required
                       />
                     </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Email
-                    </label>
-                    <Input
-                      value={customer.email}
-                      disabled
-                      className="bg-gray-50"
-                    />
+                            <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                              <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Email</p>
+                              <Input value={customer.email} disabled className="bg-gray-50" />
                     <p className="text-sm text-gray-500 mt-1">Email cannot be changed</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Phone Number
-                    </label>
+                            <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                              <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Phone</p>
                     <Input
                       value={editForm.phone}
                       onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                       placeholder="Enter phone number"
                     />
                   </div>
-                  <div className="flex space-x-3 pt-4">
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom right actions */}
+                      <div className="flex justify-end gap-2">
                     <Button type="submit" disabled={updateCustomer.isPending}>
                       {updateCustomer.isPending ? 'Saving...' : 'Save Changes'}
                     </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setIsEditing(false)}
-                    >
+                        <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
                       Cancel
                     </Button>
                   </div>
                 </form>
               ) : (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">First Name</label>
-                      <p className="text-gray-900">{customer.first_name}</p>
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      {/* Left: key details */}
+                      <div className="lg:col-span-2 space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                            <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">First Name</p>
+                            <p className="text-gray-900 font-medium">{customer.first_name}</p>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Last Name</label>
-                      <p className="text-gray-900">{customer.last_name}</p>
+                          <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                            <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Last Name</p>
+                            <p className="text-gray-900 font-medium">{customer.last_name}</p>
                     </div>
+                          <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                            <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Email</p>
+                            <p className="text-gray-900 font-medium break-all">{customer.email}</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Email</label>
-                    <p className="text-gray-900">{customer.email}</p>
+                          <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                            <p className="text-xs uppercase tracking-wide text-gray-500 mb-1">Phone</p>
+                            <p className="text-gray-900 font-medium">{customer.phone || 'Not provided'}</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-                    <p className="text-gray-900">{customer.phone || 'Not provided'}</p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Member Since</label>
-                    <p className="text-gray-900">
-                      {customer.created_at ? <ClientOnly fallback="Loading...">{formatDate(customer.created_at)}</ClientOnly> : 'N/A'}
-                    </p>
                   </div>
                 </div>
               )}
+                </div>
+              </div>
             </Card>
           )}
 
@@ -330,12 +372,237 @@ export default function ProfilePage() {
           {/* Addresses Tab */}
           {activeTab === 'addresses' && (
             <Card className="p-6">
+              {/* Delete confirmation modal */}
+              <Modal
+                isOpen={deleteDialog.open}
+                onClose={() => setDeleteDialog({ open: false })}
+                title="Delete address?"
+                size="sm"
+              >
+                <p className="text-sm text-gray-600 mb-4">This action cannot be undone.</p>
+                <div className="flex justify-end gap-2">
+                  <Button variant="outline" onClick={() => setDeleteDialog({ open: false })}>Cancel</Button>
+                  <Button
+                    className="bg-red-600 text-white hover:bg-red-700"
+                    onClick={async () => {
+                      if (!deleteDialog.id) return
+                      try {
+                        await deleteAddress.mutateAsync(deleteDialog.id)
+                        setDeleteDialog({ open: false })
+                        toast.success('Address deleted')
+                      } catch (err: any) {
+                        toast.error(err?.message || 'Failed to delete address')
+                      }
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </div>
+              </Modal>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900">Shipping Addresses</h2>
-                <Button variant="outline">Add New Address</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setEditingAddressId(null)
+                    setIsAddingAddress((v) => !v)
+                  }}
+                >
+                  {isAddingAddress ? 'Close' : 'Add New Address'}
+                </Button>
               </div>
 
-              {customer.addresses && customer.addresses.length > 0 ? (
+              {(isAddingAddress || editingAddressId) && (
+                <div className="mb-8">
+                  <div className="p-6 rounded-lg border border-gray-200 bg-white shadow-sm">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-xl font-semibold text-gray-900">{editingAddressId ? 'Edit Address' : 'Add New Address'}</h3>
+                      <span className="text-xs text-gray-500">Fields marked with <span className="text-red-600">*</span> are required</span>
+                    </div>
+                    <form
+                      onSubmit={async (e) => {
+                        e.preventDefault();
+                        try {
+                          const payload = {
+                            first_name: addressForm.first_name,
+                            last_name: addressForm.last_name,
+                            company: addressForm.company || undefined,
+                            address_1: addressForm.address_1,
+                            address_2: addressForm.address_2 || undefined,
+                            city: addressForm.city,
+                            postal_code: addressForm.postal_code,
+                            province: addressForm.province || undefined,
+                            country_code: addressForm.country_code,
+                            phone: addressForm.phone || undefined,
+                          } as any
+
+                          if (editingAddressId) {
+                            await updateAddress.mutateAsync(payload)
+                          } else {
+                            await addAddress.mutateAsync(payload)
+                          }
+
+                          setIsAddingAddress(false)
+                          setEditingAddressId(null)
+                          setAddressForm({
+                            first_name: '',
+                            last_name: '',
+                            company: '',
+                            address_1: '',
+                            address_2: '',
+                            city: '',
+                            postal_code: '',
+                            province: '',
+                            country_code: 'IN',
+                            phone: ''
+                          });
+                        } catch (err) {
+                          console.error('Failed to add address', err);
+                        }
+                      }}
+                      className="space-y-8"
+                    >
+                      {/* Name */}
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-3">Name</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">First Name <span className="text-red-600">*</span></label>
+                            <Input
+                              className="w-full min-w-[320px]"
+                              value={addressForm.first_name}
+                              onChange={(e) => setAddressForm({ ...addressForm, first_name: e.target.value })}
+                              placeholder="e.g., Riya"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Last Name <span className="text-red-600">*</span></label>
+                            <Input
+                              className="w-full min-w-[320px]"
+                              value={addressForm.last_name}
+                              onChange={(e) => setAddressForm({ ...addressForm, last_name: e.target.value })}
+                              placeholder="e.g., Sharma"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Company (optional)</label>
+                            <Input
+                              className="w-full min-w-[320px]"
+                              value={addressForm.company}
+                              onChange={(e) => setAddressForm({ ...addressForm, company: e.target.value })}
+                              placeholder="Company name"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <hr className="my-2 border-gray-200" />
+
+                      {/* Address */}
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-3">Address</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 1 <span className="text-red-600">*</span></label>
+                            <Input
+                              className="w-full min-w-[320px]"
+                              value={addressForm.address_1}
+                              onChange={(e) => setAddressForm({ ...addressForm, address_1: e.target.value })}
+                              placeholder="House no, street, area"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Address Line 2 (optional)</label>
+                            <Input
+                              className="w-full min-w-[320px]"
+                              value={addressForm.address_2}
+                              onChange={(e) => setAddressForm({ ...addressForm, address_2: e.target.value })}
+                              placeholder="Apartment, suite, etc."
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Location */}
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-3">Location</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">City <span className="text-red-600">*</span></label>
+                            <Input
+                              className="w-full min-w-[320px]"
+                              value={addressForm.city}
+                              onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                              placeholder="e.g., Ahmedabad"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">State/Province</label>
+                            <Input
+                              className="w-full min-w-[320px]"
+                              value={addressForm.province}
+                              onChange={(e) => setAddressForm({ ...addressForm, province: e.target.value })}
+                              placeholder="e.g., Gujarat"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Postal Code <span className="text-red-600">*</span></label>
+                            <Input
+                              className="w-full min-w-[320px]"
+                              value={addressForm.postal_code}
+                              onChange={(e) => setAddressForm({ ...addressForm, postal_code: e.target.value })}
+                              placeholder="e.g., 380015"
+                              required
+                            />
+                          </div>
+                        </div>
+                      </div>
+                      <hr className="my-2 border-gray-200" />
+
+                      {/* Contact */}
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-900 mb-3">Contact</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Country Code <span className="text-red-600">*</span></label>
+                            <Input
+                              className="w-full min-w-[320px]"
+                              value={addressForm.country_code}
+                              onChange={(e) => setAddressForm({ ...addressForm, country_code: e.target.value.toUpperCase() })}
+                              placeholder="e.g., IN"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Phone (optional)</label>
+                            <Input
+                              className="w-full min-w-[320px]"
+                              value={addressForm.phone}
+                              onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value })}
+                              placeholder="e.g., +91XXXXXXXXXX"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => { setIsAddingAddress(false); setEditingAddressId(null) }}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" disabled={addAddress.isPending || updateAddress.isPending}>
+                          {addAddress.isPending || updateAddress.isPending ? 'Saving...' : 'Save Address'}
+                        </Button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {!isAddingAddress && !editingAddressId && (
+                customer.addresses && customer.addresses.length > 0 ? (
                 <div className="space-y-4">
                   {customer.addresses.map((address: any, index: number) => (
                     <div key={index} className="border border-gray-200 rounded-lg p-4">
@@ -358,8 +625,34 @@ export default function ProfilePage() {
                           )}
                         </div>
                         <div className="flex space-x-2 ml-4">
-                          <Button variant="outline" size="sm">Edit</Button>
-                          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setIsAddingAddress(false)
+                              setEditingAddressId(address.id)
+                              setAddressForm({
+                                first_name: address.first_name || '',
+                                last_name: address.last_name || '',
+                                company: address.company || '',
+                                address_1: address.address_1 || '',
+                                address_2: address.address_2 || '',
+                                city: address.city || '',
+                                postal_code: address.postal_code || '',
+                                province: address.province || '',
+                                country_code: address.country_code || 'IN',
+                                phone: address.phone || '',
+                              })
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-red-600 hover:text-red-700"
+                            onClick={() => setDeleteDialog({ open: true, id: address.id })}
+                          >
                             Delete
                           </Button>
                         </div>
@@ -376,9 +669,9 @@ export default function ProfilePage() {
                     </svg>
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No addresses yet</h3>
-                  <p className="text-gray-600 mb-4">Add your first shipping address to get started.</p>
-                  <Button>Add Address</Button>
+                    <p className="text-gray-600">Add your first shipping address to get started.</p>
                 </div>
+                )
               )}
             </Card>
           )}

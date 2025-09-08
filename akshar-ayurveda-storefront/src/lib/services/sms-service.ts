@@ -35,13 +35,13 @@ export class SMSService {
   private async getCompleteHeaders(): Promise<Record<string, string>> {
     const authHeaders = await getAuthHeaders();
     const publishableKey = process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || 'pk_03d087dc82a71a3723b4ebfc54024a1b7ad03ab5c58b15d27129f8c482bfac5f';
-    
+
     const headers = {
       ...authHeaders,
       'x-publishable-api-key': publishableKey,
       'Content-Type': 'application/json',
     };
-    
+
     console.log('🔑 Generated headers:', {
       authHeaders,
       publishableKey,
@@ -52,7 +52,7 @@ export class SMSService {
         NEXT_PUBLIC_SHOPENUP_BACKEND_URL: process.env.NEXT_PUBLIC_SHOPENUP_BACKEND_URL
       }
     });
-    
+
     return headers;
   }
 
@@ -89,7 +89,7 @@ export class SMSService {
         try {
           const headers = await this.getCompleteHeaders();
           console.log('📡 Making SDK call to /store/notifications/sms with headers:', headers);
-          
+
           const result = await sdk.client.fetch('/store/notifications/sms', {
             method: 'POST',
             headers,
@@ -104,11 +104,11 @@ export class SMSService {
           return true;
         } catch (sdkError) {
           console.warn('⚠️ SDK client failed, falling back to direct fetch:', sdkError);
-          
+
           // Fallback to direct fetch with proper headers
           const backendUrl = process.env.NEXT_PUBLIC_SHOPENUP_BACKEND_URL || 'http://localhost:9000';
           const headers = await this.getCompleteHeaders();
-          
+
           const response = await fetch(`${backendUrl}/store/notifications/sms`, {
             method: 'POST',
             headers,
@@ -119,11 +119,11 @@ export class SMSService {
               channel: 'sms'
             }),
           });
-          
+
           if (!response.ok) {
             throw new Error(`Backend SMS failed: ${response.status} - ${await response.text()}`);
           }
-          
+
           const result = await response.json();
           console.log('✅ SMS sent successfully via direct fetch:', result);
           return true;
@@ -170,7 +170,7 @@ export class SMSService {
         try {
           const headers = await this.getCompleteHeaders();
           console.log('📡 Making SDK call to /store/orders/notify with headers:', headers);
-          
+
           const result = await sdk.client.fetch(`/store/orders/${orderData.order_id}/notify`, {
             method: 'POST',
             headers,
@@ -189,12 +189,12 @@ export class SMSService {
           return true;
         } catch (subscriberError) {
           console.warn('⚠️ SDK subscriber failed, trying direct fetch:', subscriberError);
-          
+
           // Try direct fetch as fallback
           try {
             const backendUrl = process.env.NEXT_PUBLIC_SHOPENUP_BACKEND_URL || 'http://localhost:9000';
             const headers = await this.getCompleteHeaders();
-            
+
             const response = await fetch(`${backendUrl}/store/orders/${orderData.order_id}/notify`, {
               method: 'POST',
               headers,
@@ -209,7 +209,7 @@ export class SMSService {
                 }
               }),
             });
-            
+
             if (response.ok) {
               console.log('✅ Order notification sent through direct fetch');
               return true;
@@ -315,7 +315,7 @@ export class SMSService {
           // Send to subscriber system via SDK
           const headers = await this.getCompleteHeaders();
           console.log('📡 Making SDK call to /store/events/order.placed with headers:', headers);
-          
+
           const result = await sdk.client.fetch('/store/events/order.placed', {
             method: 'POST',
             headers,
@@ -340,12 +340,12 @@ export class SMSService {
           return true;
         } catch (subscriberError) {
           console.warn('⚠️ SDK failed, trying direct fetch:', subscriberError);
-          
+
           // Try direct fetch as fallback
           try {
             const backendUrl = process.env.NEXT_PUBLIC_SHOPENUP_BACKEND_URL || 'http://localhost:9000';
             const headers = await this.getCompleteHeaders();
-            
+
             const response = await fetch(`${backendUrl}/store/events/order.placed`, {
               method: 'POST',
               headers,
@@ -365,7 +365,7 @@ export class SMSService {
                 }
               }),
             });
-            
+
             if (response.ok) {
               console.log('✅ Order placed event triggered successfully via direct fetch');
               return true;
@@ -419,13 +419,13 @@ export class SMSService {
 export const smsService = SMSService.getInstance();
 
 // Export individual functions for easier use
-export const sendOrderConfirmationSMS = (phone: string, orderData: OrderSMSData) => 
+export const sendOrderConfirmationSMS = (phone: string, orderData: OrderSMSData) =>
   smsService.sendOrderConfirmationSMS(phone, orderData);
 
-export const sendPaymentConfirmationSMS = (phone: string, orderData: OrderSMSData) => 
+export const sendPaymentConfirmationSMS = (phone: string, orderData: OrderSMSData) =>
   smsService.sendPaymentConfirmationSMS(phone, orderData);
 
-export const sendOrderShippedSMS = (phone: string, orderData: OrderSMSData) => 
+export const sendOrderShippedSMS = (phone: string, orderData: OrderSMSData) =>
   smsService.sendOrderShippedSMS(phone, orderData);
 
 // Export the new subscriber trigger function

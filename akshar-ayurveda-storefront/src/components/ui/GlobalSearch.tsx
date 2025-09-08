@@ -34,7 +34,7 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
     const fetchProducts = async () => {
       try {
         console.log('GlobalSearch - Fetching products...');
-        
+
         // Use the correct store products endpoint
         let productsData;
         try {
@@ -50,7 +50,7 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
           // Fallback to empty array if API fails
           productsData = { products: [] };
         }
-        
+
         console.log('GlobalSearch - Products data:', productsData);
 
         let productsArray: any[] = [];
@@ -75,7 +75,7 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
             inStock: product.variants?.[0]?.inventory_quantity > 0 || product.in_stock !== false,
             price: product.variants?.[0]?.calculated_price?.calculated_amount || product.price || 0,
           }));
-          
+
           setAllProducts(mappedProducts);
           console.log('GlobalSearch - Mapped products:', mappedProducts);
         }
@@ -124,17 +124,17 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
   // Search function
   const searchProducts = (searchQuery: string): Product[] => {
     if (!searchQuery.trim()) return [];
-    
+
     console.log('GlobalSearch - Searching for:', searchQuery);
     console.log('GlobalSearch - Available products:', allProducts.length);
     console.log('GlobalSearch - All products:', allProducts);
-    
+
     const query = searchQuery.toLowerCase();
     const filteredProducts = allProducts.filter(product => {
       const nameMatch = product.name?.toLowerCase().includes(query);
       const categoryMatch = product.category?.toLowerCase().includes(query);
       const descriptionMatch = product.description?.toLowerCase().includes(query);
-      
+
       console.log('GlobalSearch - Product:', product.name, {
         nameMatch,
         categoryMatch,
@@ -142,10 +142,10 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
         productName: product.name,
         productCategory: product.category
       });
-      
+
       return nameMatch || categoryMatch || descriptionMatch;
     });
-    
+
     console.log('GlobalSearch - Filtered results:', filteredProducts);
     return filteredProducts.slice(0, 6); // Limit to 6 results for dropdown
   };
@@ -154,7 +154,7 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setQuery(value);
-    
+
     if (value.trim()) {
       setIsLoading(true);
       // Simulate API delay
@@ -277,7 +277,7 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
                     <div className="flex-1 min-w-0">
                       <h4 className="font-semibold text-gray-900 truncate">{product.name}</h4>
                       {/* <p className="text-sm text-gray-500 truncate">{product.originalPrice}</p> */}
-                      
+
                     </div>
                   </button>
                 ))}
