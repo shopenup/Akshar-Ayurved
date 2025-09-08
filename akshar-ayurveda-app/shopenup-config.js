@@ -100,6 +100,15 @@ module.exports = defineConfig({
           //   },
           // },
           {
+            resolve: "@shopenup/shopenup/notification-sendgrid",
+            id: "sendgrid",
+            options: {
+              channels: ["email"],
+              api_key: process.env.SENDGRID_API_KEY,
+              from: process.env.SENDGRID_FROM,
+            },
+          },
+          {
             resolve: "./src/modules/twilio-sms",
             id: "twilio-sms",
             options: {

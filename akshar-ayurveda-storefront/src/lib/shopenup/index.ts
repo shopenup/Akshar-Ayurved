@@ -14,6 +14,7 @@ export { initializeShopenupUI, shopenupUIComponents } from './ui';
 export type { Cart, CartItem } from './cart';
 export type { PaymentIntent, PaymentMethod, PaymentData } from './payment';
 export type { ShopenupUIComponents } from './ui';
+export type { Product, ProductVariant, ProductCategory, ProductCollection, ProductFilter, ProductSearchParams } from './product';
 
 // Main integration class
 export class ShopenupIntegration {
