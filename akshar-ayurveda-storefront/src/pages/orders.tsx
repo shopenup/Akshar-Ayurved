@@ -23,11 +23,11 @@ export default function OrdersPage() {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         // Get auth headers
         const authHeaders = await getAuthHeaders();
         const isLoggedIn = 'authorization' in authHeaders && authHeaders.authorization;
-        
+
         if (!isLoggedIn) {
           setError('Please log in to view your orders');
           setIsLoading(false);
@@ -59,12 +59,20 @@ export default function OrdersPage() {
     fetchOrders();
   }, []);
 
-  const getStatusColor = (status: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' => {
+  const TABS = [
+    { key: 'all', label: 'All Orders' },
+    { key: 'active', label: 'Active Orders' },
+    { key: 'placed', label: 'Placed Orders' },
+  ];
+
+  // Enhanced status color for fulfillment status
+  const getFulfillmentStatusColor = (status: string): 'success' | 'info' | 'warning' | 'danger' | 'secondary' => {
     switch (status) {
       case 'delivered':
         return 'success';
       case 'shipped':
         return 'info';
+      case 'fulfilled':
       case 'processing':
         return 'warning';
       case 'cancelled':
@@ -74,24 +82,37 @@ export default function OrdersPage() {
     }
   };
 
-  const getStatusText = (status: string) => {
+  // Enhanced status text for fulfillment status
+  const getFulfillmentStatusText = (status: string) => {
     switch (status) {
       case 'delivered':
         return 'Delivered';
       case 'shipped':
         return 'Shipped';
+      case 'fulfilled':
+        return 'Fulfilled';
       case 'processing':
         return 'Processing';
       case 'cancelled':
         return 'Cancelled';
+      case 'not_fulfilled':
+        return 'not_fulfilled';
       default:
         return 'Unknown';
     }
   };
 
-  const filteredOrders = activeTab === 'all' 
-    ? orders 
-    : orders.filter(order => order.status === activeTab);
+  // Tab filtering logic
+  const filteredOrders =
+    activeTab === 'all'
+      ? orders
+      : activeTab === 'active'
+        ? orders.filter(
+          (order) =>
+            order.fulfillment_status !== 'delivered' &&
+            order.fulfillment_status !== 'canceled'
+        )
+        : orders.filter((order) => order.fulfillment_status === 'delivered');
 
   return (
     <>
@@ -99,29 +120,20 @@ export default function OrdersPage() {
         <title>My Orders - AKSHAR</title>
         <meta name="description" content="View and track your orders" />
       </Head>
-
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-4">My Orders</h1>
-            
-            {/* Order Status Tabs */}
-            <div className="flex space-x-1 bg-white rounded-lg p-1 shadow-sm">
-              {[
-                { key: 'all', label: 'All Orders' },
-                { key: 'processing', label: 'Processing' },
-                { key: 'shipped', label: 'Shipped' },
-                { key: 'delivered', label: 'Delivered' },
-                { key: 'cancelled', label: 'Cancelled' }
-              ].map((tab) => (
+            {/* Enhanced Tabs */}
+            <div className="flex space-x-1 bg-white rounded-lg p-1 shadow-sm mb-6">
+              {TABS.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                    activeTab === tab.key
+                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === tab.key
                       ? 'bg-green-600 text-white'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -144,97 +156,45 @@ export default function OrdersPage() {
               </div>
               <h3 className="text-lg font-medium text-gray-900 mb-2">Error loading orders</h3>
               <p className="text-gray-600 mb-6">{error}</p>
-              <Button 
-                variant="primary" 
-                onClick={() => window.location.reload()}
-              >
+              <Button variant="primary" onClick={() => window.location.reload()}>
                 Try Again
               </Button>
             </div>
           ) : (
             <div className="space-y-6">
               {filteredOrders.map((order) => (
-              <Card key={order.id} className="p-6">
-                <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                  {/* Order Info */}
+                <Card key={order.id} className="p-6 flex flex-col md:flex-row md:items-center md:justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          Order #{order.id}
-                        </h3>
-                        <p className="text-sm text-gray-600">
-                          Placed on {formatDate(order.created_at)}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant={getStatusColor(order.status)}>
-                          {getStatusText(order.status)}
-                        </Badge>
-                        <p className="text-lg font-bold text-gray-900 mt-1">
-                          ₹{order.total.toFixed(2)}
-                        </p>
-                      </div>
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-semibold text-gray-900">
+                        Order #{order.id}
+                      </h3>
+                      <Badge variant={getFulfillmentStatusColor(order.fulfillment_status)}>
+                        {getFulfillmentStatusText(order.fulfillment_status)}
+                      </Badge>
                     </div>
-
-                    {/* Order Items */}
-                    <div className="space-y-2 mb-4">
-                      {order.items?.map((item, index) => (
-                        <div key={index} className="flex justify-between text-sm">
-                          <span className="text-gray-600">
-                            {item.title} (Qty: {item.quantity})
-                          </span>
-                          <span className="font-medium">
-                            ₹{(item.unit_price * item.quantity).toFixed(2)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Tracking Info */}
-                    {/* {order.tracking_number && typeof order.tracking_number === 'string' && (
-                      <div className="bg-gray-50 p-3 rounded-lg mb-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              Tracking Number: {order.tracking_number}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Estimated Delivery: {order.estimated_delivery}
-                            </p>
-                            {order.status === 'delivered' && (
-                              <p className="text-sm text-green-600">
-                                Delivered on: {formatDate(order.created_at)}
-                              </p>
-                            )}
-                          </div>
-                          {order.status === 'shipped' && (
-                            <Link href={`/order-tracking/${order.id}`}>
-                              <Button variant="outline" size="sm">
-                                Track Order
-                              </Button>
-                            </Link>
+                    <p className="text-sm text-gray-600 mb-1">
+                      Placed on {formatDate(order.created_at)}
+                    </p>
+                    <div className="text-sm text-gray-800 mb-2">
+                      {order.items && order.items.length > 0 && (
+                        <>
+                          {order.items[0].title} (Qty: {order.items[0].quantity})
+                          {order.items.length > 1 && (
+                            <span className="text-gray-500"> +{order.items.length - 1} more</span>
                           )}
-                        </div>
-                      </div>
-                    )} */}
+                        </>
+                      )}
+                    </div>
                   </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex flex-col space-y-2 lg:ml-6">
-                    {order.status === 'delivered' && (
-                      <Link href={`/buy-again/${order.id}`}>
-                        <Button variant="outline" size="sm" className="w-full">
-                          Buy Again
-                        </Button>
-                      </Link>
-                    )}
-                    {order.status === 'delivered' && (
-                      <Link href={`/review/${order.id}`}>
-                        <Button variant="outline" size="sm" className="w-full">
-                          Write Review
-                        </Button>
-                      </Link>
+                  <div className="flex flex-col items-end space-y-2 min-w-[160px]">
+                    <div className="text-lg font-bold text-gray-900">
+                      ₹{order.total?.toFixed(2)}
+                    </div>
+                    {order.item_total && (
+                      <div className="text-sm text-gray-500">
+                        ₹{order.item_total?.toFixed(2)}
+                      </div>
                     )}
                     <Link href={`/order-details/${order.id}`}>
                       <Button variant="outline" size="sm" className="w-full">
@@ -242,31 +202,27 @@ export default function OrdersPage() {
                       </Button>
                     </Link>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))}
 
-            {filteredOrders.length === 0 && (
-              <div className="text-center py-12">
-                <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                  </svg>
+              {filteredOrders.length === 0 && (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
+                  <p className="text-gray-600 mb-6">
+                    {activeTab === 'all'
+                      ? "You haven't placed any orders yet."
+                      : `You don't have any ${activeTab} orders.`}
+                  </p>
+                  <Link href="/">
+                    <Button variant="primary">Start Shopping</Button>
+                  </Link>
                 </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
-                <p className="text-gray-600 mb-6">
-                  {activeTab === 'all' 
-                    ? "You haven't placed any orders yet."
-                    : `You don't have any ${activeTab} orders.`
-                  }
-                </p>
-                <Link href="/">
-                  <Button variant="primary">
-                    Start Shopping
-                  </Button>
-                </Link>
-              </div>
-            )}
+              )}
             </div>
           )}
         </div>

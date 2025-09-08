@@ -341,8 +341,8 @@ export default function ProductPage() {
             <li>/</li>
             <li><Link href="/products" className="hover:text-green-600">Products</Link></li>
             <li>/</li>
-            <li><Link href={`/products/category/${product.category?.id || 'all'}`} className="hover:text-green-600">{product.category?.name || 'All Products'}</Link></li>
-            <li>/</li>
+            {/* <li><Link href={`/products/category/${product.category?.id || 'all'}`} className="hover:text-green-600">{product.category?.name || 'All Products'}</Link></li>
+            <li>/</li> */}
             <li className="text-gray-900">{product.title}</li>
           </ol>
         </nav>
