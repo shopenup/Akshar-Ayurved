@@ -9,6 +9,9 @@ export default async function sendPasswordResetNotification({
   const query = container.resolve(ContainerRegistrationKeys.QUERY);
   const notificationModuleService = container.resolve(Modules.NOTIFICATION);
 
+  console.log("data: ", data);
+  const isCustomer = data.actor_type === "customer" || data.actor_type === "logged-in-customer";
+  
   const fields = [
     "id",
     "email",
@@ -17,7 +20,7 @@ export default async function sendPasswordResetNotification({
   ] as const satisfies (keyof CustomerDTO)[];
 
   const { data: customers } = await query.graph({
-    entity: "customer",
+    entity: isCustomer ? "customer" : "user",
     fields,
     filters: { email: data.entity_id },
   });
@@ -35,7 +38,7 @@ export default async function sendPasswordResetNotification({
     { 
       customer, 
       store_name: process.env.STORE_NAME, 
-      store_url: `${process.env.STORE_URL}/reset-password?email=${customer.email}&token=${data.token}`, 
+      store_url: `${isCustomer ? process.env.STORE_URL : `${process.env.BACKEND_URL}/app`}/reset-password?email=${customer.email}&token=${data.token}`, 
       // token: data.token 
     },
   });
