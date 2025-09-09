@@ -1,8 +1,8 @@
 import Product from "@modules/products/components/product-preview"
-import { getRegion } from "@lib/data/regions"
-import { getProductsList } from "@lib/data/products"
+import { getRegion } from "@lib/shopenup/regions"
+import { productService } from "@lib/shopenup/product"
 import { HttpTypes } from "@shopenup/types"
-import { Layout, LayoutColumn } from "@components/Layout"
+import { Layout, LayoutColumn } from "@components/layout"
 
 type RelatedProductsProps = {
   product: HttpTypes.StoreProduct
@@ -14,36 +14,15 @@ export default async function RelatedProducts({
   countryCode,
 }: RelatedProductsProps) {
   const region = await getRegion(countryCode)
-
-  if (!region) {
-    return null
-  }
-
   // edit this function to define your related products logic
-  const queryParams: HttpTypes.StoreProductListParams = {
-    limit: 3,
-  }
-  if (region?.id) {
-    queryParams.region_id = region.id
-  }
-  if (product.collection_id) {
-    queryParams.collection_id = [product.collection_id]
-  }
-  if (product.tags) {
-    queryParams.tag_id = product.tags.map((t) => t.value).filter(Boolean)
-  }
-  queryParams.is_giftcard = false
+  // Fetch all products (example: limit 1000, adjust as needed)
+  const products = await productService.getProducts({ limit: 1000 })
+  // Optionally, filter out the current product if needed
+  const relatedProducts = products.filter(
+    (responseProduct: any) => responseProduct.id !== product.id
+  )
 
-  const products = await getProductsList({
-    queryParams,
-    countryCode,
-  }).then(({ response }) => {
-    return response.products.filter(
-      (responseProduct) => responseProduct.id !== product.id
-    )
-  })
-
-  if (!products.length) {
+  if (!relatedProducts.length) {
     return null
   }
 
@@ -52,12 +31,12 @@ export default async function RelatedProducts({
       <Layout>
         <LayoutColumn className="mt-26 md:mt-36">
           <h4 className="text-md md:text-2xl mb-8 md:mb-16">
-            Related products
+            Related products 1
           </h4>
         </LayoutColumn>
       </Layout>
       <Layout className="gap-y-10 md:gap-y-16">
-        {products.map((product) => (
+        {relatedProducts.map((product: any) => (
           <LayoutColumn key={product.id} className="!col-span-6 md:!col-span-4">
             <Product product={product} />
           </LayoutColumn>

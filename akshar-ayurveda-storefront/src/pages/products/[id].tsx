@@ -9,6 +9,7 @@ import ProductPrice from '@modules/products/components/product-price';
 import ProductActions from '@modules/products/components/product-actions';
 import { useAddLineItem, useCartWithSync } from '@hooks/cart';
 import { useCountryCode } from '@hooks/country-code';
+import { productService } from '@lib/shopenup/product';
 
 // Product interface based on Shopenup API response
 interface Product {
@@ -70,6 +71,7 @@ interface Product {
     rating?: number;
     review_count?: number;
   };
+  categories?: any[];
 }
 
 export default function ProductPage() {
@@ -88,7 +90,8 @@ export default function ProductPage() {
   const [activeTab, setActiveTab] = useState('description');
   const [is360ViewActive, setIs360ViewActive] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
-
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(true);
 
 
   // Fetch product data when component mounts
@@ -98,7 +101,7 @@ export default function ProductPage() {
       
       try {
         setLoading(true);
-        console.log('Fetching product with ID:', id);
+        //console.log('Fetching product with ID:', id);
         
         // Resolve a valid region_id (UUID) by looking up regions once and caching
         const cookieMatch = document.cookie.match(/(?:^|; )country-code=([^;]+)/)
@@ -138,7 +141,7 @@ export default function ProductPage() {
         
         const query: Record<string, any> = {
           id: id,
-          fields: "*variants.calculated_price"
+          fields: "*variants.calculated_price,*categories"
         }
         if (region_id) {
           query.region_id = region_id
@@ -154,9 +157,9 @@ export default function ProductPage() {
         });
 
         const productData = response.products[0];
-        console.log('Fetched product data:', productData);
-        console.log('Product images:', productData?.images);
-        console.log('Product thumbnail:', productData?.thumbnail);
+        //console.log('Fetched product data:', productData);
+        //console.log('Product images:', productData?.images);
+        //console.log('Product thumbnail:', productData?.thumbnail);
         
         if (productData) {
           // Use type assertion to bypass complex type mismatches
@@ -171,6 +174,31 @@ export default function ProductPage() {
 
     fetchProduct();
   }, [id]);
+
+  // After product is loaded, fetch related products
+  React.useEffect(() => {
+    const fetchRelated = async () => {
+      console.log('Fetching related products', product);
+      // Fix: Check for product and at least one category with an id
+      if (!product || !product.categories || !product.categories[0] || !product.categories[0].id) return;
+      setRelatedLoading(true);
+      try {
+        const products = await productService.getProducts({
+          category: product.categories[0].id,
+          limit: 8,
+        });
+        console.log('Related products:', products);
+        // Fix: Ensure type compatibility by mapping to the expected Product type
+        setRelatedProducts(
+          (products as any[]).filter((p: any) => p.id !== product.id) as any
+        );
+      } catch (e) {
+        setRelatedProducts([]);
+      }
+      setRelatedLoading(false);
+    };
+    fetchRelated();
+  }, [product]);
 
   // Handle case when ID is not available yet
   if (!id) {
@@ -188,25 +216,25 @@ export default function ProductPage() {
   }
 
   // Debug logging
-  console.log('Product data received:', product);
-  console.log('Product price:', product?.price);
-  console.log('Product original_price:', product?.original_price);
-  console.log('Product variants:', product?.variants);
-  console.log('Product images:', product?.images);
-  console.log('Product images type:', typeof product?.images);
-  console.log('Product images array:', Array.isArray(product?.images) ? product?.images : 'Not an array');
-  console.log('Product thumbnail:', product?.thumbnail);
-  console.log('Product thumbnail type:', typeof product?.thumbnail);
-  console.log('Active image index:', activeImageIndex);
+  //console.log('Product data received:', product);
+  //console.log('Product price:', product?.price);
+  //console.log('Product original_price:', product?.original_price);
+  //console.log('Product variants:', product?.variants);
+  //console.log('Product images:', product?.images);
+  //console.log('Product images type:', typeof product?.images);
+  //console.log('Product images array:', Array.isArray(product?.images) ? product?.images : 'Not an array');
+  //console.log('Product thumbnail:', product?.thumbnail);
+  //console.log('Product thumbnail type:', typeof product?.thumbnail);
+  //console.log('Active image index:', activeImageIndex);
   
   // Log the complete product structure for debugging
   if (product) {
-    console.log('🔍 Complete product structure:', JSON.stringify(product, null, 2));
+    //console.log('🔍 Complete product structure:', JSON.stringify(product, null, 2));
   }
   
   // Success log
   if (product) {
-    console.log('✅ Product page rendered successfully');
+    //console.log('✅ Product page rendered successfully');
   }
 
   // Handle loading state
@@ -418,12 +446,12 @@ export default function ProductPage() {
                       : [];
 
                     const imageSrc = validImages[activeImageIndex] || product.thumbnail;
-                    console.log('Valid images array:', validImages);
-                    console.log('Main image source:', imageSrc);
-                    console.log('Image source type:', typeof imageSrc);
-                    console.log('Image source value:', imageSrc);
-                    console.log('Product images:', product.images);
-                    console.log('Product thumbnail:', product.thumbnail);
+                    //console.log('Valid images array:', validImages);
+                    //console.log('Main image source:', imageSrc);
+                    //console.log('Image source type:', typeof imageSrc);
+                    //console.log('Image source value:', imageSrc);
+                    //console.log('Product images:', product.images);
+                    //console.log('Product thumbnail:', product.thumbnail);
                     
                     if (imageSrc && typeof imageSrc === 'string') {
                       return (
@@ -1093,16 +1121,37 @@ export default function ProductPage() {
         <div className="mt-16 border-t border-gray-200 pt-16">
           <h3 className="text-2xl font-bold text-gray-900 mb-8">Related Products</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* This will be populated with related products from the same category */}
-            <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative h-48 bg-gray-100 flex items-center justify-center">
-                <p className="text-gray-500 text-center">Related products will be loaded here</p>
+            {relatedLoading ? (
+              <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="relative h-48 bg-gray-100 flex items-center justify-center">
+                  <p className="text-gray-500 text-center">Loading related products...</p>
+                </div>
               </div>
-              <div className="p-4">
-                <h4 className="font-medium text-gray-900 mb-2">Loading related products...</h4>
-                <p className="text-sm text-gray-600 mb-3">Products from the same category will appear here</p>
+            ) : relatedProducts.length === 0 ? (
+              <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="relative h-48 bg-gray-100 flex items-center justify-center">
+                  <p className="text-gray-500 text-center">No related products found.</p>
+                </div>
               </div>
-            </div>
+            ) : (
+              relatedProducts.map((related) => (
+                <div key={related.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                  <Link href={`/products/${related.id}`}>
+                    <div className="relative h-48 flex items-center justify-center">
+                      {related.thumbnail ? (
+                        <Image src={related.thumbnail} alt={related.title} fill className="object-contain" />
+                      ) : (
+                        <span className="text-gray-400">No Image</span>
+                      )}
+                    </div>
+                    <div className="p-4">
+                      <h4 className="font-medium text-gray-900 mb-2">{related.title}</h4>
+                      <p className="text-sm text-gray-600 mb-3">{related.description?.slice(0, 60)}...</p>
+                    </div>
+                  </Link>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
