@@ -13,8 +13,10 @@ import {
   useCollections
 } from '../hooks/useShopenupProducts';
 import { type Product, type ProductCategory, type ProductCollection } from '../lib/shopenup/product';
+import { useRouter } from 'next/router';
 
 export default function ShopenupProductsDemo() {
+  const router = useRouter();
   // Use all the Shopenup product hooks
   const { products: allProducts, loading: allProductsLoading, error: allProductsError, refetch: refetchAllProducts } = useProducts({ limit: 12 });
   const { products: newArrivals, loading: newArrivalsLoading, error: newArrivalsError, refetch: refetchNewArrivals } = useNewArrivals(6);
@@ -24,7 +26,7 @@ export default function ShopenupProductsDemo() {
   const { collections, loading: collectionsLoading, error: collectionsError, refetch: refetchCollections } = useCollections();
 
   const handleProductClick = (productId: string) => {
-    window.location.href = `/products/${productId}`;
+    router.push(`/products/${productId}`);
   };
 
   const handleAddToCart = (productId: string) => {

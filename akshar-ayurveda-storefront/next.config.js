@@ -32,6 +32,10 @@ const nextConfig = {
         pathname: '/**',
       },
       {
+        protocol: "https",
+        hostname: "app.aksharayurved.com",
+      },
+      {
         protocol: 'http',
         hostname: 'localhost',
         port: '',

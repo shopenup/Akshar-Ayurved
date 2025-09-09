@@ -16,6 +16,10 @@ export default function Cart() {
   const { data: cart, isLoading: cartLoading, error: cartError } = useCartWithSync({ 
     enabled: true // Always enable cart fetching
   });
+
+  const itemsSubtotal = cart && cart.items && Array.isArray(cart.items)
+    ? cart.items.reduce((sum, item) => sum + ((item.unit_price || 0) * (item.quantity || 0)), 0)
+    : 0;
   
   const updateLineItemMutation = useUpdateLineItem();
   const deleteLineItemMutation = useDeleteLineItem();
@@ -254,7 +258,7 @@ export default function Cart() {
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium">
                     {convertToLocale({ 
-                      amount: cart.subtotal || 0, 
+                      amount: itemsSubtotal || 0, 
                       currency_code: cart.currency_code || 'INR' 
                     })}
                   </span>
