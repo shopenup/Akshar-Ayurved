@@ -12,13 +12,25 @@ const forgotPasswordFormSchema = z.object({
 })
 
 export const ForgotPasswordForm: React.FC = () => {
-  const [formState, formAction] = React.useActionState(forgotPassword, {
-    state: "initial",
-  })
+  const [formState, setFormState] = React.useState<{
+    state: "initial" | "success" | "error"
+    error?: string
+  }>({ state: "initial" })
+  
+  const [isPending, startTransition] = React.useTransition()
 
-  const onSubmit = (values: z.infer<typeof forgotPasswordFormSchema>) => {
-    React.startTransition(() => {
-      formAction(values)
+  const onSubmit = async (values: z.infer<typeof forgotPasswordFormSchema>) => {
+    startTransition(() => {
+      forgotPassword(null, values)
+        .then((result) => {
+          setFormState(result)
+        })
+        .catch((error) => {
+          setFormState({
+            state: "error",
+            error: "An unexpected error occurred. Please try again."
+          })
+        })
     })
   }
 
@@ -59,7 +71,7 @@ export const ForgotPasswordForm: React.FC = () => {
       {formState.state === "error" && (
         <p className="text-red-primary text-sm">{formState.error}</p>
       )}
-      <SubmitButton isFullWidth>Reset your password</SubmitButton>
+      <SubmitButton isFullWidth isLoading={isPending}>Reset your password</SubmitButton>
     </Form>
   )
 }

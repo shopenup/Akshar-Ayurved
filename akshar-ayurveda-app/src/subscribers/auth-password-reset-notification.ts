@@ -9,6 +9,9 @@ export default async function sendPasswordResetNotification({
   const query = container.resolve(ContainerRegistrationKeys.QUERY);
   const notificationModuleService = container.resolve(Modules.NOTIFICATION);
 
+  console.log("data: ", data);
+  const isCustomer = data.actor_type === "customer" || data.actor_type === "logged-in-customer";
+  
   const fields = [
     "id",
     "email",
@@ -17,10 +20,11 @@ export default async function sendPasswordResetNotification({
   ] as const satisfies (keyof CustomerDTO)[];
 
   const { data: customers } = await query.graph({
-    entity: "customer",
+    entity: isCustomer ? "customer" : "user",
     fields,
     filters: { email: data.entity_id },
   });
+  console.log("customers: ", customers);
   const customer = customers[0] as Pick<CustomerDTO, (typeof fields)[number]>;
 
   await notificationModuleService.createNotifications({
@@ -29,8 +33,14 @@ export default async function sendPasswordResetNotification({
     template:
       data.actor_type === "logged-in-customer"
         ? "auth-password-reset"
-        : "auth-forgot-password",
-    data: { customer, token: data.token },
+        : process.env.SENDGRID_CUSTOM_FORGET_PASSWORD_TEMP_ID,
+    data: 
+    { 
+      customer, 
+      store_name: process.env.STORE_NAME, 
+      store_url: `${isCustomer ? process.env.STORE_URL : `${process.env.BACKEND_URL}/app`}/reset-password?email=${customer.email}&token=${data.token}`, 
+      // token: data.token 
+    },
   });
 }
 

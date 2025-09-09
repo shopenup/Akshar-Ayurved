@@ -1,139 +1,156 @@
 "use client"
 
 import * as React from "react"
-import { redirect } from "next/navigation"
-
 import { resetPassword } from "@lib/shopenup/customer"
-import { SubmitButton } from "@modules/common/components/submit-button"
-import { Form, InputField } from "@components/Forms"
-import { z } from "zod"
-import UiModal from "@components/ui/Modal"
-import UiModalOverlay from "@components/ui/Modal"
-import { UiCloseButton, UiDialog } from "@components/Dialog"
-import { Icon } from "@components/Icon"
-
-const resetPasswordSchema = z.object({
-  type: z.literal("reset"),
-  current_password: z.string().min(6),
-  new_password: z.string().min(6),
-  confirm_new_password: z.string().min(6),
-})
-
-const forgotPasswordSchema = z.object({
-  type: z.literal("forgot"),
-  new_password: z.string().min(6),
-  confirm_new_password: z.string().min(6),
-})
-
-const baseSchema = z.discriminatedUnion("type", [
-  resetPasswordSchema,
-  forgotPasswordSchema,
-])
-
-const resetPasswordFormSchema = baseSchema.superRefine((data, ctx) => {
-  if (data.new_password !== data.confirm_new_password) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Passwords must match",
-      path: ["confirm_new_password"],
-    })
-  }
-
-  if (data.type === "reset" && data.current_password === data.new_password) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "New password must be different from the current password",
-      path: ["new_password"],
-    })
-  }
-})
+import { Card, Input, Button } from "@components/ui"
 
 export const ChangePasswordForm: React.FC<{
   email: string
   token: string
   customer?: boolean
 }> = ({ email, token, customer }) => {
-  const [formState, formAction, isPending] = React.useActionState(
-    resetPassword,
-    { email, token, state: "initial" }
-  )
+  const [isPending, setIsPending] = React.useState(false)
+  const [message, setMessage] = React.useState("")
+  const [isSuccess, setIsSuccess] = React.useState(false)
 
-  const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsPending(true)
+    setMessage("")
+    setIsSuccess(false)
+    
+    const formData = new FormData(e.currentTarget)
+    const newPassword = formData.get("new_password") as string
+    const confirmPassword = formData.get("confirm_new_password") as string
+    const currentPassword = formData.get("current_password") as string
 
-  React.useEffect(() => {
-    if (formState.state === "success") {
-      setIsModalOpen(true)
+    // Validation
+    if (newPassword !== confirmPassword) {
+      setMessage("Passwords must match")
+      setIsPending(false)
+      return
     }
-  }, [formState])
 
-  const onSubmit = (values: z.infer<typeof resetPasswordFormSchema>) => {
-    React.startTransition(() => formAction(values))
+    if (newPassword.length < 6) {
+      setMessage("Password must be at least 6 characters long")
+      setIsPending(false)
+      return
+    }
+
+    if (customer && currentPassword === newPassword) {
+      setMessage("New password must be different from the current password")
+      setIsPending(false)
+      return
+    }
+
+    try {
+      // Prepare the form data for the API
+      const values = {
+        type: (customer ? "reset" : "forgot") as "reset" | "forgot",
+        current_password: currentPassword,
+        new_password: newPassword,
+        confirm_new_password: confirmPassword,
+      } as const
+
+      // Call the actual resetPassword API
+      const result = await resetPassword({ email, token }, values)
+      
+      if (result.state === "success") {
+        setMessage("Password reset successful! You can now log in with your new password.")
+        setIsSuccess(true)
+      } else if (result.state === "error") {
+        setMessage(result.error || "Failed to reset password. Please try again.")
+      }
+    } catch (error) {
+      console.error("Password reset error:", error)
+      setMessage("An unexpected error occurred. Please try again.")
+    } finally {
+      setIsPending(false)
+    }
+  }
+
+  // Show success message with redirect option
+  if (isSuccess) {
+    return (
+      <Card className="p-8">
+        <div className="text-center space-y-6">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+            <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900">Password Reset Successful!</h2>
+          <p className="text-gray-600">
+            Your password has been successfully reset. You can now use your new password to log in.
+          </p>
+          <Button
+            onClick={() => window.location.href = "/login"}
+            variant="primary"
+            size="lg"
+            fullWidth
+          >
+            Go to Login
+          </Button>
+        </div>
+      </Card>
+    )
   }
 
   return (
-    <>
-      <Form
-        onSubmit={onSubmit}
-        schema={resetPasswordFormSchema}
-        defaultValues={customer ? { type: "reset" } : { type: "forgot" }}
-      >
-        <h1 className="text-lg mb-6 md:mb-8">Reset password</h1>
-        <div className="flex flex-col gap-4 mb-6 md:mb-8">
-          {customer && (
-            <InputField
-              type="password"
-              placeholder="Current password"
-              name="current_password"
-              inputProps={{ autoComplete: "current-password" }}
-            />
-          )}
-          <InputField
-            type="password"
-            placeholder="New password"
-            name="new_password"
-            inputProps={{ autoComplete: "new-password" }}
-          />
-          <InputField
-            type="password"
-            placeholder="Confirm new password"
-            name="confirm_new_password"
-            inputProps={{ autoComplete: "new-password" }}
-          />
-        </div>
-        {formState.state === "error" && (
-          <p className="text-red-primary text-sm mb-6">{formState.error}</p>
+    <Card className="p-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {message && (
+          <div className={`p-4 rounded-md ${isSuccess ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700'}`}>
+            {message}
+          </div>
         )}
-        <SubmitButton isLoading={isPending} isFullWidth>
-          Reset password
-        </SubmitButton>
-      </Form>
-      <UiModalOverlay
-        isOpen={isModalOpen}
-        className="bg-transparent"
-        onClose={() => {
-          setIsModalOpen(false)
-          redirect("/auth/login")
-        }}
-      >
-        <UiModal className="relative" isOpen={isModalOpen} onClose={() => {
-          setIsModalOpen(false)
-          redirect("/auth/login")
-        }}>
-          <UiDialog>
-            <p className="text-md mb-12">Password reset successful!</p>
-            <p className="text-grayscale-500">
-              Your password has been successfully reset. You may now use your
-              new password to log in.
-            </p>
-            <UiCloseButton
-              variant="ghost"
-              className="absolute top-4 right-6 p-0"
-            >
-              <Icon name="close" className="w-6 h-6" />
-            </UiCloseButton>
-          </UiDialog>
-        </UiModal>
-      </UiModalOverlay>
-    </>
+
+        {customer && (
+          <Input
+            label="Current Password"
+            type="password"
+            name="current_password"
+            required
+            fullWidth
+            placeholder="Enter your current password"
+          />
+        )}
+        
+        <Input
+          label="New Password"
+          type="password"
+          name="new_password"
+          required
+          fullWidth
+          placeholder="Enter your new password"
+        />
+        
+        <Input
+          label="Confirm New Password"
+          type="password"
+          name="confirm_new_password"
+          required
+          fullWidth
+          placeholder="Confirm your new password"
+        />
+        
+        <Button
+          type="submit"
+          variant="primary"
+          size="lg"
+          fullWidth
+          disabled={isPending}
+        >
+          {isPending ? (
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+              Resetting...
+            </div>
+          ) : (
+            'Reset Password'
+          )}
+        </Button>
+      </form>
+    </Card>
   )
 }

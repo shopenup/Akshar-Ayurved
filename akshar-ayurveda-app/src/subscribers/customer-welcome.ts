@@ -22,7 +22,7 @@ export default async function userCreatedHandler({
         store_name: process.env.STORE_NAME,
         first_name: customer.first_name,
         email: customer.email,
-        store_url: process.env.STORE_URL,
+        store_url: `${process.env.STORE_URL}/profile`,
     },
   })
 }
