@@ -321,6 +321,7 @@ const BillingAddress = ({
             name="billing_address.first_name"
             inputProps={{
               autoComplete: "given-name",
+              className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full",
             }}
             data-testid="billing-first-name-input"
           />
@@ -329,6 +330,7 @@ const BillingAddress = ({
             name="billing_address.last_name"
             inputProps={{
               autoComplete: "family-name",
+              className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full",
             }}
             data-testid="billing-last-name-input"
           />
@@ -337,6 +339,7 @@ const BillingAddress = ({
             name="billing_address.address_1"
             inputProps={{
               autoComplete: "address-line1",
+              className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full",
             }}
             data-testid="billing-address-input"
           />
@@ -345,6 +348,7 @@ const BillingAddress = ({
             name="billing_address.company"
             inputProps={{
               autoComplete: "company",
+              className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full",
             }}
             data-testid="billing-company-input"
           />
@@ -353,6 +357,7 @@ const BillingAddress = ({
             name="billing_address.postal_code"
             inputProps={{
               autoComplete: "postal-code",
+              className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full",
             }}
             data-testid="billing-postal-input"
           />
@@ -361,6 +366,7 @@ const BillingAddress = ({
             name="billing_address.city"
             inputProps={{
               autoComplete: "address-level2",
+              className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full",
             }}
             data-testid="billing-city-input"
           />
@@ -384,13 +390,13 @@ const BillingAddress = ({
           <InputField
             placeholder="State / Province"
             name="billing_address.province"
-            inputProps={{ autoComplete: "address-level1" }}
+            inputProps={{ autoComplete: "address-level1", className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full",}}
             data-testid="billing-province-input"
           />
           <InputField
             placeholder="Phone"
             name="billing_address.phone"
-            inputProps={{ autoComplete: "tel" }}
+            inputProps={{ autoComplete: "tel" ,className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full",}}
             data-testid="billing-phone-input"
           />
         </div>

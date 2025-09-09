@@ -11,12 +11,12 @@ import { HttpTypes } from '@shopenup/types';
 export default function Cart() {
   const router = useRouter();
   const countryCode = useCountryCode() || 'in'; // Default to 'IN' if no country code found
-  
+
   // Use the synchronized cart hook - enable cart fetching even without country code
-  const { data: cart, isLoading: cartLoading, error: cartError } = useCartWithSync({ 
+  const { data: cart, isLoading: cartLoading, error: cartError } = useCartWithSync({
     enabled: true // Always enable cart fetching
   });
-  
+
   const updateLineItemMutation = useUpdateLineItem();
   const deleteLineItemMutation = useDeleteLineItem();
 
@@ -24,7 +24,7 @@ export default function Cart() {
 
   const updateQuantity = async (lineId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
-    
+
     try {
       await updateLineItemMutation.mutateAsync({ lineId, quantity: newQuantity });
     } catch (error) {
@@ -47,7 +47,7 @@ export default function Cart() {
         const variant = item.variant;
         return variant?.calculated_price?.calculated_amount && variant.calculated_price.calculated_amount > 0;
       });
-      
+
       if (hasValidItems) {
         router.push('/checkout');
       } else {
@@ -138,16 +138,16 @@ export default function Cart() {
                   // Get product and variant information
                   const product = item.variant?.product;
                   const variant = item.variant;
-                  
+
                   // Get pricing information
                   const price = variant?.calculated_price?.calculated_amount || 0;
                   const originalPrice = variant?.calculated_price?.original_amount || 0;
                   const currencyCode = variant?.calculated_price?.currency_code || 'INR';
-                  
+
                   // Get product image
                   const image = product?.thumbnail || '';
                   const productName = product?.title || 'Product';
-                  
+
                   return (
                     <div key={item.id} className="flex items-center space-x-4 border-b border-gray-200 pb-6 last:border-b-0">
                       {/* Product Image */}
@@ -179,7 +179,7 @@ export default function Cart() {
                             {variant.options.map((option, index) => (
                               <span key={index}>
                                 {option.option_id}: {option.value}
-                                {index < (variant.options?.length || 0) - 1 ? ', ' : ''}  
+                                {index < (variant.options?.length || 0) - 1 ? ', ' : ''}
                               </span>
                             ))}
                           </div>
@@ -196,9 +196,9 @@ export default function Cart() {
                         </div>
                         {originalPrice > price && (
                           <Badge variant="danger" size="sm">
-                            Save {convertToLocale({ 
-                              amount: originalPrice - price, 
-                              currency_code: currencyCode 
+                            Save {convertToLocale({
+                              amount: originalPrice - price,
+                              currency_code: currencyCode
                             })}
                           </Badge>
                         )}
@@ -248,37 +248,38 @@ export default function Cart() {
           <div className="lg:col-span-1">
             <Card className="p-6 sticky top-8">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
-              
+
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium">
-                    {convertToLocale({ 
-                      amount: cart.subtotal || 0, 
-                      currency_code: cart.currency_code || 'INR' 
+                    {convertToLocale({
+                      amount: cart.subtotal || 0,
+                      currency_code: cart.currency_code || 'INR'
                     })}
                   </span>
                 </div>
-                
-                {cart.discount_total && cart.discount_total > 0 && (
+
+                {cart.discount_total > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Discount</span>
                     <span className="font-medium text-green-600">
-                      -{convertToLocale({ 
-                        amount: cart.discount_total, 
-                        currency_code: cart.currency_code || 'INR' 
+                      -{convertToLocale({
+                        amount: cart.discount_total,
+                        currency_code: cart.currency_code || 'INR'
                       })}
                     </span>
                   </div>
                 )}
-                
+
+
                 <div className="flex justify-between">
                   <span className="text-gray-600">Shipping</span>
                   <span className="font-medium">
                     {cart.shipping_total && cart.shipping_total > 0 ? (
-                      convertToLocale({ 
-                        amount: cart.shipping_total, 
-                        currency_code: cart.currency_code || 'INR' 
+                      convertToLocale({
+                        amount: cart.shipping_total,
+                        currency_code: cart.currency_code || 'INR'
                       })
                     ) : (
                       <span className="text-green-600">Free</span>
@@ -286,25 +287,26 @@ export default function Cart() {
                   </span>
                 </div>
 
-                {cart.tax_total && cart.tax_total > 0 && (
+                {cart.tax_total > 0 && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Taxes</span>
                     <span className="font-medium">
-                      {convertToLocale({ 
-                        amount: cart.tax_total, 
-                        currency_code: cart.currency_code || 'INR' 
+                      {convertToLocale({
+                        amount: cart.tax_total,
+                        currency_code: cart.currency_code || 'INR'
                       })}
                     </span>
                   </div>
                 )}
-                
+
+
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex justify-between">
                     <span className="text-lg font-bold text-gray-900">Total</span>
                     <span className="text-lg font-bold text-gray-900">
-                      {convertToLocale({ 
-                        amount: cart.total || 0, 
-                        currency_code: cart.currency_code || 'INR' 
+                      {convertToLocale({
+                        amount: cart.total || 0,
+                        currency_code: cart.currency_code || 'INR'
                       })}
                     </span>
                   </div>
@@ -325,7 +327,7 @@ export default function Cart() {
                   </svg>
                   Proceed to Checkout
                 </Button>
-                
+
                 <div className="grid grid-cols-1 gap-3">
                   <Link href="/">
                     <Button variant="secondary" size="lg" fullWidth>
@@ -342,9 +344,9 @@ export default function Cart() {
               {cart.subtotal && cart.subtotal < 500 && (
                 <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
                   <p className="text-sm text-green-800">
-                    Add {convertToLocale({ 
-                      amount: 500 - cart.subtotal, 
-                      currency_code: cart.currency_code || 'INR' 
+                    Add {convertToLocale({
+                      amount: 500 - cart.subtotal,
+                      currency_code: cart.currency_code || 'INR'
                     })} more to get free shipping!
                   </p>
                 </div>
