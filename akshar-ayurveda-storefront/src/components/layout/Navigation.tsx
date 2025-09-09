@@ -92,6 +92,7 @@ export default function Navigation({
 
   const navItems = [
     { name: 'Home', href: '/' },
+    { name: 'Products', href: '/products' },
     { name: 'About Us', href: '/about' },
     // { name: 'Blogs', href: '/blogs' },
     // { name: 'Gallery', href: '/gallery' },
@@ -120,7 +121,7 @@ export default function Navigation({
   };
 
   return (
-    <nav className="bg-white shadow-lg w-full">
+    <nav className="bg-white shadow-lg w-full sticky top-0 z-[1000]">
       <div className="w-full px-1 xs:px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 2xl:px-12">
         <div className="flex items-center justify-between h-12 xs:h-14 sm:h-16 md:h-18 lg:h-20 py-1 xs:py-2">
           {/* Logo */}
@@ -245,7 +246,7 @@ export default function Navigation({
               </div> */}
 
               {/* Simple Products Link */}
-              <Link
+              {/* <Link
                 href="/products"
                 className={`px-1 xl:px-2 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium transition-colors ${
                   router.pathname.startsWith('/products')
@@ -254,7 +255,7 @@ export default function Navigation({
                 }`}
               >
                 Products
-              </Link>
+              </Link> */}
             </div>
 
             {/* User Actions */}

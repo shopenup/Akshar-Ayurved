@@ -20,15 +20,20 @@ const CartTotals: React.FC<CartTotalsProps> = ({ cart }) => {
     gift_card_total,
   } = cart
 
+  // Calculate items subtotal from cart.items
+  const itemsSubtotal = cart.items && Array.isArray(cart.items)
+    ? cart.items.reduce((sum, item) => sum + ((item.unit_price || 0) * (item.quantity || 0)), 0)
+    : 0;
+
   return (
     <div>
       <div className="flex flex-col gap-2 lg:gap-1 mb-8">
         <div className="flex justify-between max-lg:text-xs">
           <div>
-            <p>Subtotal</p>
+            <p>Items Subtotal</p>
           </div>
           <div className="self-end">
-            <p>{convertToLocale({ amount: subtotal ?? 0, currency_code })}</p>
+            <p>{convertToLocale({ amount: itemsSubtotal, currency_code })}</p>
           </div>
         </div>
         {!!discount_total && (

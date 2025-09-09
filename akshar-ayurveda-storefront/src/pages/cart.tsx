@@ -17,6 +17,10 @@ export default function Cart() {
     enabled: true // Always enable cart fetching
   });
 
+  const itemsSubtotal = cart && cart.items && Array.isArray(cart.items)
+    ? cart.items.reduce((sum, item) => sum + ((item.unit_price || 0) * (item.quantity || 0)), 0)
+    : 0;
+  
   const updateLineItemMutation = useUpdateLineItem();
   const deleteLineItemMutation = useDeleteLineItem();
 
@@ -253,9 +257,9 @@ export default function Cart() {
                 <div className="flex justify-between">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium">
-                    {convertToLocale({
-                      amount: cart.subtotal || 0,
-                      currency_code: cart.currency_code || 'INR'
+                    {convertToLocale({ 
+                      amount: itemsSubtotal || 0, 
+                      currency_code: cart.currency_code || 'INR' 
                     })}
                   </span>
                 </div>

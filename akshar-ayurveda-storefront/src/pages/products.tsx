@@ -393,7 +393,7 @@ export default function ProductsPage() {
                   </div>
 
                   {/* Price Range */}
-                  <div>
+                  {/* <div>
                     <h3 className="text-sm font-medium text-gray-900 mb-3">Price Range</h3>
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -410,7 +410,7 @@ export default function ProductsPage() {
                         className="w-full"
                       />
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Stock Filter */}
                   {/* <div>

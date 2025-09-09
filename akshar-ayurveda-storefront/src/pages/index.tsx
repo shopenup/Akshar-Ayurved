@@ -2,6 +2,7 @@ import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/router';
 
 import {
   BannerCarousel,
@@ -29,6 +30,7 @@ export default function HomePage() {
   // Use Shopenup product hooks
   const { products: newArrivals, loading: newArrivalsLoading, error: newArrivalsError } = useNewArrivals(8);
   const { showToast } = useToast();
+  const router = useRouter();
   const countryCode = useCountryCode() || 'in';
   const { mutateAsync: addLineItem, isPending: isAddingToCart } = useAddLineItem();
   // Remove useCategories hook
@@ -120,7 +122,7 @@ export default function HomePage() {
 
   const handleProductClick = (productId: string) => {
     // Navigate to product detail page
-    window.location.href = `/products/${productId}`;
+    router.push(`/products/${productId}`);
   };
 
   // const handleAddToCart = (productId: string) => {

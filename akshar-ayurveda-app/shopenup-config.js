@@ -71,6 +71,21 @@ module.exports = defineConfig({
       },
     },
     {
+      resolve: "@shopenup/shopenup/file",
+      options: {
+        providers: [
+          {
+            resolve: "@shopenup/shopenup/file-local",
+            id: "local",
+            options: {
+              upload_dir: "static",  // keeps uploads in /static folder
+              backend_url: process.env.BACKEND_URL, // 👈 public URL for serving
+            },
+          },
+        ],
+      },
+    },
+    {
       resolve: '@shopenup/shopenup/notification',
       options: {
         providers: [

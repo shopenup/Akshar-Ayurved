@@ -17,6 +17,8 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
   const applyPromotions = useApplyPromotions()
 
   const { promotions = [] } = cart
+  const activePromotion = promotions.length > 0 ? promotions[0] : null;
+
   const addPromotionCode = async (values: { code: string }) => {
     if (!values.code) {
       return
@@ -29,20 +31,56 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
     await applyPromotions.mutateAsync(codes)
   }
 
+  const handleRemovePromotion = async () => {
+    // Remove all promotion codes
+    await applyPromotions.mutateAsync([])
+  }
+
   return (
-    <Form onSubmit={addPromotionCode} schema={codeFormSchema}>
-      <div className="flex max-sm:flex-col gap-x-6 gap-y-4 mb-8">
-        <InputField
-          name="code"
-          inputProps={{ autoFocus: false, className: "block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full" }}
-          placeholder="Discount code"
-          className="flex-1"
-        />
-        <SubmitButton className="bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors ml-2 mt-1">
-          Apply
-        </SubmitButton>
+    <>
+      {activePromotion ? (
+        <div className="mb-6">
+        <div className="flex items-center rounded-lg border border-green-200 bg-green-50 p-4 gap-4">
+          <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+          <span className="font-semibold text-green-700 text-base mr-2">
+            {activePromotion.application_method?.type === 'percentage'
+              ? `${activePromotion.application_method.value}% off applied!`
+              : activePromotion.application_method?.type === 'fixed' && activePromotion.application_method.currency_code
+                ? `₹${activePromotion.application_method.value} off applied!`
+                : 'Discount applied!'}
+          </span>
+          <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded ml-2">Code: {activePromotion.code}</span>
+          <button
+            onClick={handleRemovePromotion}
+            className="ml-auto text-red-600 text-sm font-medium hover:underline"
+            type="button"
+          >
+            Remove
+          </button>
+        </div>
       </div>
-    </Form>
+      ) : (
+        <Form onSubmit={addPromotionCode} schema={codeFormSchema}>
+          <div className="flex gap-2 mb-8">
+            <InputField
+              name="code"
+              inputProps={{
+                autoFocus: false,
+                className:
+                  "block px-4 py-2 text-base border border-gray-300 rounded-l-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-400 w-full",
+              }}
+              placeholder="Enter discount code"
+              className="flex-1"
+            />
+            <SubmitButton className="bg-green-600 text-white px-4 py-2 rounded-r-lg text-sm font-medium hover:bg-green-700 transition-colors">
+              Apply
+            </SubmitButton>
+          </div>
+        </Form>
+      )}
+    </>
   )
 }
 
