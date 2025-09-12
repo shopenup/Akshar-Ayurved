@@ -1,6 +1,6 @@
 import Product from "@modules/products/components/product-preview"
-import { getRegion } from "@lib/data/regions"
-import { getProductsList } from "@lib/data/products"
+import { getRegion } from "@lib/shopenup/regions"
+import { productService } from "@lib/shopenup/product"
 import { HttpTypes } from "@shopenup/types"
 import { Layout, LayoutColumn } from "@components/Layout"
 
@@ -19,26 +19,12 @@ export default async function RelatedProducts({
     return null
   }
 
-  // edit this function to define your related products logic
-  const queryParams: HttpTypes.StoreProductListParams = {
+  const products = await productService.getProducts({
     limit: 3,
-  }
-  if (region?.id) {
-    queryParams.region_id = region.id
-  }
-  if (product.collection_id) {
-    queryParams.collection_id = [product.collection_id]
-  }
-  if (product.tags) {
-    queryParams.tag_id = product.tags.map((t) => t.value).filter(Boolean)
-  }
-  queryParams.is_giftcard = false
-
-  const products = await getProductsList({
-    queryParams,
-    countryCode,
-  }).then(({ response }) => {
-    return response.products.filter(
+    category: product.type?.value,
+    tags: product.tags?.map(t => t.value).filter(Boolean),
+  }).then((responseProducts) => {
+    return responseProducts.filter(
       (responseProduct) => responseProduct.id !== product.id
     )
   })
@@ -59,7 +45,7 @@ export default async function RelatedProducts({
       <Layout className="gap-y-10 md:gap-y-16">
         {products.map((product) => (
           <LayoutColumn key={product.id} className="!col-span-6 md:!col-span-4">
-            <Product product={product} />
+            <Product product={product as unknown as HttpTypes.StoreProduct} />
           </LayoutColumn>
         ))}
       </Layout>

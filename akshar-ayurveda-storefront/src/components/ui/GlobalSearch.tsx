@@ -14,6 +14,34 @@ interface Product {
   inStock: boolean;
 }
 
+interface ApiProduct {
+  id: string;
+  title?: string;
+  name?: string;
+  price?: number;
+  original_price?: number;
+  originalPrice?: number;
+  image?: string;
+  thumbnail?: string;
+  images?: Array<{ url?: string }>;
+  category?: string;
+  categories?: Array<{ name?: string }>;
+  description?: string;
+  subtitle?: string;
+  inStock?: boolean;
+  in_stock?: boolean;
+  variants?: Array<{
+    original_price?: number;
+    inventory_quantity?: number;
+    calculated_price?: { calculated_amount?: number };
+  }>;
+}
+
+interface ProductsResponse {
+  products?: ApiProduct[];
+  data?: ApiProduct[];
+}
+
 interface GlobalSearchProps {
   className?: string;
 }
@@ -53,26 +81,26 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
 
         console.log('GlobalSearch - Products data:', productsData);
 
-        let productsArray: any[] = [];
+        let productsArray: ApiProduct[] = [];
         if (Array.isArray(productsData)) {
-          productsArray = productsData;
+          productsArray = productsData as ApiProduct[];
         } else if (productsData && typeof productsData === 'object') {
-          if (Array.isArray((productsData as any).products)) {
-            productsArray = (productsData as any).products;
-          } else if (Array.isArray((productsData as any).data)) {
-            productsArray = (productsData as any).data;
+          if (Array.isArray((productsData as ProductsResponse).products)) {
+              productsArray = (productsData as ProductsResponse).products!;
+          } else if (Array.isArray((productsData as ProductsResponse).data)) {
+            productsArray = (productsData as ProductsResponse).data!;
           }
         }
 
         if (productsArray.length > 0) {
-          const mappedProducts = productsArray.map((product: any) => ({
+          const mappedProducts = productsArray.map((product: ApiProduct) => ({
             id: product.id,
             name: product.title || product.name || 'Untitled Product',
-            originalPrice: product.variants?.[0]?.original_price || product.original_price,
-            image: product.images?.[0]?.url || product.thumbnail || '/assets/placeholder-product.jpg',
-            category: product.categories?.[0]?.name || product.category?.name || 'Uncategorized',
+            originalPrice: product.variants?.[0]?.original_price || product.originalPrice || product.original_price,
+            image: product.images?.[0]?.url || product.image || product.thumbnail || '/assets/placeholder-product.jpg',
+            category: product.categories?.[0]?.name || product.category || 'Uncategorized',
             description: product.description || product.subtitle || '',
-            inStock: product.variants?.[0]?.inventory_quantity > 0 || product.in_stock !== false,
+            inStock: product.variants?.[0]?.inventory_quantity ? product.variants[0].inventory_quantity > 0 : (product.inStock ?? product.in_stock ?? true),
             price: product.variants?.[0]?.calculated_price?.calculated_amount || product.price || 0,
           }));
 

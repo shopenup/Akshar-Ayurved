@@ -12,7 +12,7 @@ export default async function orderPlacedHandler({
     last_name: string 
   }; 
   total: number; 
-  items: any[]; 
+  items: unknown[]; 
   status: string 
 }>) {
   try {

@@ -1,4 +1,4 @@
-import type { SubscriberArgs, SubscriberConfig } from '@shopenup/shopenup';
+import type { SubscriberArgs, SubscriberConfig } from '@shopenup/framework';
 import { Modules } from '@shopenup/framework/utils';
 import { ISearchService } from '@shopenup/framework/types';
 
@@ -13,22 +13,22 @@ export default async function indexProductHandler({
   let meilisearchService: ISearchService | undefined;
   try {
     meilisearchService = container.resolve('meilisearchService');
-  } catch (e) {
+  } catch {
     return; // search disabled
   }
 
   if (name === 'product.deleted') {
-    await meilisearchService.deleteDocument('products', productId);
+    await meilisearchService?.deleteDocument('products', productId);
     logger.info(`The product ${productId} was deleted from MeiliSearch`);
     return;
   }
 
-  const product = await productModuleService.retrieveProduct(productId, {
+  const product = await productModuleService?.retrieveProduct(productId, {
     relations: ['variants', 'options', 'tags', 'collection', 'type', 'images'],
   });
 
   if (name === 'product.updated') {
-    await meilisearchService.replaceDocuments(
+    await meilisearchService?.replaceDocuments(
       'products',
       [product],
       'products',
@@ -39,7 +39,7 @@ export default async function indexProductHandler({
     return;
   }
 
-  await meilisearchService.addDocuments('products', [product], 'products');
+  await meilisearchService?.addDocuments('products', [product], 'products');
   logger.info(
     `The product ${productId} ${product.title} was added to MeiliSearch`,
   );

@@ -97,8 +97,6 @@ interface RadioGroupProps {
 }
 
 export const UiRadioGroup: React.FC<RadioGroupProps> = ({
-  value,
-  onChange,
   children,
   className = '',
   'aria-label': ariaLabel,
@@ -118,7 +116,6 @@ export const UiRadio: React.FC<React.PropsWithChildren<{
   variant?: string;
 }>> = ({ 
   children, 
-  value,
   className = '',
   onPress,
   variant

@@ -1,50 +1,16 @@
 import { HttpTypes } from "@shopenup/types"
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useState } from "react"
 
-import compareAddresses from "@lib/util/compare-addresses"
 import { CountrySelectField, InputField } from "@components/Forms"
-import { Icon } from "@components/Icon"
 import { Button } from "@components/Button"
-import { useCountryCode } from "hooks/country-code"
 import {
   UiCheckbox,
   UiCheckboxBox,
-  UiCheckboxIcon,
   UiCheckboxLabel,
 } from "@components/ui/Checkbox"
 import { useFormContext, useWatch } from "react-hook-form"
 import { useAddressMutation } from "hooks/customer"
 import { toast } from "sonner"
-
-const isShippingAddressEmpty = (formData: {
-  shipping_address?: Pick<
-    HttpTypes.StoreCartAddress,
-    | "first_name"
-    | "last_name"
-    | "address_1"
-    | "address_2"
-    | "company"
-    | "postal_code"
-    | "city"
-    | "country_code"
-    | "province"
-    | "phone"
-  >
-}) => {
-  return (
-    !formData?.shipping_address?.first_name &&
-    !formData?.shipping_address?.last_name &&
-    !formData?.shipping_address?.address_1 &&
-    !formData?.shipping_address?.address_2 &&
-    !formData?.shipping_address?.company &&
-    !formData?.shipping_address?.postal_code &&
-    !formData?.shipping_address?.city &&
-    !formData?.shipping_address?.country_code &&
-    !formData?.shipping_address?.province &&
-    !formData?.shipping_address?.phone
-  )
-}
-// import AddressSelect from "../address-select"
 
 const ShippingAddress = ({
   customer,
@@ -57,7 +23,6 @@ const ShippingAddress = ({
   checked: boolean
   onChange: () => void
 }) => {
-  const countryCode = useCountryCode()
   const [showNewAddressForm, setShowNewAddressForm] = useState(false)
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
   const addAddress = useAddressMutation()
@@ -81,58 +46,8 @@ const ShippingAddress = ({
     numeric_code: c.num_code 
   })))
 
-  const countriesInRegion = useMemo(() => {
-    console.log('Cart region data:', cart?.region)
-    console.log('Countries in region:', cart?.region?.countries)
-    return cart?.region?.countries?.map((c) => c.iso_2)
-  }, [cart?.region])
 
-  // check if customer has saved addresses that are in the current region
-  // If no region data is available, show all addresses
-  const addressesInRegion = useMemo(() => {
-    if (!customer?.addresses) return []
-    
-    // If no region data or countries, show all addresses
-    if (!countriesInRegion || countriesInRegion.length === 0) {
-      return customer.addresses
-    }
-    
-    // Filter addresses by region
-    return customer.addresses.filter(
-      (a) => a.country_code && countriesInRegion.includes(a.country_code)
-    )
-  }, [customer?.addresses, countriesInRegion])
 
-  const setFormAddress = (
-    address?: Pick<
-      HttpTypes.StoreCartAddress,
-      | "first_name"
-      | "last_name"
-      | "address_1"
-      | "address_2"
-      | "company"
-      | "postal_code"
-      | "city"
-      | "country_code"
-      | "province"
-      | "phone"
-    >
-  ) => {
-    if (address) {
-      setValue("shipping_address", {
-        first_name: address?.first_name || "",
-        last_name: address?.last_name || "",
-        address_1: address?.address_1 || "",
-        address_2: address?.address_2 || "",
-        company: address?.company || "",
-        postal_code: address?.postal_code || "",
-        city: address?.city || "",
-        country_code: address?.country_code || "",
-        province: address?.province || "",
-        phone: address?.phone || "",
-      })
-    }
-  }
 
   useEffect(() => {
     console.log('useEffect triggered - cart:', cart, 'customer:', customer)
@@ -437,7 +352,7 @@ const ShippingAddress = ({
                         
                         setShowNewAddressForm(false)
                         toast.success('Address added successfully!')  
-                      } catch (error) {
+                      } catch {
                         toast.error('Failed to add address')
                       }
                     }}

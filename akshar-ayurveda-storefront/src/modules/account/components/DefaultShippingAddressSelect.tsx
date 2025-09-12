@@ -3,7 +3,7 @@ import * as React from "react"
 import * as ReactAria from "react-aria-components"
 import { StoreCustomerAddress } from "@shopenup/types"
 import { BaseRegionCountry } from "@shopenup/types/dist/http/region/common"
-import { updateDefaultShippingAddress } from "@lib/data/customer"
+import { updateDefaultShippingAddress } from "@lib/shopenup/customer"
 import {
   UiSelectButton,
   UiSelectValue,

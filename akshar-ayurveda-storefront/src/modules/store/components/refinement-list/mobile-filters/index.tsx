@@ -4,7 +4,6 @@ import * as ReactAria from "react-aria-components"
 import {
   UiCheckbox,
   UiCheckboxBox,
-  UiCheckboxIcon,
   UiCheckboxLabel,
 } from "@components/ui/Checkbox"
 import { Button } from "@components/Button"
@@ -41,7 +40,6 @@ export const MobileFilters: React.FC<{
       </Button>
       <UiModalOverlay className="p-0">
         <UiModal
-          animateFrom="bottom"
           className="top-36 w-full pb-26 max-w-full"
         >
           <UiDialog>
@@ -81,12 +79,11 @@ export const MobileFilters: React.FC<{
                     {Object.entries(collections).map(([key, value]) => (
                       <UiCheckbox
                         key={key}
-                        value={key}
+                        onPress={() => setMultipleQueryParams({ collection: [key] })}
                         className="justify-between py-3"
                       >
                         <UiCheckboxLabel>{value}</UiCheckboxLabel>
-                        <UiCheckboxBox>
-                          <UiCheckboxIcon />
+                        <UiCheckboxBox isSelected={collection?.includes(key)}>
                         </UiCheckboxBox>
                       </UiCheckbox>
                     ))}
@@ -110,12 +107,11 @@ export const MobileFilters: React.FC<{
                     {Object.entries(categories).map(([key, value]) => (
                       <UiCheckbox
                         key={key}
-                        value={key}
+                        onPress={() => setMultipleQueryParams({ category: [key] })}
                         className="justify-between py-3"
                       >
                         <UiCheckboxLabel>{value}</UiCheckboxLabel>
-                        <UiCheckboxBox>
-                          <UiCheckboxIcon />
+                        <UiCheckboxBox isSelected={category?.includes(key)}>
                         </UiCheckboxBox>
                       </UiCheckbox>
                     ))}
@@ -139,12 +135,11 @@ export const MobileFilters: React.FC<{
                     {Object.entries(types).map(([key, value]) => (
                       <UiCheckbox
                         key={key}
-                        value={key}
+                        onPress={() => setMultipleQueryParams({ type: [key] })}
                         className="justify-between py-3"
                       >
                         <UiCheckboxLabel>{value}</UiCheckboxLabel>
-                        <UiCheckboxBox>
-                          <UiCheckboxIcon />
+                        <UiCheckboxBox isSelected={type?.includes(key)}>
                         </UiCheckboxBox>
                       </UiCheckbox>
                     ))}

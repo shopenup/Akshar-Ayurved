@@ -80,7 +80,7 @@ export default function TestSMSPage() {
             <div className="mt-6 p-4 bg-gray-100 rounded-md">
               <h3 className="font-medium text-gray-900 mb-2">Test Message Content:</h3>
               <p className="text-sm text-gray-600">
-                "Thank you for your order! Your order - TEST[timestamp] has been placed successfully. We'll notify you once it's shipped."
+                &quot;Thank you for your order! Your order - TEST[timestamp] has been placed successfully. We&apos;ll notify you once it&apos;s shipped.&quot;
               </p>
             </div>
           </div>

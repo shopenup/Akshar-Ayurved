@@ -1,13 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Button, Badge, useToast } from '../components/ui';
+import { Button, useToast } from '../components/ui';
 import ProductCard from '../components/ui/ProductCard';
 import { sdk } from '@lib/config';
 import { HttpTypes } from '@shopenup/types';
 import { getCategoriesList } from '@lib/shopenup/categories';
 import { useAddLineItem } from '../hooks/cart';
-import { useAppContext } from '../context/AppContext';
+
+interface ProductVariant {
+  id: string;
+  title?: string;
+  price?: number;
+  sku?: string;
+  inventory_quantity?: number;
+}
+
+interface ProductImage {
+  id: string;
+  url: string;
+}
 
 interface Product {
   id: string;
@@ -15,14 +27,14 @@ interface Product {
   description?: string;
   price: number;
   original_price?: number;
-  images: any[] | null;
+  images: ProductImage[] | null;
   thumbnail?: string | null;
   status: string;
   created_at: string | null;
   updated_at: string | null;
-  variants?: any[];
+  variants?: ProductVariant[];
   tags?: string[];
-  categories?: any[];
+  categories?: unknown[];
   type?: {
     value: string;
     label: string;
@@ -46,8 +58,7 @@ interface FilterState {
 
 export default function ProductsPage() {
   const router = useRouter();
-  const { updateCartCount } = useAppContext();
-  const { mutateAsync: addLineItem, isPending: isAddingToCart } = useAddLineItem();
+  const { mutateAsync: addLineItem } = useAddLineItem();
   const { showToast } = useToast();
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -74,9 +85,9 @@ export default function ProductsPage() {
         const cats = await getCategoriesList();
         //console.log('Categories fetched:', cats);
         setCategories(cats.product_categories || []);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching categories:', err);
-        setError(err.message);
+        setError((err as Error).message);
       } finally {
         setCategoriesLoading(false);
       }
@@ -89,7 +100,7 @@ export default function ProductsPage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const query: any = {
+        const query: Record<string, unknown> = {
           limit: 100,
           offset: 0,
           fields: '*variants.calculated_price,*categories',
@@ -135,16 +146,16 @@ export default function ProductsPage() {
             price = p.variants[0].calculated_price;
           }
           // Method 3: Try variants[0].price
-          else if (p.variants && p.variants[0] && typeof (p.variants[0] as any).price === 'number') {
-            price = (p.variants[0] as any).price;
+          else if (p.variants && p.variants[0] && typeof (p.variants[0] as { price?: number }).price === 'number') {
+            price = (p.variants[0] as { price?: number }).price!;
           }
           // Method 4: Try direct price property
-          else if (typeof (p as any).price === 'number') {
-            price = (p as any).price;
+          else if (typeof (p as { price?: number }).price === 'number') {
+            price = (p as { price?: number }).price!;
           }
           // Method 5: Try original_price
-          else if (typeof (p as any).original_price === 'number') {
-            price = (p as any).original_price;
+          else if (typeof (p as { original_price?: number }).original_price === 'number') {
+            price = (p as { original_price?: number }).original_price!;
           }
           
           console.log(`Product ${p.title} - Price extracted:`, price, 'from variants:', p.variants);
@@ -154,13 +165,18 @@ export default function ProductsPage() {
             title: p.title,
             description: p.description || undefined,
             price: price,
-            original_price: (p as any).original_price || undefined,
-            images: p.images || [],
+            original_price: (p as { original_price?: number }).original_price || undefined,
+            images: (p.images || []).map((img: unknown, index: number) => 
+              typeof img === 'string' ? { id: `img-${index}`, url: img } : 
+              img && typeof img === 'object' && 'url' in img ? 
+                { id: `img-${index}`, url: (img as { url: string }).url } : 
+                { id: `img-${index}`, url: '' }
+            ),
             thumbnail: p.thumbnail || undefined,
             status: p.status,
             created_at: p.created_at || '',
             updated_at: p.updated_at || '',
-            variants: p.variants || [],
+            variants: (p.variants || []) as ProductVariant[],
             tags: p.tags,
             type: p.type,
             categories: p.categories || [], // <-- ensure categories is mapped
@@ -169,9 +185,9 @@ export default function ProductsPage() {
 
         //console.log('Mapped products:', mappedProducts.map(p => ({ id: p.id, title: p.title, status: p.status, price: p.price })));
         setProducts(mappedProducts as Product[]);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error fetching products:', err);
-        setError(err.message);
+        setError((err as Error).message);
       } finally {
         setLoading(false);
       }
@@ -184,7 +200,7 @@ export default function ProductsPage() {
     //console.log('Filtering products:', products.length, 'products');
     //console.log('Filter settings:', filters);
     
-    let filtered = products.filter(product => {
+    const filtered = products.filter(() => {
       // Temporarily disable all filters for debugging
       return true;
       
@@ -242,7 +258,7 @@ export default function ProductsPage() {
     
     try {
       // Get the first variant ID (most products have only one variant)
-      const variantId = product?.variants?.[0]?.id;
+      const variantId = (product?.variants?.[0] as { id?: string })?.id;
       if (!variantId) {
         console.error('No variant found for product:', productId);
         return;
@@ -264,7 +280,7 @@ export default function ProductsPage() {
     
   };
 
-  const handleFilterChange = (key: keyof FilterState, value: any) => {
+  const handleFilterChange = (key: keyof FilterState, value: unknown) => {
     setFilters(prev => ({
       ...prev,
       [key]: value
@@ -543,7 +559,15 @@ export default function ProductsPage() {
                         console.log(product),
                         <ProductCard
                           key={product.id}
-                          product={product}
+                          product={{
+                            ...product,
+                            // Ensure categories is correctly typed as { id: string; name: string; }[] | undefined
+                            categories: product.categories as { id: string; name: string; }[] | undefined,
+                            variants: product.variants?.map(variant => ({
+                              ...variant,
+                              title: variant.title ?? ""
+                            }))
+                          }}
                           onProductClick={handleProductClick}
                           onAddToCart={handleAddToCart}
                           showAddToCart={true}
@@ -560,3 +584,5 @@ export default function ProductsPage() {
     </>
   );
 }
+
+         

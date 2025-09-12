@@ -2,7 +2,7 @@ import React, { useEffect, useMemo } from "react"
 import * as ReactAria from "react-aria-components"
 
 import { HttpTypes } from "@shopenup/types"
-import { CountrySelectField, InputField } from "@components/Forms"
+import { InputField } from "@components/Forms"
 import { Icon } from "@components/Icon"
 import { UiCloseButton, UiDialog, UiDialogTrigger } from "@components/Dialog"
 import { Button } from "@components/Button"
@@ -85,17 +85,6 @@ const BillingAddress = ({
     }
   }
   const formData = watch()
-  const handleChange = (
-    e:
-      | React.ChangeEvent<
-          HTMLInputElement | HTMLInputElement | HTMLSelectElement
-        >
-      | {
-          target: { name: string; value: string }
-        }
-  ) => {
-    setValue(e.target.name, e.target.value)
-  }
   const countriesInRegion = useMemo(
     () => cart?.region?.countries?.map((c) => c.iso_2),
     [cart?.region]

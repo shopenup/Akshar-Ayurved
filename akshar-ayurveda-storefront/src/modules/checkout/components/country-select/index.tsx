@@ -47,7 +47,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
     }))
     console.log('CountrySelect - mapped options:', options)
     return options
-  }, [region])
+  }, [region, props.selectedKey])
 
   // Temporary fallback to test if ReactAria is the issue
   if (true) {

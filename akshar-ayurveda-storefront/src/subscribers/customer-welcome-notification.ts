@@ -1,4 +1,4 @@
-import type { SubscriberArgs, SubscriberConfig } from '@shopenup/shopenup';
+import type { SubscriberArgs, SubscriberConfig } from '@shopenup/framework';
 import { ContainerRegistrationKeys, Modules } from '@shopenup/framework/utils';
 import type { CustomerDTO } from '@shopenup/framework/types';
 

@@ -3,13 +3,12 @@
 import * as ReactAria from "react-aria-components"
 import {
   UiSelectButton,
-  UiSelectDialog,
+  UiSelectListBox,
   UiSelectIcon,
 } from "@components/ui/Select"
 import {
   UiCheckbox,
   UiCheckboxBox,
-  UiCheckboxIcon,
   UiCheckboxLabel,
 } from "@components/ui/Checkbox"
 import { UiDialogTrigger } from "@components/Dialog"
@@ -25,7 +24,7 @@ export const TypeFilter: React.FC<{
       <UiSelectIcon />
     </UiSelectButton>
     <ReactAria.Popover className="w-64" placement="bottom left">
-      <UiSelectDialog>
+      <UiSelectListBox>
         <ReactAria.CheckboxGroup
           value={type ?? []}
           onChange={(value) => {
@@ -34,15 +33,13 @@ export const TypeFilter: React.FC<{
           className="max-h-50 overflow-scroll"
         >
           {Object.entries(types).map(([key, value]) => (
-            <UiCheckbox value={key} className="p-4" key={key}>
-              <UiCheckboxBox>
-                <UiCheckboxIcon />
-              </UiCheckboxBox>
+            <UiCheckbox className="p-4" key={key} onPress={() => setQueryParams("type", [key])}>
+              <UiCheckboxBox isSelected={type?.includes(key)} />
               <UiCheckboxLabel>{value}</UiCheckboxLabel>
             </UiCheckbox>
           ))}
         </ReactAria.CheckboxGroup>
-      </UiSelectDialog>
+      </UiSelectListBox>
     </ReactAria.Popover>
   </UiDialogTrigger>
 )

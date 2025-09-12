@@ -4,8 +4,8 @@ import { LocalizedButtonLink } from "@components/LocalizedLink"
 import { Icon } from "@components/Icon"
 import Item from "@modules/order/components/item"
 import { OrderTotals } from "@modules/order/components/OrderTotals"
-import { listOrders } from "@lib/data/orders"
-import { getCustomer } from "@lib/data/customer"
+import { listOrders } from "@lib/shopenup/orders"
+import { getCustomer } from "@lib/shopenup/customer"
 
 type OrderCompletedTemplateProps = {
   order: HttpTypes.StoreOrder

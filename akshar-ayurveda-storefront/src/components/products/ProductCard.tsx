@@ -31,10 +31,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
   showActions = true,
   className = '',
 }) => {
-  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    e.preventDefault();
-    e.nativeEvent.stopImmediatePropagation();
+  const handleAddToCart = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.stopPropagation();
+    e?.preventDefault();
+    e?.nativeEvent.stopImmediatePropagation();
     onAddToCart?.(product.id);
   };
 
@@ -168,7 +168,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={handleAddToCart as any}
+                  onClick={handleAddToCart}
                   disabled={product.inStock === false}
                   fullWidth
                 >

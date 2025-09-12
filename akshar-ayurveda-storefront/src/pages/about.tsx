@@ -41,7 +41,7 @@ export default function AboutPage() {
               <div className="bg-white rounded-lg shadow-lg p-8 h-full flex flex-col">
                 <p className="text-gray-600 mb-4">
                   <h3 className="text-2xl font-bold text-green-600 mb-4">Our Vision</h3>
-                  Along with the progress of science, it is our endeavor to provide the best Ayurvedic medicine to the patient according to today's circumstances by converting the old principles of Ayurveda medicines into new forms for new diseases, so that we can present formulations through our continuous research work. While doing so, we can contribute to the service of the suffering human being.
+                  Along with the progress of science, it is our endeavor to provide the best Ayurvedic medicine to the patient according to today&apos;s circumstances by converting the old principles of Ayurveda medicines into new forms for new diseases, so that we can present formulations through our continuous research work. While doing so, we can contribute to the service of the suffering human being.
                 </p>
               </div>
             </div>

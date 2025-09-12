@@ -6,7 +6,7 @@ import  {useRazorpay, RazorpayOrderOptions } from "react-razorpay"
 import { HttpTypes } from "@shopenup/types"
 import { usePlaceOrder } from "@hooks/cart"
 import { CurrencyCode } from "react-razorpay/dist/constants/currency"
-import { sendOrderConfirmationSMS, triggerOrderPlacedEvent } from "@lib/services/sms-service"
+import { triggerOrderPlacedEvent } from "@lib/services/sms-service"
 export const RazorpayPaymentButton = ({
   session,
   notReady,
@@ -16,7 +16,6 @@ export const RazorpayPaymentButton = ({
   notReady: boolean
   cart: HttpTypes.StoreCart
 }) => {
-  const [disabled, setDisabled] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const {Razorpay
@@ -27,7 +26,7 @@ export const RazorpayPaymentButton = ({
 
   
   console.log(`session_data: `+JSON.stringify(session))
-  const onPaymentCompleted = async () => {
+  const onPaymentCompleted = useCallback(async () => {
     try {
       const result = await placeOrder.mutateAsync(null);
       
@@ -58,15 +57,24 @@ export const RazorpayPaymentButton = ({
           // Don't block the order flow if SMS fails
         }
         
-        // Redirect to order confirmation page
+        // Redirect to order success page
         const orderId = (result as { order?: { id?: string } })?.order?.id || `ORD${Date.now()}`;
-        window.location.href = `/order-confirmation/${orderId}`;
+        console.log('🚀 Razorpay: Navigating to order success page with orderId:', orderId);
+        window.location.href = `/order-success?orderId=${orderId}`;
       }
-    } catch (error) {
+    } catch {
       setErrorMessage("An error occurred, please try again.")
       setSubmitting(false)
     }
-  }
+  }, [
+    placeOrder,
+    cart.shipping_address?.phone,
+    cart.email,
+    cart.shipping_address?.first_name,
+    cart.shipping_address?.last_name,
+    cart.total,
+    cart.items
+  ])
   useEffect(()=>{
     setOrderData(session.data as {razorpayOrder:{id:string}})
   },[session.data])
@@ -123,15 +131,16 @@ export const RazorpayPaymentButton = ({
     const razorpay = new Razorpay(options);
     if(orderData.razorpayOrder.id)
     razorpay.open();
-    razorpay.on("payment.failed", function (response: any) {
+    razorpay.on("payment.failed", function (response: { error: { code: string; description: string } }) {
       setErrorMessage(JSON.stringify(response.error))
-   
-    })
-   razorpay.on("payment.authorized" as any, function (response: any) {
-    placeOrder.mutate(null, {
-      onSuccess: async (result) => {
-        console.log(`authorized: ${JSON.stringify(result)}`)
-        if (result?.type === "order" && result.order) {
+    });
+
+    // @ts-expect-error: Razorpay types do not include "payment.authorized" event, but it is supported in practice.
+    razorpay.on("payment.authorized", function () {
+      placeOrder.mutate(null, {
+        onSuccess: async (result) => {
+          console.log(`authorized: ${JSON.stringify(result)}`)
+          if (result?.type === "order" && result.order) {
           // Send SMS notification through subscriber system
           try {
             if (cart.shipping_address?.phone) {
@@ -171,10 +180,22 @@ export const RazorpayPaymentButton = ({
 
     // }
     // )
-  }, [Razorpay, cart.billing_address?.first_name, 
-    cart.billing_address?.last_name, cart.currency_code,
-     cart?.email, cart?.shipping_address?.phone, orderData.razorpayOrder.id, 
-     session.amount, session.provider_id]);
+  }, [
+    Razorpay,
+    cart.billing_address?.first_name,
+    cart.billing_address?.last_name,
+    cart.currency_code,
+    cart.email,
+    cart.shipping_address?.phone,
+    cart.items,
+    cart.shipping_address?.first_name,
+    cart.shipping_address?.last_name,
+    cart.total,
+    orderData.razorpayOrder.id,
+    session.amount,
+    onPaymentCompleted,
+    placeOrder
+  ]);
   console.log("orderData"+JSON.stringify(orderData))
   return (
     <>
@@ -185,7 +206,7 @@ export const RazorpayPaymentButton = ({
           handlePayment()}
         }
       >
-        {submitting ? <Spinner /> : "Checkout"}
+        {submitting ? <Spinner name="loader" /> : "Checkout"}
       </Button>
       {errorMessage && (
         <div className="text-red-500 text-small-regular mt-2">

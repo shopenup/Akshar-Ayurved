@@ -6,7 +6,7 @@ import { getAuthHeaders } from '@lib/shopenup/cookies';
 export interface SMSNotificationData {
   phone: string;
   template: string;
-  data: Record<string, any>;
+  data: Record<string, unknown>;
 }
 
 export interface OrderSMSData {
@@ -171,7 +171,7 @@ export class SMSService {
           const headers = await this.getCompleteHeaders();
           console.log('📡 Making SDK call to /store/orders/notify with headers:', headers);
 
-          const result = await sdk.client.fetch(`/store/orders/${orderData.order_id}/notify`, {
+          await sdk.client.fetch(`/store/orders/${orderData.order_id}/notify`, {
             method: 'POST',
             headers,
             body: JSON.stringify({
@@ -222,7 +222,7 @@ export class SMSService {
             return this.sendSMS({
               phone,
               template: 'order-confirmation-sms',
-              data: orderData
+              data: { ...orderData } as Record<string, unknown>
             });
           }
         }
@@ -232,7 +232,7 @@ export class SMSService {
       return this.sendSMS({
         phone,
         template: 'order-confirmation-sms',
-        data: orderData
+        data: { ...orderData } as Record<string, unknown>
       });
     } catch (error) {
       console.error('❌ Error sending order confirmation SMS:', error);
@@ -247,7 +247,7 @@ export class SMSService {
     return this.sendSMS({
       phone,
       template: 'order-shipped-sms',
-      data: orderData
+      data: { ...orderData } as Record<string, unknown>
     });
   }
 
@@ -258,7 +258,7 @@ export class SMSService {
     return this.sendSMS({
       phone,
       template: 'order-delivered-sms',
-      data: orderData
+      data: { ...orderData } as Record<string, unknown>
     });
   }
 
@@ -269,7 +269,7 @@ export class SMSService {
     return this.sendSMS({
       phone,
       template: 'order-cancelled-sms',
-      data: orderData
+      data: { ...orderData } as Record<string, unknown>
     });
   }
 
@@ -280,7 +280,7 @@ export class SMSService {
     return this.sendSMS({
       phone,
       template: 'payment-confirmation-sms',
-      data: orderData
+      data: { ...orderData } as Record<string, unknown>
     });
   }
 
@@ -291,7 +291,7 @@ export class SMSService {
     return this.sendSMS({
       phone,
       template: 'delivery-reminder-sms',
-      data: orderData
+      data: { ...orderData } as Record<string, unknown>
     });
   }
 
@@ -303,7 +303,12 @@ export class SMSService {
     id: string;
     customer: { phone: string; email: string; firstName: string; lastName: string };
     total: number;
-    items: any[];
+    items: Array<{
+      id: string;
+      title: string;
+      quantity: number;
+      unit_price: number;
+    }>;
     status: string;
   }): Promise<boolean> {
     try {
@@ -316,7 +321,7 @@ export class SMSService {
           const headers = await this.getCompleteHeaders();
           console.log('📡 Making SDK call to /store/events/order.placed with headers:', headers);
 
-          const result = await sdk.client.fetch('/store/events/order.placed', {
+          await sdk.client.fetch('/store/events/order.placed', {
             method: 'POST',
             headers,
             body: JSON.stringify({
@@ -433,7 +438,12 @@ export const triggerOrderPlacedEvent = (orderData: {
   id: string;
   customer: { phone: string; email: string; firstName: string; lastName: string };
   total: number;
-  items: any[];
+  items: Array<{
+    id: string;
+    title: string;
+    quantity: number;
+    unit_price: number;
+  }>;
   status: string;
 }) => smsService.triggerOrderPlacedEvent(orderData);
 

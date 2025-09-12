@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Button } from '../components/ui';
-import { clearAllCartData, removeAuthToken, removeCartId } from '../lib/shopenup/cookies';
+import { clearAllCartData } from '../lib/shopenup/cookies';
 
 export default function ClearDataPage() {
   const router = useRouter();

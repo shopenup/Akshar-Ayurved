@@ -6,9 +6,7 @@ import { sdk } from "@lib/config"
 import {
   getAuthHeaders,
   setAuthToken,
-  removeAuthToken,
   getCartId,
-  removeCartId,
   clearAuthDataOnly,
 } from "@lib/shopenup/cookies"
 import {

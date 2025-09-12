@@ -14,7 +14,7 @@ import { UiDialog, UiDialogTrigger } from "@components/Dialog"
 export const MobileSort: React.FC<{
   sortBy: SortOptions | undefined
   setQueryParams: (name: string, value: SortOptions) => void
-}> = ({ sortBy, setQueryParams }) => {
+}> = ({ setQueryParams }) => {
   return (
     <UiDialogTrigger>
       <Button
@@ -28,7 +28,6 @@ export const MobileSort: React.FC<{
       </Button>
       <UiModalOverlay className="p-0">
         <UiModal
-          animateFrom="bottom"
           className="w-full rounded-none max-w-full shadow-none pb-21"
         >
           <UiDialog>
@@ -46,8 +45,6 @@ export const MobileSort: React.FC<{
               >
                 <UiRadioGroup
                   className="flex flex-col mb-5"
-                  name="sortBy"
-                  defaultValue={sortBy}
                   aria-label="Sort by"
                 >
                   <ReactAria.Label className="block text-md font-semibold mb-3">

@@ -1,8 +1,8 @@
 "use client"
 
 import { LayoutColumn } from "@components/Layout"
-import { Link } from "@components/Link"
 import { usePathname } from "next/navigation"
+import { LocalizedLink } from "@components/LocalizedLink"
 
 export const NoResults = () => {
   const pathname = usePathname()
@@ -13,14 +13,13 @@ export const NoResults = () => {
         <div>
           <p className="text-md text-center mb-2">No results match!</p>
         </div>
-        <Link
+        <LocalizedLink
           scroll={false}
           href={pathname}
-          variant="underline"
-          className="inline-flex md:pb-0"
+          className="underline inline-flex md:pb-0"   
         >
           Clear filters
-        </Link>
+        </LocalizedLink>
       </div>
     </LayoutColumn>
   )

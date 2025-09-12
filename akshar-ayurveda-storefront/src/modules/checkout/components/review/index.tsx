@@ -1,7 +1,7 @@
 "use client"
 
 import { twJoin } from "tailwind-merge"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 import { Button } from "@components/Button"
 import PaymentButton from "@modules/checkout/components/payment-button"
@@ -10,7 +10,6 @@ import { StoreCart } from "@shopenup/types"
 const Review = ({ cart }: { cart: StoreCart }) => {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const pathname = usePathname()
 
   const isOpen = searchParams.get("step") === "review"
 
@@ -62,7 +61,7 @@ const Review = ({ cart }: { cart: StoreCart }) => {
           <PaymentButton
             cart={cart}
             selectPaymentMethod={() => {
-              router.push("/checkout?step=payment", { scroll: false })
+              router.push("/order-success", { scroll: false })
             }}
           />
         </>

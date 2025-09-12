@@ -1,6 +1,6 @@
 import { HttpTypes } from "@shopenup/types"
 
-import { isStripe, paymentInfoMap } from "@lib/constants"
+import { isStripe } from "@lib/constants" 
 import { convertToLocale } from "@lib/util/money"
 
 type PaymentDetailsProps = {
@@ -18,7 +18,7 @@ const PaymentDetails = ({ order }: PaymentDetailsProps) => {
 
   return (
     <p className="text-grayscale-500">
-      {paymentInfoMap[payment.provider_id].title}
+      {payment.provider_id}
       <br />
       {isStripe(payment.provider_id) && payment.data?.card_last4
         ? `**** **** **** ${payment.data.card_last4}`

@@ -14,7 +14,6 @@ import {
   updateCustomer,
   updateCustomerAddress,
 } from "@lib/shopenup/customer"
-import { clearAllCartData } from "@lib/shopenup/cookies"
 import { z } from "zod"
 import { StoreCustomer } from "@shopenup/types"
 

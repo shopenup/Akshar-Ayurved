@@ -1,5 +1,4 @@
 import { HttpTypes } from "@shopenup/types"
-import { notFound } from "next/navigation"
 import { NextRequest, NextResponse } from "next/server"
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_SHOPENUP_BACKEND_URL || "http://localhost:9000"
@@ -125,7 +124,7 @@ export async function middleware(request: NextRequest) {
         })
       }
     }
-  } catch (_) {
+  } catch {
     // noop: never block the request due to cookie errors
   }
 

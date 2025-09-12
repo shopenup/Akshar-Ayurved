@@ -11,7 +11,6 @@ import Payment from "@modules/checkout/components/payment"
 import Review from "@modules/checkout/components/review"
 import { useCart } from "hooks/cart"
 import { getCheckoutStep } from "@modules/cart/utils/getCheckoutStep"
-import { Icon } from "@components/Icon"
 
 export const CheckoutForm = withReactQueryProvider<{
   countryCode: string

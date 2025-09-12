@@ -1,8 +1,8 @@
 import React from 'react';
 import Head from 'next/head';
-import { Layout } from '../components/layout';
-import { Button, Card, Spinner } from '../components/ui';
-import { useNewArrivals, useCategories, useCollections } from '../hooks/useShopenupProducts';
+import Layout from '@components/layout/Layout';
+import { Button, Card, Spinner } from '@components/ui';
+import { useNewArrivals, useCategories, useCollections } from '@hooks/useShopenupProducts';
 
 export default function TestShopenup() {
   const { products: newArrivals, loading: newArrivalsLoading, error: newArrivalsError, refetch: refetchNewArrivals } = useNewArrivals(4);
@@ -50,7 +50,7 @@ export default function TestShopenup() {
                     <div key={product.id} className="border rounded-lg p-4">
                       <h3 className="font-semibold text-gray-900">{product.title}</h3>
                       <p className="text-sm text-gray-600">₹{product.price}</p>
-                      <p className="text-xs text-gray-500">{product.category}</p>
+                      <p className="text-xs text-gray-500">{typeof product.category === 'string' ? product.category : product.category.name}</p>
                     </div>
                   ))}
                 </div>

@@ -1,4 +1,3 @@
-import { ProductPageGallery } from "@components/ProductPageGallery"
 import { HttpTypes } from "@shopenup/types"
 import Image from "next/image"
 
@@ -15,7 +14,7 @@ const ImageGallery = ({ images, className }: ImageGalleryProps) => {
   }
 
   return (
-    <ProductPageGallery className={className}>
+    <div className={className}>
       {filteredImages.map((image, index) => (
         <div
           key={image.id}
@@ -32,7 +31,7 @@ const ImageGallery = ({ images, className }: ImageGalleryProps) => {
           />
         </div>
       ))}
-    </ProductPageGallery>
+    </div>
   )
 }
 

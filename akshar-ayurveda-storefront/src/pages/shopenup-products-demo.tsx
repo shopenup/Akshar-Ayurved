@@ -2,8 +2,8 @@ import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Layout } from '../components/layout';
-import { Button, Card, Badge, Spinner, Alert } from '../components/ui';
+import Layout from '@components/layout/Layout';
+import { Button, Card, Badge, Spinner, Alert } from '@components/ui';
 import { 
   useProducts, 
   useNewArrivals, 
@@ -11,8 +11,8 @@ import {
   useProductsOnSale, 
   useCategories, 
   useCollections
-} from '../hooks/useShopenupProducts';
-import { type Product, type ProductCategory, type ProductCollection } from '../lib/shopenup/product';
+} from '@hooks/useShopenupProducts';
+import { type Product, type ProductCategory, type ProductCollection } from '@lib/shopenup/product';
 
 export default function ShopenupProductsDemo() {
   // Use all the Shopenup product hooks
@@ -45,7 +45,7 @@ export default function ShopenupProductsDemo() {
     <Card className="p-4 hover:shadow-lg transition-shadow">
       <div className="relative mb-4">
         <Image
-          src={product.thumbnail || product.images?.[0] || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`}
+          src={product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : product.images?.[0]?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`}
           alt={product.title}
           width={300}
           height={300}
