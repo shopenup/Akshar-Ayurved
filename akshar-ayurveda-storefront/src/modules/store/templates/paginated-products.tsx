@@ -8,16 +8,15 @@ import { withReactQueryProvider } from "@lib/util/react-query"
 import * as React from "react"
 import { useProducts } from "@hooks/useShopenupProducts"
 import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
+import { Product } from "@lib/shopenup/product"
 
 const PRODUCT_LIMIT = 12
 function PaginatedProducts({
   sortBy,
-  page,
   collectionId,
   categoryId,
   typeId,
   productsIds,
-  countryCode,
 }: {
   sortBy?: SortOptions
   page: number
@@ -61,7 +60,7 @@ function PaginatedProducts({
     limit: PRODUCT_LIMIT,
     category: categoryId as string,
     collection: collectionId as string,
-    sortBy: sortBy as any,
+    sortBy: sortBy === 'price_asc' ? 'price' : sortBy === 'price_desc' ? 'price' : sortBy === 'created_at' ? 'created_at' : undefined,
   })
 
   console.log(`productsQuery: `+ productsQuery?.products)
@@ -91,10 +90,10 @@ function PaginatedProducts({
       <Layout className="gap-y-10 md:gap-y-16 mb-16">
         {productsQuery?.products?.length &&
         (!productsIds || productsIds.length > 0) ? (
-          productsQuery?.products.map((p: StoreProduct) => {
+          productsQuery?.products.map((p: Product) => {
             return (
               <LayoutColumn key={p.id} className="md:!col-span-4 !col-span-6">
-                <ProductPreview product={p} />
+                <ProductPreview product={p as unknown as StoreProduct} />
               </LayoutColumn>
             )
           })

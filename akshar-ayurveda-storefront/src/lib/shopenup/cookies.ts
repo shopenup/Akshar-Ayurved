@@ -30,6 +30,7 @@ export const setAuthToken = async (token: string) => {
     expires: 7, // 7 days
     sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
+    path: "/", // Ensure cookie is available across the site
   })
 }
 

@@ -1,34 +1,67 @@
-import React, { useState } from 'react';
+import React from 'react';
 import Head from 'next/head';
 import Hero from '../components/layout/Hero';
 import Section from '../components/layout/Section';
 import ProductGrid from '../components/products/ProductGrid';
-import { Button } from '../components/ui';
 import { sdk } from '@lib/config';
 import { HttpTypes } from '@shopenup/types';
 import { getCategoriesList } from '@lib/shopenup/categories';
 
-interface GalleryItem {
-  id: number;
-  category: string;
-  title: string;
-  description: string;
-  image: string;
-  tags: string[];
-}
-
 interface Category {
   id: string;
   name: string;
-  count: number;
+  description?: string;
+  is_active?: boolean;
 }
+
+interface ProductQuery {
+  limit: number;
+  offset: number;
+  fields: string;
+  category_id?: string;
+}
+
+interface ProductImage {
+  id: string;
+  url: string;
+  alt_text?: string;
+}
+
+interface ProductVariant {
+  calculated_price?: {
+    calculated_amount: number;
+  };
+  inventory_quantity?: number;
+}
+
+interface Product {
+  id: string;
+  title: string;
+  description?: string;
+  price?: number;
+  thumbnail?: string;
+  images?: ProductImage[];
+  category?: {
+    name: string;
+  };
+  type?: {
+    label: string;
+  };
+  tags?: string[];
+  rating?: number;
+  review_count?: number;
+  variants?: ProductVariant[];
+  in_stock?: boolean;
+}
+
+
 
 // NOTE: Make sure you have NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY set in your .env.local file
 // Example: NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY=your_actual_publishable_key
 
 export default function GalleryPage() {
-  const [products, setProducts] = React.useState<any[]>([]);
-  const [categories, setCategories] = React.useState<any[]>([]);
+  const [products, setProducts] = React.useState<Product[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = React.useState('all');
   const [loading, setLoading] = React.useState(true);
   const [catLoading, setCatLoading] = React.useState(true);
@@ -43,8 +76,8 @@ export default function GalleryPage() {
           const cats = await getCategoriesList();
         console.log('cats', cats);
         setCategories(cats.product_categories || []);
-      } catch (err: any) {
-        setCatError(err.message);
+      } catch (err: unknown) {
+        setCatError(err instanceof Error ? err.message : 'Failed to fetch categories');
       } finally {
         setCatLoading(false);
       }
@@ -57,7 +90,7 @@ export default function GalleryPage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const query: any = {
+        const query: ProductQuery = {
           limit: 100,
           offset: 0,
           fields: '*variants.calculated_price',
@@ -84,10 +117,10 @@ export default function GalleryPage() {
         console.log('Total products returned:', sdkProducts.length);
         console.log('Product IDs:', sdkProducts.map(p => ({ id: p.id, title: p.title, status: p.status })));
         
-        setProducts(sdkProducts);
-      } catch (err: any) {
+        setProducts(sdkProducts as Product[]);
+      } catch (err: unknown) {
         console.error('Error fetching products:', err);
-        setError(err.message);
+        setError(err instanceof Error ? err.message : 'Failed to fetch products');
       } finally {
         setLoading(false);
       }
@@ -168,7 +201,7 @@ export default function GalleryPage() {
                 >
                   All Products
                 </button>
-                {categories.map((category: any) => (
+                {categories.map((category: Category) => (
                   <button
                      key={category.id}
                     onClick={() => setSelectedCategory(category.id)}
@@ -192,11 +225,12 @@ export default function GalleryPage() {
             <div className="text-center py-12 text-red-600">{error}</div>
           ) : (
             <ProductGrid
-              products={products.map((product: any) => {
+              products={products.map((product: Product) => {
                 // Try to get price from different sources
                 let price = 0;
-                
-                // Check calculated_price first (most common)
+
+                // Ensure description is always a string
+                const description = product.description ?? "";
                 if (product.variants?.[0]?.calculated_price?.calculated_amount) {
                   price = product.variants[0].calculated_price.calculated_amount;
                 }
@@ -208,15 +242,15 @@ export default function GalleryPage() {
                 return {
                   id: product.id,
                   name: product.title,
-                  description: product.description,
+                  description: description,
                   price: price,
                   image: product.thumbnail || product.images?.[0]?.url || '',
-                  images: product.images?.map((img: any) => img.url).filter(Boolean) || [],
+                  images: product.images?.map((img: ProductImage) => img.url).filter(Boolean) || [],
                   category: product.category?.name || product.type?.label || '',
                   tags: product.tags || [],
                   rating: product.rating,
                   reviewCount: product.review_count,
-                  inStock: product.variants?.[0]?.inventory_quantity > 0 || product.in_stock !== false
+                  inStock: (product.variants?.[0]?.inventory_quantity ?? 0) > 0 || product.in_stock !== false
                 };
               })}
               columns={4}

@@ -1,5 +1,21 @@
 import React from 'react';
+import Image from 'next/image';
 import { Button, Badge } from './index';
+
+interface ProductImage {
+  id: string;
+  url: string;
+  alt_text?: string;
+}
+
+interface ProductVariant {
+  id: string;
+  title: string;
+  prices?: Array<{
+    amount: number;
+    currency_code: string;
+  }>;
+}
 
 interface Product {
   id: string;
@@ -7,12 +23,12 @@ interface Product {
   description?: string;
   price: number;
   original_price?: number;
-  images: any[] | null;
+  images: ProductImage[] | null;
   thumbnail?: string | null;
   status: string;
   created_at: string | null;
   updated_at: string | null;
-  variants?: any[];
+  variants?: ProductVariant[];
   tags?: string[];
   type?: {
     value: string;
@@ -46,13 +62,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onAddToCart) {
-      onAddToCart(product.id);
-    }
-  };
-
   // Temporarily disable status check - all products are in stock
   const isInStock = true;
   const hasDiscount = product.original_price && product.price && product.original_price > product.price;
@@ -67,9 +76,21 @@ const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Product Image */}
       <div className="relative">
-        <img
-          src={product.thumbnail || product.images?.[0] || '/placeholder-product.jpg'}
+        <Image
+          src={
+            product.thumbnail
+              ? typeof product.thumbnail === 'string'
+                ? product.thumbnail
+                : (product.thumbnail as ProductImage).url || '/placeholder-product.jpg'
+              : product.images && product.images[0]
+                ? typeof product.images[0] === 'string'
+                  ? product.images[0]
+                  : (product.images[0] as ProductImage).url || '/placeholder-product.jpg'
+                : '/placeholder-product.jpg'
+          }
           alt={product.title}
+          width={300}
+          height={192}
           className="w-full h-48 object-contain rounded-t-lg"
           onError={(e) => {
             const target = e.target as HTMLImageElement;

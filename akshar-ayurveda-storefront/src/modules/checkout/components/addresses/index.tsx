@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { twJoin } from "tailwind-merge"
 import compareAddresses from "@lib/util/compare-addresses"
 import { SubmitButton } from "@modules/common/components/submit-button"
@@ -56,7 +56,6 @@ const addressesFormSchema = z
 const Addresses = ({ cart }: { cart: StoreCart }) => {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const pathname = usePathname()
 
   const isOpen = searchParams.get("step") === "delivery"
 

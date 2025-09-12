@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import Link from 'next/link';
-import { Button, Card, Badge } from '../../components/ui';
+import Image from 'next/image';
+import { Button, Badge } from '@components/ui';
 import { formatDate } from '@lib/util/date';
 import { sdk } from '@lib/config';
 import { getAuthHeaders, getCompleteHeaders } from '@lib/shopenup/cookies';
@@ -71,11 +72,6 @@ const ReceiptIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   </svg>
 );
 
-const ShippingIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
-    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-  </svg>
-);
 
 const TagIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 20 20">
@@ -120,7 +116,7 @@ export default function OrderDetailsPage() {
         } else {
           setError('Order not found.');
         }
-      } catch (error) {
+      } catch {
         setError('Failed to load order details. Please try again.');
       } finally {
         setIsLoading(false);
@@ -144,20 +140,6 @@ export default function OrderDetailsPage() {
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'delivered':
-        return 'Delivered';
-      case 'shipped':
-        return 'Shipped';
-      case 'processing':
-        return 'Processing';
-      case 'cancelled':
-        return 'Cancelled';
-      default:
-        return 'Unknown';
-    }
-  };
 
   // Timeline steps for order progress
   const timelineSteps = [
@@ -377,9 +359,11 @@ export default function OrderDetailsPage() {
                   <div key={idx} className="flex flex-col md:flex-row md:items-center md:justify-between p-4 border rounded-lg">
               <div className="flex items-center space-x-4 flex-1">
                 {((item.thumbnail || item.variant?.product?.thumbnail) ?? undefined) && (
-                        <img 
-                          src={(item.thumbnail || item.variant?.product?.thumbnail) ?? undefined} 
+                        <Image 
+                          src={(item.thumbnail || item.variant?.product?.thumbnail) ?? ''} 
                           alt={item.title} 
+                          width={80}
+                          height={80}
                           className="w-20 h-20 object-cover rounded-lg border" 
                         />
                       )}
@@ -464,20 +448,20 @@ export default function OrderDetailsPage() {
                         if (order.shipping_methods?.[0]?.amount) {
                           return order.shipping_methods[0].amount.toFixed(2);
                         }
-                        if ((order as any).shipping) {
-                          return (order as any).shipping.toFixed(2);
+                        if ((order as unknown as { shipping?: number }).shipping) {
+                          return (order as unknown as { shipping: number }).shipping.toFixed(2);
                         }
-                        if ((order as any).shipping_cost) {
-                          return (order as any).shipping_cost.toFixed(2);
+                        if ((order as unknown as { shipping_cost?: number }).shipping_cost) {
+                          return (order as unknown as { shipping_cost: number }).shipping_cost.toFixed(2);
                         }
-                        if ((order as any).shipping_amount) {
-                          return (order as any).shipping_amount.toFixed(2);
+                        if ((order as unknown as { shipping_amount?: number }).shipping_amount) {
+                          return (order as unknown as { shipping_amount: number }).shipping_amount.toFixed(2);
                         }
-                        if ((order as any).delivery_cost) {
-                          return (order as any).delivery_cost.toFixed(2);
+                        if ((order as unknown as { delivery_cost?: number }).delivery_cost) {
+                          return (order as unknown as { delivery_cost: number }).delivery_cost.toFixed(2);
                         }
-                        if ((order as any).shipping_fee) {
-                          return (order as any).shipping_fee.toFixed(2);
+                        if ((order as unknown as { shipping_fee?: number }).shipping_fee) {
+                          return (order as unknown as { shipping_fee: number }).shipping_fee.toFixed(2);
                         }
                         
                         // Calculate from total - subtotal
@@ -515,16 +499,16 @@ export default function OrderDetailsPage() {
                           ? order.shipping_total 
                           : order.shipping_methods?.[0]?.amount 
                           ? order.shipping_methods[0].amount
-                          : (order as any).shipping
-                          ? (order as any).shipping
-                          : (order as any).shipping_cost
-                          ? (order as any).shipping_cost
-                          : (order as any).shipping_amount
-                          ? (order as any).shipping_amount
-                          : (order as any).delivery_cost
-                          ? (order as any).delivery_cost
-                          : (order as any).shipping_fee
-                          ? (order as any).shipping_fee
+                          : (order as unknown as { shipping?: number }).shipping
+                          ? (order as unknown as { shipping: number }).shipping
+                          : (order as unknown as { shipping_cost?: number }).shipping_cost
+                          ? (order as unknown as { shipping_cost: number }).shipping_cost
+                          : (order as unknown as { shipping_amount?: number }).shipping_amount
+                          ? (order as unknown as { shipping_amount: number }).shipping_amount
+                          : (order as unknown as { delivery_cost?: number }).delivery_cost
+                          ? (order as unknown as { delivery_cost: number }).delivery_cost
+                          : (order as unknown as { shipping_fee?: number }).shipping_fee
+                          ? (order as unknown as { shipping_fee: number }).shipping_fee
                           : 0;
                         const tax = order.tax_total || 0;
                         return (subtotal + shipping + tax).toFixed(2);

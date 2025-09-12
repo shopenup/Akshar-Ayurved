@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Button, Card, Badge, Input, Textarea, Modal } from '../components/ui';
+import { Button, Card, Badge, Input, Modal } from '@components/ui';
 import { useCustomer, useUpdateCustomer, useSignout, useAddressMutation, useDeleteCustomerAddress } from '@hooks/customer';
 import { toast } from 'sonner';
 import { useAppContext } from '../context/AppContext';
@@ -23,51 +23,12 @@ function ClientOnly({ children, fallback = null }: { children: React.ReactNode; 
   return <>{children}</>;
 }
 
-// Define order types
-interface OrderItem {
-  name: string;
-  quantity: number;
-  price: number;
-}
 
-interface Order {
-  id: string;
-  date: string;
-  status: string;
-  total: number;
-  items: OrderItem[];
-  trackingNumber?: string;
-  estimatedDelivery?: string;
-  customer: {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-  };
-  shipping: {
-    address: string;
-    address2?: string;
-    city: string;
-    state: string;
-    pincode: string;
-    country: string;
-  };
-  billing: {
-    address: string;
-    address2?: string;
-    city: string;
-    state: string;
-    pincode: string;
-    country: string;
-  };
-  paymentMethod: string;
-  notes?: string;
-}
 
 export default function ProfilePage() {
   const router = useRouter();
   const { data: customer, isLoading: customerLoading } = useCustomer();
-  const { setLoggedIn, resetAppState } = useAppContext();
+  const { resetAppState } = useAppContext();
   const updateCustomer = useUpdateCustomer();
   const signout = useSignout();
   
@@ -100,14 +61,14 @@ export default function ProfilePage() {
   const [deleteDialog, setDeleteDialog] = useState<{open: boolean; id?: string}>({ open: false });
 
   // Redirect if not logged in
-  React.useEffect(() => {
+  useEffect(() => {
     if (!customerLoading && !customer) {
       router.push('/login');
     }
   }, [customer, customerLoading, router]);
 
   // Update form when customer data changes
-  React.useEffect(() => {
+  useEffect(() => {
     if (customer) {
       setEditForm({
         first_name: customer.first_name || '',
@@ -143,19 +104,6 @@ export default function ProfilePage() {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'delivered': return 'success';
-      case 'shipped': return 'info';
-      case 'processing': return 'warning';
-      case 'cancelled': return 'danger';
-      default: return 'secondary';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
 
   if (customerLoading) {
     return (
@@ -390,8 +338,8 @@ export default function ProfilePage() {
                         await deleteAddress.mutateAsync(deleteDialog.id)
                         setDeleteDialog({ open: false })
                         toast.success('Address deleted')
-                      } catch (err: any) {
-                        toast.error(err?.message || 'Failed to delete address')
+                      } catch (err: unknown) {
+                        toast.error((err as Error)?.message || 'Failed to delete address')
                       }
                     }}
                   >
@@ -434,7 +382,7 @@ export default function ProfilePage() {
                             province: addressForm.province || undefined,
                             country_code: addressForm.country_code,
                             phone: addressForm.phone || undefined,
-                          } as any
+                          }
 
                           if (editingAddressId) {
                             await updateAddress.mutateAsync(payload)
@@ -604,24 +552,24 @@ export default function ProfilePage() {
               {!isAddingAddress && !editingAddressId && (
                 customer.addresses && customer.addresses.length > 0 ? (
                 <div className="space-y-4">
-                  {customer.addresses.map((address: any, index: number) => (
+                  {customer.addresses.map((address: unknown, index: number) => (
                     <div key={index} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <h3 className="font-medium text-gray-900">
-                            {address.first_name} {address.last_name}
+                            {(address as { first_name?: string }).first_name} {(address as { last_name?: string }).last_name}
                           </h3>
                           <p className="text-gray-600 mt-1">
-                            {address.address_1}
-                            {address.address_2 && <br />}
-                            {address.address_2}
+                            {(address as { address_1?: string }).address_1}
+                            {(address as { address_2?: string }).address_2 && <br />}
+                            {(address as { address_2?: string }).address_2}
                           </p>
                           <p className="text-gray-600">
-                            {address.city}, {address.province} {address.postal_code}
+                            {(address as { city?: string }).city}, {(address as { province?: string }).province} {(address as { postal_code?: string }).postal_code}
                           </p>
-                          <p className="text-gray-600">{address.country_code}</p>
-                          {address.phone && (
-                            <p className="text-gray-600 mt-1">Phone: {address.phone}</p>
+                          <p className="text-gray-600">{(address as { country_code?: string }).country_code}</p>
+                          {(address as { phone?: string }).phone && (
+                            <p className="text-gray-600 mt-1">Phone: {(address as { phone?: string }).phone}</p>
                           )}
                         </div>
                         <div className="flex space-x-2 ml-4">
@@ -630,18 +578,18 @@ export default function ProfilePage() {
                             size="sm"
                             onClick={() => {
                               setIsAddingAddress(false)
-                              setEditingAddressId(address.id)
+                              setEditingAddressId((address as { id?: string }).id || null)
                               setAddressForm({
-                                first_name: address.first_name || '',
-                                last_name: address.last_name || '',
-                                company: address.company || '',
-                                address_1: address.address_1 || '',
-                                address_2: address.address_2 || '',
-                                city: address.city || '',
-                                postal_code: address.postal_code || '',
-                                province: address.province || '',
-                                country_code: address.country_code || 'IN',
-                                phone: address.phone || '',
+                                first_name: (address as { first_name?: string }).first_name || '',
+                                last_name: (address as { last_name?: string }).last_name || '',
+                                company: (address as { company?: string }).company || '',
+                                address_1: (address as { address_1?: string }).address_1 || '',
+                                address_2: (address as { address_2?: string }).address_2 || '',
+                                city: (address as { city?: string }).city || '',
+                                postal_code: (address as { postal_code?: string }).postal_code || '',
+                                province: (address as { province?: string }).province || '',
+                                country_code: (address as { country_code?: string }).country_code || 'IN',
+                                phone: (address as { phone?: string }).phone || '',
                               })
                             }}
                           >
@@ -651,7 +599,7 @@ export default function ProfilePage() {
                             variant="outline"
                             size="sm"
                             className="text-red-600 hover:text-red-700"
-                            onClick={() => setDeleteDialog({ open: true, id: address.id })}
+                            onClick={() => setDeleteDialog({ open: true, id: (address as { id?: string }).id })}
                           >
                             Delete
                           </Button>

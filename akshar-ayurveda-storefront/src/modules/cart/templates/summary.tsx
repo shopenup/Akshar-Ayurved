@@ -37,8 +37,7 @@ const Summary = ({ cart }: SummaryProps) => {
             Already have an account? No worries, just{" "}
             <LocalizedLink
               href="/auth/login"
-              variant="underline"
-              className="text-black !p-0"
+              className="text-black !p-0 underline"
             >
               log in.
             </LocalizedLink>

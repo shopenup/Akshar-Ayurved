@@ -28,22 +28,19 @@ export default function Navigation({
   cartItemCount = 0, 
   favouriteCount = 0, 
   isLoggedIn = false,
-  updateCartCount,
-  setLoggedIn,
   resetAppState
 }: NavigationProps) {
   const router = useRouter();
-  const { mutateAsync: signout, isPending: isSigningOut } = useSignout();
-  const { resetAppState: contextResetAppState, updateCartCount: contextUpdateCartCount } = useAppContext();
+  const { mutateAsync: signout } = useSignout();
+  const { resetAppState: contextResetAppState } = useAppContext();
   
   // Use cart hook to get real-time cart data with automatic context sync
-  const { data: cart } = useCartWithSync({ enabled: true });
+  useCartWithSync({ enabled: true });
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [isProductsDropdownOpen, setIsProductsDropdownOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Use the cart count from context - it's automatically synced by useCartWithSync
   const currentCartCount = cartItemCount;

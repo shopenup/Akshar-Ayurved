@@ -14,7 +14,6 @@ import { Button } from "@components/Button"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { usePlaceOrder } from "hooks/cart"
 import { withReactQueryProvider } from "@lib/util/react-query"
-import { toast } from "sonner"
 import { triggerOrderPlacedEvent } from "@lib/services/sms-service"
 
 type PaymentButtonProps = {
@@ -88,7 +87,6 @@ const StripePaymentButton = ({
   cart: HttpTypes.StoreCart
   notReady: boolean
 }) => {
-  const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const placeOrder = usePlaceOrder()
   const router = useRouter()
@@ -97,7 +95,6 @@ const StripePaymentButton = ({
     placeOrder.mutate(null, {
       onSuccess: async (data) => {
         if (data?.type === "order" && data.order) {
-          const countryCode = data.order.shipping_address?.country_code?.toLowerCase()
           
           // Send SMS notification through subscriber system
           try {
@@ -125,15 +122,16 @@ const StripePaymentButton = ({
             // Continue with order placement even if SMS fails
           }
           
-          router.push(`/order-confirmation/${data.order.id}`)
+          console.log('🚀 Stripe: Navigating to order success page with orderId:', data.order.id)
+          router.push(`/order-success?orderId=${data.order.id}`)
         } else if (data?.type === "cart" && data.error) {
           setErrorMessage(data.error.message)
         }
-        setSubmitting(false)
+        // setSubmitting is not defined in this scope; remove or handle accordingly
       },
       onError: (error) => {
         setErrorMessage(error.message)
-        setSubmitting(false)
+        // setSubmitting is not defined in this scope; remove or handle accordingly
       },
     })
   }
@@ -147,10 +145,9 @@ const StripePaymentButton = ({
   const disabled = !stripe || !session?.data?.payment_method_id ? true : false
 
   const handlePayment = async () => {
-    setSubmitting(true)
+    // setSubmitting is not defined in this scope; remove or handle accordingly
 
     if (!stripe) {
-      setSubmitting(false)
       return
     }
     const paymentMethodId = session?.data?.payment_method_id as string
@@ -217,9 +214,6 @@ const PayPalPaymentButton = ({
     placeOrder.mutate(null, {
       onSuccess: async (data) => {
         if (data?.type === "order" && data.order) {
-          const countryCode =
-            data.order.shipping_address?.country_code?.toLowerCase()
-          
           // Send SMS notification through subscriber system
           try {
             if (data.order.shipping_address?.phone) {
@@ -246,9 +240,10 @@ const PayPalPaymentButton = ({
             // Continue with order placement even if SMS fails
           }
           
-          router.push(`/order-confirmation/${data.order.id}`)
-        } else if (data?.type === "cart" && (data as any).error) {
-          setErrorMessage((data as any).error.message)
+          console.log('🚀 PayPal: Navigating to order success page with orderId:', data.order.id)
+          router.push(`/order-success?orderId=${data.order.id}`)
+        } else if (data?.type === "cart" && (data as { error: { message: string } }).error) {
+          setErrorMessage((data as { error: { message: string } }).error.message)
         }
         setSubmitting(false)
       },
@@ -285,7 +280,7 @@ const PayPalPaymentButton = ({
   const [{ isPending, isResolved }] = usePayPalScriptReducer()
 
   if (isPending) {
-    return <Spinner />
+    return <Spinner name="loader" />
   }
 
   if (isResolved) {
@@ -313,9 +308,6 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
     placeOrder.mutate(null, {
       onSuccess: async (data) => {
         if (data?.type === "order" && data.order) {
-          const countryCode =
-            data.order.shipping_address?.country_code?.toLowerCase()
-          
           // Send SMS notification through subscriber system
           try {
             if (data.order.shipping_address?.phone) {
@@ -342,8 +334,9 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
             // Continue with order placement even if SMS fails
           }
           
-          router.push(`/order-confirmation/${data.order.id}`)
-        } else if (data?.type === "cart" && (data as any).error) {
+          console.log('🚀 Manual Test: Navigating to order success page with orderId:', data.order.id)
+          router.push(`/order-success?orderId=${data.order.id}`)
+        } else if (data?.type === "cart" && (data as { error: { message: string } }).error) {
           setErrorMessage(data.error.message)
         }
       },

@@ -5,9 +5,7 @@ import Link from 'next/link';
 import { Button, Badge, Product360View, useToast } from '@components/ui';
 import { sdk } from '@lib/config';
 import { HttpTypes } from '@shopenup/types';
-import ProductPrice from '@modules/products/components/product-price';
-import ProductActions from '@modules/products/components/product-actions';
-import { useAddLineItem, useCartWithSync } from '@hooks/cart';
+import { useAddLineItem } from '@hooks/cart';
 import { useCountryCode } from '@hooks/country-code';
 import { productService } from '@lib/shopenup/product';
 
@@ -79,7 +77,6 @@ export default function ProductPage() {
   const { id } = router.query;
   const { showToast } = useToast();
   const countryCode = useCountryCode();
-  const { data: cart } = useCartWithSync({ enabled: !!countryCode });
   const addLineItemMutation = useAddLineItem();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,9 +86,9 @@ export default function ProductPage() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('description');
   const [is360ViewActive, setIs360ViewActive] = useState(false);
-  const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(true);
+
 
 
   // Fetch product data when component mounts
@@ -139,7 +136,7 @@ export default function ProductPage() {
           }
         }
         
-        const query: Record<string, any> = {
+        const query: Record<string, unknown> = {
           id: id,
           fields: "*variants.calculated_price,*categories"
         }
@@ -163,7 +160,7 @@ export default function ProductPage() {
         
         if (productData) {
           // Use type assertion to bypass complex type mismatches
-          setProduct(productData as any);
+          setProduct(productData as unknown as Product); 
         } else {
           setError('Product not found');
         }
@@ -397,7 +394,7 @@ export default function ProductPage() {
                   // Extract valid image URLs
                   const validImages = Array.isArray(product.images)
                     ? product.images
-                        .map((img: any) =>
+                        .map((img: unknown) =>
                           typeof img === 'string'
                             ? img
                             : img && typeof img === 'object' && 'url' in img && typeof img.url === 'string'
@@ -429,7 +426,7 @@ export default function ProductPage() {
                     // Fix type error by allowing for possible image object shape
                     const validImages = Array.isArray(product.images)
                       ? product.images
-                          .map((img: any) =>
+                          .map((img: unknown) =>
                             typeof img === 'string'
                               ? img
                               : (img && typeof img === 'object' && 'url' in img && typeof img.url === 'string')
@@ -515,7 +512,7 @@ export default function ProductPage() {
             {!is360ViewActive && (() => {
               const validImages = Array.isArray(product.images)
                 ? product.images
-                    .map((img: any) =>
+                    .map((img: unknown) =>
                       typeof img === 'string'
                         ? img
                         : img && typeof img === 'object' && 'url' in img
@@ -536,7 +533,7 @@ export default function ProductPage() {
                 {(() => {
                   const validImages = Array.isArray(product.images)
                     ? product.images
-                        .map((img: any) =>
+                        .map((img: unknown) =>
                           typeof img === 'string'
                             ? img
                             : img && typeof img === 'object' && 'url' in img
@@ -712,8 +709,8 @@ export default function ProductPage() {
                   }
                   
                   // Try metadata or other fields
-                  if (!price && (product.metadata as any)?.price) {
-                    price = (product.metadata as any).price;
+                  if (!price && (product.metadata as Record<string, unknown>)?.price) {
+                    price = (product.metadata as Record<string, unknown>).price as number;
                   }
                   
                   if (price) {

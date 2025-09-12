@@ -389,7 +389,6 @@ export default async function seedDemoData({ container }: ExecArgs) {
           title: 'Frontend Publishable Key',
           type: 'publishable',
           created_by: '',
-          token: 'pk_03d087dc82a71a3723b4ebfc54024a1b7ad03ab5c58b15d27129f8c482bfac5f',
         },
       ],
     },

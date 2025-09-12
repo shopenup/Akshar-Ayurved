@@ -40,7 +40,7 @@ export interface Order {
   fulfillment_status: string;
   created_at: string;
   updated_at: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface CreateOrderData {
@@ -54,7 +54,7 @@ export interface CreateOrderData {
   payment_method: string;
   shipping_method: string;
   currency_code?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**

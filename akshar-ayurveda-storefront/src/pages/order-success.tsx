@@ -33,15 +33,15 @@ export default function OrderSuccessPage() {
             )}
             
             <p className="text-gray-600 mb-6">
-              Thank you for your purchase. We've sent you a confirmation email and SMS with all the details.
+              Thank you for your purchase. We&apos;ve sent you a confirmation email and SMS with all the details.
             </p>
 
             {/* Order Details */}
             <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
               <h3 className="font-medium text-gray-900 mb-3">What happens next?</h3>
               <ul className="text-sm text-gray-600 space-y-2">
-                <li>• You'll receive an email confirmation shortly</li>
-                <li>• We'll notify you via SMS when your order ships</li>
+                <li>• You&apos;ll receive an email confirmation shortly</li>
+                <li>• We&apos;ll notify you via SMS when your order ships</li>
                 <li>• Estimated delivery: 3-5 business days</li>
                 <li>• Track your order using the order ID above</li>
               </ul>

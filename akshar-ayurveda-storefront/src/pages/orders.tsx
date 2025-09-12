@@ -7,9 +7,7 @@ import { sdk } from '@lib/config';
 import { getAuthHeaders } from '@lib/shopenup/cookies';
 import { HttpTypes } from '@shopenup/types';
 
-// Use Shopenup StoreOrder type directly
 type Order = HttpTypes.StoreOrder;
-type OrderItem = NonNullable<HttpTypes.StoreOrder['items']>[0];
 
 export default function OrdersPage() {
   const [activeTab, setActiveTab] = useState('all');

@@ -82,7 +82,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
     }
 
     if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = 'You must agree to the terms and conditions';
+      newErrors.agreeToTerms = true;
     }
 
     setErrors(newErrors);
@@ -194,7 +194,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({
         </div>
 
         {errors.agreeToTerms && (
-          <p className="text-sm text-red-600">{errors.agreeToTerms}</p>
+          <p className="text-sm text-red-600">You must agree to the terms and conditions</p>
         )}
 
         {/* Submit Button */}

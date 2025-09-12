@@ -5,7 +5,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import DeleteButton from "@modules/common/components/delete-button"
 import LineItemUnitPrice from "@modules/common/components/line-item-unit-price"
 import Thumbnail from "@modules/products/components/thumbnail"
-import { NumberField } from "@components/NumberField"
+import { Input } from "@components/ui"
 import { LocalizedLink } from "@components/LocalizedLink"
 import { twMerge } from "tailwind-merge"
 import { useUpdateLineItem } from "hooks/cart"
@@ -63,13 +63,19 @@ const Item = ({ item, className }: ItemProps) => {
             </p>
             <LineItemUnitPrice item={item} className="sm:hidden" />
           </div>
-          <NumberField
+          <Input
+            type="number"
             size="sm"
-            minValue={1}
-            maxValue={maxQuantity}
-            value={quantity}
-            onChange={setQuantity}
-            isDisabled={isPending}
+            value={quantity.toString()}
+            onChange={(e) => {
+              const val = parseInt(e.target.value, 10)
+              if (!isNaN(val) && val >= 1 && val <= maxQuantity) {
+                setQuantity(val)
+              } else if (e.target.value === "") {
+                setQuantity(1)
+              }
+            }}
+            disabled={isPending}
             className="w-25"
             aria-label="Quantity"
           />

@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useContext, useEffect, useMemo, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { CreditCard } from "@shopenup/icons"
 import { CardElement } from "@stripe/react-stripe-js"
 import { StripeCardElementOptions } from "@stripe/stripe-js"
@@ -38,7 +38,6 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
 
   const searchParams = useSearchParams()
   const router = useRouter()
-  const pathname = usePathname()
 
   const isOpen = searchParams.get("step") === "payment"
 

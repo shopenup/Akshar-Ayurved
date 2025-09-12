@@ -2,7 +2,7 @@
 export * from './ui';
 
 // Layout Components
-export * from './layout';
+export * from './Layout';
 
 // Product Components
 // Explicitly re-export ProductCard to resolve ambiguity

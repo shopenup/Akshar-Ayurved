@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { productService, type Product, type ProductCategory, type ProductCollection, type ProductSearchParams } from '../lib/shopenup';
 
 export interface UseProductsOptions {
@@ -24,7 +24,7 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsReturn
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -49,11 +49,11 @@ export function useProducts(options: UseProductsOptions = {}): UseProductsReturn
     } finally {
       setLoading(false);
     }
-  };
+  }, [options]);
 
   useEffect(() => {
     fetchProducts();
-  }, [options.limit, options.category, options.collection, options.search, options.tags, options.inStock, options.sortBy, options.sortOrder]);
+  }, [fetchProducts]);
 
   return {
     products,
@@ -68,7 +68,7 @@ export function useNewArrivals(limit: number = 8): UseProductsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchNewArrivals = async () => {
+  const fetchNewArrivals = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -81,11 +81,11 @@ export function useNewArrivals(limit: number = 8): UseProductsReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit]);
 
   useEffect(() => {
     fetchNewArrivals();
-  }, [limit]);
+  }, [fetchNewArrivals]);
 
   return {
     products,
@@ -100,7 +100,7 @@ export function useFeaturedProducts(limit: number = 8): UseProductsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchFeaturedProducts = async () => {
+  const fetchFeaturedProducts = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -113,11 +113,11 @@ export function useFeaturedProducts(limit: number = 8): UseProductsReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit]);
 
   useEffect(() => {
     fetchFeaturedProducts();
-  }, [limit]);
+  }, [fetchFeaturedProducts]);
 
   return {
     products,
@@ -132,7 +132,7 @@ export function useProductsOnSale(limit: number = 8): UseProductsReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProductsOnSale = async () => {
+  const fetchProductsOnSale = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -145,11 +145,11 @@ export function useProductsOnSale(limit: number = 8): UseProductsReturn {
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit]);
 
   useEffect(() => {
     fetchProductsOnSale();
-  }, [limit]);
+  }, [fetchProductsOnSale]);
 
   return {
     products,
@@ -228,7 +228,7 @@ export function useProduct(productId: string) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     if (!productId) return;
     
     try {
@@ -243,11 +243,11 @@ export function useProduct(productId: string) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
 
   useEffect(() => {
     fetchProduct();
-  }, [productId]);
+  }, [fetchProduct]);
 
   return {
     product,
@@ -262,7 +262,7 @@ export function useProductRecommendations(productId: string, limit: number = 4):
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRecommendations = async () => {
+  const fetchRecommendations = useCallback(async () => {
     if (!productId) return;
     
     try {
@@ -277,11 +277,11 @@ export function useProductRecommendations(productId: string, limit: number = 4):
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId, limit]);
 
   useEffect(() => {
     fetchRecommendations();
-  }, [productId, limit]);
+  }, [fetchRecommendations]);
 
   return {
     products,

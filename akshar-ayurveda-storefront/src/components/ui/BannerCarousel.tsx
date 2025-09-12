@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from './index';
-import Link from 'next/link';
 
 interface Banner {
   id: string;
@@ -36,15 +35,6 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Function to get background image based on banner index
-  const getBackgroundImage = (index: number) => {
-    const backgroundImages = [
-      '/assets/banner1.jpg',
-      '/assets/banner2.jpg',
-      // '/assets/banner2.jpeg', // fallback for additional banners
-    ];
-    return backgroundImages[index] || backgroundImages[0];
-  };
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prevIndex) =>
@@ -93,7 +83,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
         className={`flex transition-transform duration-700 ease-in-out ${height}`}
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
-        {banners.map((banner, index) => (
+        {banners.map((banner) => (
           <div
             key={banner.id}
             className="w-full flex-shrink-0 relative"

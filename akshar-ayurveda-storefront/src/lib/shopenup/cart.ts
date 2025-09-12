@@ -9,9 +9,9 @@ import {
   getCartId,
   getAuthHeaders,
   setCartId,
-  removeCartId,
-  clearAllCartData,
   getCompleteHeaders,
+  removeCartId,
+  setAuthToken,
 } from "@lib/shopenup/cookies"
 import { getRegion } from "@lib/shopenup/regions"
 import { addressesFormSchema } from "hooks/cart"
@@ -669,26 +669,53 @@ export async function placeOrder() {
   console.log('🛒 Cart validation passed, proceeding with order completion')
 
   try {
+    // Preserve auth token before cart completion
+    const authHeadersBeforeComplete = await getAuthHeaders()
+    const authToken = 'authorization' in authHeadersBeforeComplete ? authHeadersBeforeComplete.authorization.replace('Bearer ', '') : null
+    console.log('🔍 Auth token before cart completion:', authHeadersBeforeComplete)
+    
+    // Backup auth token to localStorage as additional safety
+    if (authToken && typeof window !== 'undefined') {
+      localStorage.setItem('_shopenup_jwt_backup', authToken)
+    }
+    
     const cartRes = await sdk.store.cart
       .complete(cartId, {}, await getCompleteHeaders())
-      .then((cartRes) => {
+      .then(async (cartRes) => {
         console.log('✅ Order completed successfully:', cartRes)
+        
+        // Restore auth token if it was cleared by backend (non-blocking)
+        if (authToken) {
+          // Use requestAnimationFrame to ensure this doesn't block navigation
+          requestAnimationFrame(async () => {
+            const authHeadersAfterComplete = await getAuthHeaders()
+            if (!('authorization' in authHeadersAfterComplete) || !authHeadersAfterComplete.authorization) {
+              console.log('🔧 Restoring auth token after cart completion')
+              await setAuthToken(authToken)
+              // Clean up backup token
+              if (typeof window !== 'undefined') {
+                localStorage.removeItem('_shopenup_jwt_backup')
+              }
+            }
+          })
+        }
+        
         revalidateTag("cart")
         revalidateTag("orders")
         return cartRes
       })
 
     if (cartRes?.type === "order") {
-      await clearAllCartData()
-      console.log('✅ Cart data cleared after successful order placement')
+      await removeCartId()
+      console.log('✅ Cart data cleared after successful order placement (auth token preserved)')
     }
 
     return cartRes
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Error completing order:', error)
     
     // Handle inventory error specifically
-    if (error.message && error.message.includes('not stocked at location')) {
+    if (error instanceof Error && error.message && error.message.includes('not stocked at location')) {
       console.log('⚠️ Inventory error detected - this is a backend configuration issue')
       throw new Error('Order completion failed due to inventory configuration. Please contact support or try again later.')
     }

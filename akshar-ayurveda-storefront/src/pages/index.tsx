@@ -19,12 +19,34 @@ import {
 } from '../components/ui';
 import homepageData from '../data/homepage-data.json';
 import { getIconComponent } from '../utils/icons';
-import { Category, Collection, Product } from '../types/homepage';
-import { useNewArrivals, useCategories, useCollections } from '../hooks/useShopenupProducts';
+import { useNewArrivals } from '@hooks/useShopenupProducts';
 import { getCategoriesList } from '../lib/shopenup/categories';
 import { sdk } from '../lib/config';
 import { useCountryCode } from '@hooks/country-code';
 import { useAddLineItem } from '@hooks/cart';
+
+interface Category {
+  id: string;
+  name: string;
+  description?: string;
+  is_active?: boolean;
+  product_count?: number;
+  product_thumbnail?: string;
+  image?: string;
+}
+
+interface Product {
+  id: string;
+  title: string;
+  thumbnail?: string;
+  images?: Array<{ url: string }>;
+  variants?: Array<{ id: string }>;
+}
+
+interface ProductResponse {
+  count: number;
+  products: Product[];
+}
 
 export default function HomePage() {
   // Use Shopenup product hooks
@@ -32,10 +54,10 @@ export default function HomePage() {
   const { showToast } = useToast();
   const router = useRouter();
   const countryCode = useCountryCode() || 'in';
-  const { mutateAsync: addLineItem, isPending: isAddingToCart } = useAddLineItem();
+  const { mutateAsync: addLineItem } = useAddLineItem();
   // Remove useCategories hook
   // const { categories: shopenupCategories, loading: categoriesLoading, error: categoriesError } = useCategories();
-  const [categories, setCategories] = React.useState<any[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = React.useState(true);
   const [categoriesError, setCategoriesError] = React.useState<string | null>(null);
   
@@ -43,7 +65,7 @@ export default function HomePage() {
   // Function to get product count and thumbnail for a category
   const getCategoryData = async (categoryId: string) => {
     try {
-      const response = await sdk.client.fetch<{ count: number; products: any[] }>('/store/products', {
+      const response = await sdk.client.fetch<ProductResponse>('/store/products', {
         query: {
           category_id: categoryId,
           limit: 1,
@@ -72,22 +94,22 @@ export default function HomePage() {
         console.log('Categories response:', res);
         
         const categoriesWithCounts = await Promise.all(
-          (res.product_categories || []).map(async (category: any) => {
+          (res.product_categories || []).map(async (category: Category) => {
             const { productCount, productThumbnail } = await getCategoryData(category.id);
             return {
               ...category,
               product_count: productCount,
-              product_thumbnail: productThumbnail
+              product_thumbnail: productThumbnail || undefined
             };
           })
         );
         
         console.log('Categories with counts:', categoriesWithCounts);
-        setCategories(categoriesWithCounts);
+        setCategories(categoriesWithCounts as Category[]);
         setCategoriesLoading(false);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Categories error:', err);
-        setCategoriesError(err.message);
+        setCategoriesError(err instanceof Error ? err.message : 'Failed to fetch categories');
         setCategoriesLoading(false);
       }
     };
@@ -95,7 +117,7 @@ export default function HomePage() {
     fetchCategoriesWithCounts();
   }, []);
 
-  const { collections: shopenupCollections, loading: collectionsLoading } = useCollections();
+  // Collections removed as they're not used
 
   // Transform feature highlights to include icon components
   const featureHighlights = homepageData.featureHighlights.map(feature => ({
@@ -105,7 +127,7 @@ export default function HomePage() {
 
   // Use dynamic categories if available, fallback to static
   const displayCategories = categories.length > 0
-    ? categories.map((cat: any) => ({
+    ? categories.map((cat: Category) => ({
       id: cat.id,
       name: cat.name,
       image: cat.product_thumbnail || cat.image || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(cat.name)}`,
@@ -113,12 +135,6 @@ export default function HomePage() {
     }))
     : homepageData.categories;
 
-  const collections = shopenupCollections.length > 0 ? shopenupCollections.map(col => ({
-    id: col.id,
-    name: col.title,
-    image: col.image || `https://dummyimage.com/300x300/22c55e/ffffff?text=${encodeURIComponent(col.title)}`,
-    description: col.description
-  })) : homepageData.collections;
 
   const handleProductClick = (productId: string) => {
     // Navigate to product detail page
@@ -148,7 +164,7 @@ export default function HomePage() {
 
       // Get the first variant ID (most products have only one variant)
       // We need to fetch the product details to get the variant ID
-      const productResponse = await sdk.client.fetch<{ product: any }>(
+      const productResponse = await sdk.client.fetch<{ product: Product }>(
         `/store/products/${productId}`,
         {
           next: { tags: ['products'] },
@@ -171,8 +187,8 @@ export default function HomePage() {
 
       showToast(`${product.title} added to cart`, 'success');
 
-    } catch (error) {
-      console.error('Error adding to cart:', error);
+    } catch {
+      console.error('Error adding to cart:');
       showToast('Failed to add product to cart', 'error');
     }
   };
@@ -208,13 +224,13 @@ export default function HomePage() {
       ) : categories.length > 0 ? (
         <BannerCarousel 
           banners={categories
-            .filter((category: any) => 
+            .filter((category: Category) => 
               category.name.toLowerCase().includes('diabetic') || 
               category.name.toLowerCase().includes('cosmetic') ||
               category.name.toLowerCase().includes('premium')
             )
             .slice(0, 2)
-            .map((category: any, index: number) => {
+            .map((category: Category, index: number) => {
               // Map different background images based on category content
               const getBackgroundImage = (categoryName: string, index: number) => {
                 const categoryLower = categoryName.toLowerCase();
@@ -313,7 +329,7 @@ export default function HomePage() {
                 Error loading categories: {categoriesError}
               </div>
             ) : (
-              displayCategories.map((category: any) => (
+              displayCategories.map((category) => (
                 <Link
                   key={category.id}
                   href={`/products/category/${category.id}`}

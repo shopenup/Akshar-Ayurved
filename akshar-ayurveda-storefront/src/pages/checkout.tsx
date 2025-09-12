@@ -9,40 +9,40 @@ import CheckoutSummaryWrapper from '@modules/checkout/components/checkout-summar
 import { withReactQueryProvider } from '@lib/util/react-query';
 import { getCheckoutStep } from '@modules/cart/utils/getCheckoutStep';
 
-// Step Navigation Component
-const StepNavigation = ({ currentStep, onStepClick }: { 
-  currentStep: string; 
-  onStepClick: (step: string) => void;
-}) => {
-  const steps = [
-    { step: 'email', label: 'Email', icon: '📧' },
-    { step: 'delivery', label: 'Address', icon: '📍' },
-    { step: 'shipping', label: 'Shipping', icon: '🚚' },
-    { step: 'payment', label: 'Payment', icon: '💳' },
-    { step: 'review', label: 'Review', icon: '✅' }
-  ];
+// Step Navigation Component (commented out)
+// const StepNavigation = ({ currentStep, onStepClick }: { 
+//   currentStep: string; 
+//   onStepClick: (step: string) => void;
+// }) => {
+//   const steps = [
+//     { step: 'email', label: 'Email', icon: '📧' },
+//     { step: 'delivery', label: 'Address', icon: '📍' },
+//     { step: 'shipping', label: 'Shipping', icon: '🚚' },
+//     { step: 'payment', label: 'Payment', icon: '💳' },
+//     { step: 'review', label: 'Review', icon: '✅' }
+//   ];
 
-  // return (
-  //   <div className="flex flex-wrap gap-2 mb-6">
-  //     {steps.map((stepInfo) => (
-  //       <button
-  //         key={stepInfo.step}
-  //         onClick={() => onStepClick(stepInfo.step)}
-  //         className={`
-  //           px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-  //           ${currentStep === stepInfo.step
-  //             ? 'bg-green-600 text-white shadow-md'
-  //             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-  //           }
-  //         `}
-  //       >
-  //         <span className="mr-2">{stepInfo.icon}</span>
-  //         {stepInfo.label}
-  //       </button>
-  //     ))}
-  //   </div>
-  // );
-};
+//   // return (
+//   //   <div className="flex flex-wrap gap-2 mb-6">
+//   //     {steps.map((stepInfo) => (
+//   //       <button
+//   //         key={stepInfo.step}
+//   //         onClick={() => onStepClick(stepInfo.step)}
+//   //         className={`
+//   //           px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
+//   //           ${currentStep === stepInfo.step
+//   //             ? 'bg-green-600 text-white shadow-md'
+//   //             : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+//   //           }
+//   //         `}
+//   //       >
+//   //         <span className="mr-2">{stepInfo.icon}</span>
+//   //         {stepInfo.label}
+//   //       </button>
+//   //     ))}
+//   //   </div>
+//   // );
+// };
 
 function CheckoutPage() {
   const router = useRouter();
@@ -61,11 +61,6 @@ function CheckoutPage() {
   // Get current step
   const currentStep = cart ? getCheckoutStep(cart) : 'email';
   const currentStepIndex = checkoutSteps.findIndex(step => step.step === currentStep);
-
-  // Handle step navigation
-  const handleStepClick = (step: string) => {
-    router.push(`/${countryCode}/checkout?step=${step}`);
-  };
 
   // Show loading state
   if (cartLoading) {
@@ -165,7 +160,6 @@ function CheckoutPage() {
                     {checkoutSteps.map((stepInfo, index) => {
                       const isActive = stepInfo.step === currentStep;
                       const isCompleted = index < currentStepIndex;
-                      const isUpcoming = index > currentStepIndex;
                       
                       return (
                         <div key={stepInfo.step} className="flex items-center flex-1">

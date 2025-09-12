@@ -70,8 +70,6 @@ export const UiCheckbox: React.FC<React.PropsWithChildren<{
   onPress?: () => void;
 }>> = ({ 
   children, 
-  isSelected = false,
-  isDisabled = false,
   className = '',
   onPress
 }) => (

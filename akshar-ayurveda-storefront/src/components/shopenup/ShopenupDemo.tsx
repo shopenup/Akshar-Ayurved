@@ -54,8 +54,8 @@ export default function ShopenupDemo() {
         const payment = await getPaymentService();
         const ui = await getUIComponents();
         
-        setCartService(cart as CartService);
-        setPaymentService(payment as PaymentService);
+        setCartService(cart as unknown as CartService);
+        setPaymentService(payment as unknown as PaymentService);
         setUIComponents(ui);
         setIsInitialized(true);
       } catch (error) {

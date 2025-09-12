@@ -2,15 +2,14 @@ import React, { useState } from "react"
 import { useRouter } from "next/router"
 import { Button, Input, Card } from '../components/ui'
 import { useAppContext } from '../context/AppContext'
-import { z } from "zod"
 import { useLogin } from '../hooks/customer'
 import { EyeIcon, EyeOffIcon } from '../utils/icons'
 import Link from 'next/link';
 
-const loginFormSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
-})
+interface LoginFormData {
+  email: string;
+  password: string;
+}
 
 interface LoginFormProps {
   className?: string
@@ -24,7 +23,7 @@ export default function LoginForm({ className, redirectUrl, handleCheckout }: Lo
   const { setLoggedIn } = useAppContext()
   const [showPassword, setShowPassword] = useState(false)
 
-  const onSubmit = (values: z.infer<typeof loginFormSchema>) => {
+  const onSubmit = (values: LoginFormData) => {
     mutate(
       { ...values, redirect_url: redirectUrl },
       {

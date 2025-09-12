@@ -1,13 +1,14 @@
 import React from 'react';
 import Head from 'next/head';
-import { Layout, Section } from '../components';
+import Layout from '@components/layout/Layout';
+import Section from '@components/layout/Section';
 import {
   Carousel,
   ProductCarousel,
   TestimonialCarousel,
   BannerCarousel,
   ImageGalleryCarousel
-} from '../components/ui';
+} from '@components/ui';
 
 export default function CarouselDemo() {
   // Sample data for different carousels

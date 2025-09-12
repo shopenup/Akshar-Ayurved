@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
 import Hero from '../components/layout/Hero';
 import Section from '../components/layout/Section';
 import ContactForm from '../components/forms/ContactForm';

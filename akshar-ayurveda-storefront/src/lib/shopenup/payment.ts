@@ -1,4 +1,4 @@
-import { getPaymentModule, getOrderModule, getCustomerModule } from "./init";
+import { getPaymentModule, getOrderModule, getCustomerModule } from "@lib/shopenup/init";
 
 export interface PaymentMethod {
   id: string;
@@ -32,9 +32,9 @@ export interface PaymentData {
 }
 
 export class ShopenupPaymentService {
-  private paymentModule!: any;
-  private orderModule!: any;
-  private customerModule!: any;
+  private paymentModule!: unknown;
+  private orderModule!: unknown;
+  private customerModule!: unknown;
 
   constructor() {
     this.initializeModules();
@@ -50,10 +50,86 @@ export class ShopenupPaymentService {
     }
   }
 
+  private getPaymentModule(): {
+    createPaymentIntent: (args: Record<string, unknown>) => Promise<Record<string, unknown>>;
+    processPayment: (intentId: string, args: Record<string, unknown>) => Promise<Record<string, unknown>>;
+    confirmPayment: (intentId: string) => Promise<Record<string, unknown>>;
+    cancelPayment: (intentId: string) => Promise<Record<string, unknown>>;
+    refundPayment: (intentId: string, args: Record<string, unknown>) => Promise<Record<string, unknown>>;
+    getPayment: (intentId: string) => Promise<Record<string, unknown>>;
+    savePaymentMethod: (customerId: string, data: Record<string, unknown>) => Promise<Record<string, unknown>>;
+    getPaymentMethods: (customerId: string) => Promise<Record<string, unknown>[]>;
+    deletePaymentMethod: (customerId: string, methodId: string) => Promise<void>;
+    setDefaultPaymentMethod: (customerId: string, methodId: string) => Promise<void>;
+    validatePaymentMethod: (data: Record<string, unknown>) => Promise<{ is_valid: boolean }>;
+    getPaymentHistory?: (customerId: string, args: { limit: number; offset: number }) => Promise<{ payments: unknown[]; total: number }>;
+    getSupportedPaymentMethods?: (region: string) => Promise<unknown[]>;
+  } {
+    const mod = this.paymentModule as Record<string, unknown>;
+    const requiredFns = [
+      'createPaymentIntent',
+      'processPayment',
+      'confirmPayment',
+      'cancelPayment',
+      'refundPayment',
+      'getPayment',
+      'savePaymentMethod',
+      'getPaymentMethods',
+      'deletePaymentMethod',
+      'setDefaultPaymentMethod',
+      'validatePaymentMethod',
+    ];
+    for (const fn of requiredFns) {
+      if (typeof mod?.[fn] !== 'function') {
+        throw new Error('Payment module is not initialized correctly');
+      }
+    }
+    return mod as unknown as ReturnType<ShopenupPaymentService['getPaymentModule']>;
+  }
+
+  private isOneOf<T extends readonly string[]>(list: T, value: string): value is T[number] {
+    return (list as readonly string[]).includes(value);
+  }
+
+  private parsePaymentMethod(obj: unknown): PaymentMethod | undefined {
+    if (!obj || typeof obj !== "object") return undefined;
+    const r = obj as Record<string, unknown>;
+    const allowed = ["card", "upi", "netbanking", "wallet"] as const;
+    const rawType = String(r.type ?? "card");
+    const type = (this.isOneOf(allowed, rawType) ? rawType : "card");
+    return {
+      id: String(r.id ?? ""),
+      type,
+      brand: r.brand != null ? String(r.brand) : undefined,
+      last4: r.last4 != null ? String(r.last4) : undefined,
+      expiryMonth: typeof r.expiry_month === "number" ? r.expiry_month : undefined,
+      expiryYear: typeof r.expiry_year === "number" ? r.expiry_year : undefined,
+      isDefault: Boolean(r.is_default),
+    };
+  }
+
+  private parsePaymentIntent(obj: unknown): PaymentIntent {
+    const r = (obj ?? {}) as Record<string, unknown>;
+    const statusAllowed = ["pending", "processing", "succeeded", "failed", "canceled"] as const;
+    const rawStatus = String(r.status ?? "pending");
+    const status = (this.isOneOf(statusAllowed, rawStatus) ? rawStatus : "pending");
+    return {
+      id: String(r.id ?? ""),
+      amount: typeof r.amount === "number" ? r.amount : 0,
+      currency: String(r.currency ?? "inr"),
+      status,
+      paymentMethod: this.parsePaymentMethod(r.payment_method),
+      clientSecret: r.client_secret != null ? String(r.client_secret) : undefined,
+      createdAt: new Date(String(r.created_at ?? new Date().toISOString())),
+      updatedAt: new Date(String(r.updated_at ?? new Date().toISOString())),
+    };
+  }
+
   // Create payment intent
   async createPaymentIntent(paymentData: PaymentData): Promise<PaymentIntent> {
     try {
-      const intentData = await this.paymentModule.createPaymentIntent({
+      const pm = this.getPaymentModule();
+      const intentData = await pm.createPaymentIntent({
         amount: paymentData.amount,
         currency: paymentData.currency,
         payment_method_id: paymentData.paymentMethodId,
@@ -63,15 +139,7 @@ export class ShopenupPaymentService {
         metadata: paymentData.metadata,
       });
 
-      return {
-        id: intentData.id,
-        amount: intentData.amount,
-        currency: intentData.currency,
-        status: intentData.status,
-        clientSecret: intentData.client_secret,
-        createdAt: new Date(intentData.created_at),
-        updatedAt: new Date(intentData.updated_at),
-      };
+      return this.parsePaymentIntent(intentData);
     } catch (error) {
       console.error("Failed to create payment intent:", error);
       throw error;
@@ -84,32 +152,15 @@ export class ShopenupPaymentService {
     paymentMethodId?: string
   ): Promise<PaymentIntent> {
     try {
-      const paymentData = await this.paymentModule.processPayment(
+      const pm = this.getPaymentModule();
+      const paymentData = await pm.processPayment(
         paymentIntentId,
         {
           payment_method_id: paymentMethodId,
         }
       );
 
-      return {
-        id: paymentData.id,
-        amount: paymentData.amount,
-        currency: paymentData.currency,
-        status: paymentData.status,
-        paymentMethod: paymentData.payment_method
-          ? {
-              id: paymentData.payment_method.id,
-              type: paymentData.payment_method.type,
-              brand: paymentData.payment_method.brand,
-              last4: paymentData.payment_method.last4,
-              expiryMonth: paymentData.payment_method.expiry_month,
-              expiryYear: paymentData.payment_method.expiry_year,
-              isDefault: paymentData.payment_method.is_default,
-            }
-          : undefined,
-        createdAt: new Date(paymentData.created_at),
-        updatedAt: new Date(paymentData.updated_at),
-      };
+      return this.parsePaymentIntent(paymentData);
     } catch (error) {
       console.error("Failed to process payment:", error);
       throw error;
@@ -119,29 +170,11 @@ export class ShopenupPaymentService {
   // Confirm payment
   async confirmPayment(paymentIntentId: string): Promise<PaymentIntent> {
     try {
-      const paymentData = await this.paymentModule.confirmPayment(
+      const pm = this.getPaymentModule();
+      const paymentData = await pm.confirmPayment(
         paymentIntentId
       );
-
-      return {
-        id: paymentData.id,
-        amount: paymentData.amount,
-        currency: paymentData.currency,
-        status: paymentData.status,
-        paymentMethod: paymentData.payment_method
-          ? {
-              id: paymentData.payment_method.id,
-              type: paymentData.payment_method.type,
-              brand: paymentData.payment_method.brand,
-              last4: paymentData.payment_method.last4,
-              expiryMonth: paymentData.payment_method.expiry_month,
-              expiryYear: paymentData.payment_method.expiry_year,
-              isDefault: paymentData.payment_method.is_default,
-            }
-          : undefined,
-        createdAt: new Date(paymentData.created_at),
-        updatedAt: new Date(paymentData.updated_at),
-      };
+      return this.parsePaymentIntent(paymentData);
     } catch (error) {
       console.error("Failed to confirm payment:", error);
       throw error;
@@ -151,18 +184,11 @@ export class ShopenupPaymentService {
   // Cancel payment
   async cancelPayment(paymentIntentId: string): Promise<PaymentIntent> {
     try {
-      const paymentData = await this.paymentModule.cancelPayment(
+      const pm = this.getPaymentModule();
+      const paymentData = await pm.cancelPayment(
         paymentIntentId
       );
-
-      return {
-        id: paymentData.id,
-        amount: paymentData.amount,
-        currency: paymentData.currency,
-        status: paymentData.status,
-        createdAt: new Date(paymentData.created_at),
-        updatedAt: new Date(paymentData.updated_at),
-      };
+      return this.parsePaymentIntent(paymentData);
     } catch (error) {
       console.error("Failed to cancel payment:", error);
       throw error;
@@ -182,7 +208,8 @@ export class ShopenupPaymentService {
     reason?: string;
   }> {
     try {
-      const refundData = await this.paymentModule.refundPayment(
+      const pm = this.getPaymentModule();
+      const refundData = await pm.refundPayment(
         paymentIntentId,
         {
           amount,
@@ -190,12 +217,13 @@ export class ShopenupPaymentService {
         }
       );
 
+      const r = refundData as Record<string, unknown>;
       return {
-        id: refundData.id,
-        amount: refundData.amount,
-        currency: refundData.currency,
-        status: refundData.status,
-        reason: refundData.reason,
+        id: String(r.id ?? ""),
+        amount: typeof r.amount === "number" ? r.amount : Number(r.amount ?? 0),
+        currency: String(r.currency ?? "inr"),
+        status: String(r.status ?? "pending"),
+        reason: r.reason != null ? String(r.reason) : undefined,
       };
     } catch (error) {
       console.error("Failed to refund payment:", error);
@@ -206,8 +234,9 @@ export class ShopenupPaymentService {
   // Get payment status
   async getPaymentStatus(paymentIntentId: string): Promise<string> {
     try {
-      const paymentData = await this.paymentModule.getPayment(paymentIntentId);
-      return paymentData.status;
+      const pm = this.getPaymentModule();
+      const paymentData = await pm.getPayment(paymentIntentId);
+      return String((paymentData as Record<string, unknown>).status ?? "pending");
     } catch (error) {
       console.error("Failed to get payment status:", error);
       throw error;
@@ -224,20 +253,17 @@ export class ShopenupPaymentService {
     }
   ): Promise<PaymentMethod> {
     try {
-      const paymentMethod = await this.paymentModule.savePaymentMethod(
+      const pm = this.getPaymentModule();
+      const paymentMethod = await pm.savePaymentMethod(
         customerId,
         paymentMethodData
       );
 
-      return {
-        id: paymentMethod.id,
-        type: paymentMethod.type,
-        brand: paymentMethod.brand,
-        last4: paymentMethod.last4,
-        expiryMonth: paymentMethod.expiry_month,
-        expiryYear: paymentMethod.expiry_year,
-        isDefault: paymentMethod.is_default,
-      };
+      const parsed = this.parsePaymentMethod(paymentMethod);
+      if (!parsed) {
+        throw new Error("Invalid payment method returned by module");
+      }
+      return parsed;
     } catch (error) {
       console.error("Failed to save payment method:", error);
       throw error;
@@ -247,19 +273,15 @@ export class ShopenupPaymentService {
   // Get customer payment methods
   async getPaymentMethods(customerId: string): Promise<PaymentMethod[]> {
     try {
-      const paymentMethods = await this.paymentModule.getPaymentMethods(
+      const pm = this.getPaymentModule();
+      const paymentMethods = await pm.getPaymentMethods(
         customerId
       );
 
-      return paymentMethods.map((method: Record<string, unknown>) => ({
-        id: method.id,
-        type: method.type,
-        brand: method.brand,
-        last4: method.last4,
-        expiryMonth: method.expiry_month,
-        expiryYear: method.expiry_year,
-        isDefault: method.is_default,
-      }));
+      return paymentMethods.map((method: unknown) => {
+        const parsed = this.parsePaymentMethod(method);
+        return parsed ?? { id: "", type: "card", isDefault: false };
+      });
     } catch (error) {
       console.error("Failed to get payment methods:", error);
       throw error;
@@ -272,7 +294,8 @@ export class ShopenupPaymentService {
     paymentMethodId: string
   ): Promise<void> {
     try {
-      await this.paymentModule.deletePaymentMethod(customerId, paymentMethodId);
+      const pm = this.getPaymentModule();
+      await pm.deletePaymentMethod(customerId, paymentMethodId);
     } catch (error) {
       console.error("Failed to delete payment method:", error);
       throw error;
@@ -285,7 +308,8 @@ export class ShopenupPaymentService {
     paymentMethodId: string
   ): Promise<void> {
     try {
-      await this.paymentModule.setDefaultPaymentMethod(
+      const pm = this.getPaymentModule();
+      await pm.setDefaultPaymentMethod(
         customerId,
         paymentMethodId
       );
@@ -305,32 +329,56 @@ export class ShopenupPaymentService {
     total: number;
   }> {
     try {
-      const history = await this.paymentModule.getPaymentHistory(customerId, {
+      const paymentModule = this.paymentModule as Record<string, unknown>;
+      const getPaymentHistory = paymentModule.getPaymentHistory as
+        | ((customerId: string, args: { limit: number; offset: number }) => Promise<{ payments: unknown[]; total: number }>)
+        | undefined;
+
+      if (!getPaymentHistory) {
+        throw new Error("Payment module is not initialized correctly");
+      }
+
+      const history = await getPaymentHistory(customerId, {
         limit,
         offset,
       });
 
       return {
-        payments: history.payments.map((payment: Record<string, unknown>) => ({
-          id: payment.id,
-          amount: payment.amount,
-          currency: payment.currency,
-          status: payment.status,
-          paymentMethod: payment.payment_method
-            ? {
-                id: (payment.payment_method as any).id,
-                type: (payment.payment_method as any).type,
-                brand: (payment.payment_method as any).brand,
-                last4: (payment.payment_method as any).last4 || '',
-                expiryMonth: (payment.payment_method as any).expiry_month,
-                expiryYear: (payment.payment_method as any).expiry_year,
-                isDefault: (payment.payment_method as any).is_default,
-              }
-            : undefined,
-          createdAt: new Date(payment.created_at as string),
-          updatedAt: new Date(payment.updated_at as string),
-        })),
-        total: history.total,
+        payments: (history.payments as unknown[]).map((payment: unknown) => {
+          const p = payment as Record<string, unknown>;
+
+          const parsePaymentMethod = (obj: unknown): PaymentMethod | undefined => {
+            if (!obj || typeof obj !== "object") return undefined;
+            const r = obj as Record<string, unknown>;
+            const typeStr = String(r.type ?? "card");
+            const allowed = ["card", "upi", "netbanking", "wallet"] as const;
+            const safeType = (this.isOneOf(allowed, typeStr) ? typeStr : "card");
+            const last4 = r.last4 != null ? String(r.last4) : undefined;
+            const expMonth = typeof r.expiry_month === "number" ? r.expiry_month : undefined;
+            const expYear = typeof r.expiry_year === "number" ? r.expiry_year : undefined;
+            const isDefault = Boolean(r.is_default);
+            return {
+              id: String(r.id ?? ""),
+              type: safeType,
+              brand: r.brand != null ? String(r.brand) : undefined,
+              last4,
+              expiryMonth: expMonth,
+              expiryYear: expYear,
+              isDefault,
+            };
+          };
+
+          return {
+            id: String(p.id ?? ""),
+            amount: typeof p.amount === "number" ? p.amount : 0,
+            currency: String(p.currency ?? "inr"),
+            status: String(p.status ?? "pending") as PaymentIntent["status"],
+            paymentMethod: parsePaymentMethod(p.payment_method),
+            createdAt: new Date(String(p.created_at ?? new Date().toISOString())),
+            updatedAt: new Date(String(p.updated_at ?? new Date().toISOString())),
+          };
+        }),
+        total: Number((history as { total?: number }).total ?? 0),
       };
     } catch (error) {
       console.error("Failed to get payment history:", error);
@@ -347,7 +395,8 @@ export class ShopenupPaymentService {
     cvc?: string;
   }): Promise<boolean> {
     try {
-      const validation = await this.paymentModule.validatePaymentMethod(
+      const pm = this.getPaymentModule();
+      const validation = await pm.validatePaymentMethod(
         paymentMethodData
       );
       return validation.is_valid;
@@ -360,7 +409,7 @@ export class ShopenupPaymentService {
   // Get supported payment methods
   async getSupportedPaymentMethods(region: string = "IN"): Promise<
     {
-      id: any;
+      id: string;
       type: string;
       name: string;
       description: string;
@@ -369,17 +418,28 @@ export class ShopenupPaymentService {
     }[]
   > {
     try {
-      const methods = await this.paymentModule.getSupportedPaymentMethods(
-        region
-      );
+      const paymentModule = this.paymentModule as Record<string, unknown>;
+      const getSupportedPaymentMethods = paymentModule.getSupportedPaymentMethods as
+        | ((region: string) => Promise<unknown[]>)
+        | undefined;
 
-      return methods.map((method: Record<string, unknown>) => ({
-        type: method.type,
-        name: method.name,
-        description: method.description,
-        icon: method.icon,
-        enabled: method.enabled,
-      }));
+      if (!getSupportedPaymentMethods) {
+        throw new Error("Payment module is not initialized correctly");
+      }
+
+      const methods = await getSupportedPaymentMethods(region);
+
+      return (methods as unknown[]).map((method: unknown) => {
+        const m = method as Record<string, unknown>;
+        return {
+          id: String(m.id ?? m.type ?? ""),
+          type: String(m.type ?? ""),
+          name: String(m.name ?? ""),
+          description: String(m.description ?? ""),
+          icon: String(m.icon ?? ""),
+          enabled: Boolean(m.enabled),
+        };
+      });
     } catch (error) {
       console.error("Failed to get supported payment methods:", error);
       // Return default payment methods
