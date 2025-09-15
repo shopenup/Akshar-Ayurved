@@ -5,14 +5,10 @@
  * 2. Link it to your sales channel
  * 3. Ensure it's properly configured
  */
-
 const { PrismaClient } = require('@prisma/client');
-
 async function fixPublishableApiKey() {
   const prisma = new PrismaClient();
-  
   try {
-    
     // Step 1: Check if the key already exists
     const existingKey = await prisma.apiKey.findFirst({
       where: {
@@ -22,29 +18,15 @@ async function fixPublishableApiKey() {
         sales_channels_link: true
       }
     });
-    
     if (existingKey) {
-        id: existingKey.id,
-        title: existingKey.title,
-        type: existingKey.type,
-        token: existingKey.token,
-        salesChannels: existingKey.sales_channels_link.length
-      });
-      
       // Check if it's linked to sales channels
-      if (existingKey.sales_channels_link.length === 0) {
-      } else {
-        return;
-      }
     }
-    
     // Step 2: Get or create a sales channel
     let salesChannel = await prisma.salesChannel.findFirst({
       where: {
         name: 'Default Sales Channel'
       }
     });
-    
     if (!salesChannel) {
       salesChannel = await prisma.salesChannel.create({
         data: {
@@ -55,7 +37,6 @@ async function fixPublishableApiKey() {
       });
     } else {
     }
-    
     // Step 3: Create the API key if it doesn't exist
     let apiKey;
     if (!existingKey) {
@@ -71,7 +52,6 @@ async function fixPublishableApiKey() {
     } else {
       apiKey = existingKey;
     }
-    
     // Step 4: Link API key to sales channel
     const existingLink = await prisma.apiKeySalesChannelLink.findFirst({
       where: {
@@ -79,7 +59,6 @@ async function fixPublishableApiKey() {
         sales_channel_id: salesChannel.id
       }
     });
-    
     if (!existingLink) {
       await prisma.apiKeySalesChannelLink.create({
         data: {
@@ -89,7 +68,6 @@ async function fixPublishableApiKey() {
       });
     } else {
     }
-    
     // Step 5: Verify the setup
     const finalKey = await prisma.apiKey.findFirst({
       where: {
@@ -103,14 +81,8 @@ async function fixPublishableApiKey() {
         }
       }
     });
-    
-    
-    finalKey.sales_channels_link.forEach(link => {
-    });
-    
-    
   } catch (error) {
-    
+    console.error(':x: Error fixing API key:', error);
     if (error.code === 'P2002') {
     } else if (error.message?.includes('Unknown column')) {
     }
@@ -118,42 +90,10 @@ async function fixPublishableApiKey() {
     await prisma.$disconnect();
   }
 }
-
 // Alternative: Manual SQL commands if Prisma fails
-function showManualSQL() {
-  console.log(`
-  🔧 Manual SQL Alternative:
-  
-  If the script fails, run these SQL commands in your database:
-  
-  1. Create the API key:
-  INSERT INTO api_key (id, token, type, title, created_at, updated_at)
-  VALUES (
-    gen_random_uuid(),
-    'pk_03d087dc82a71a3723b4ebfc54024a1b7ad03ab5c58b15d27129f8c482bfac5f',
-    'publishable',
-    'Frontend Publishable Key',
-    NOW(),
-    NOW()
-  );
-  
-  2. Get your sales channel ID:
-  SELECT id, name FROM sales_channel;
-  
-  3. Link the API key to sales channel (replace UUIDs):
-  INSERT INTO api_key_sales_channel_link (api_key_id, sales_channel_id)
-  VALUES ('API_KEY_UUID', 'SALES_CHANNEL_UUID');
-  
-  Note: You may need to adjust table names based on your schema.
-  `);
-}
-
 // Run the function
 if (require.main === module) {
-  fixPublishableApiKey().catch((error) => {
-    // Error handling without console
-  });
+  fixPublishableApiKey().catch(console.error);
   showManualSQL();
 }
-
 module.exports = { fixPublishableApiKey };

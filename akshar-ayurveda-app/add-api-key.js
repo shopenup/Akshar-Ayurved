@@ -18,11 +18,6 @@ async function addPublishableApiKey() {
     });
     
     if (existingKey) {
-        id: existingKey.id,
-        title: existingKey.title,
-        type: existingKey.type,
-        token: existingKey.token
-      });
       return;
     }
     
@@ -35,12 +30,6 @@ async function addPublishableApiKey() {
         created_at: new Date(),
         updated_at: new Date(),
       },
-    });
-    
-      id: apiKey.id,
-      title: apiKey.title,
-      type: apiKey.type,
-      token: apiKey.token
     });
     
   } catch (error) {
