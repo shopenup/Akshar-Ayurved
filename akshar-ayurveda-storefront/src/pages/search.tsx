@@ -252,10 +252,10 @@ export default function SearchPage() {
     router.push(`/products/${productId}`);
   };
 
-  const handleAddToCart = (productId: string) => {
-    // Add to cart logic here
-    console.log('Added to cart:', productId);
-  };
+  // const handleAddToCart = () => {
+  //   // Add to cart logic here
+  //   // console.log('Added to cart:', productId);
+  // };
 
   const clearFilters = () => {
     setFilterCategory('all');
@@ -498,7 +498,7 @@ export default function SearchPage() {
                               variant={product.inStock ? "primary" : "secondary"}
                               className="w-full"
                               disabled={!product.inStock}
-                              onClick={() => handleAddToCart(product.id)}
+                              // onClick={() => handleAddToCart(product.id)}
                             >
                               {product.inStock ? 'Add to Cart' : 'Out of Stock'}
                             </Button>

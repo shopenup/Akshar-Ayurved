@@ -53,8 +53,6 @@ function PaginatedProducts({
   if (sortBy === "created_at") {
     queryParams["order"] = "created_at"
   }
-  console.log(`queryParams: `+ JSON.stringify(queryParams))
-  console.log(`productsIds: `+ productsIds)
 
   const productsQuery = useProducts({
     limit: PRODUCT_LIMIT,
@@ -63,7 +61,6 @@ function PaginatedProducts({
     sortBy: sortBy === 'price_asc' ? 'price' : sortBy === 'price_desc' ? 'price' : sortBy === 'created_at' ? 'created_at' : undefined,
   })
 
-  console.log(`productsQuery: `+ productsQuery?.products)
   const loadMoreRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {

@@ -29,9 +29,8 @@ export default function ShopenupProductsDemo() {
     router.push(`/products/${productId}`);
   };
 
-  const handleAddToCart = (productId: string) => {
-    console.log('Add to cart:', productId);
-  };
+  // const handleAddToCart = (_productId: string) => {
+  // };
 
   const LoadingSpinner = () => (
     <div className="flex justify-center py-8">
@@ -95,7 +94,7 @@ export default function ShopenupProductsDemo() {
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => handleAddToCart(product.id)}
+          // onClick={() => handleAddToCart(product.id)}
           disabled={!product.inStock}
         >
           Add to Cart

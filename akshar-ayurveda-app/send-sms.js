@@ -11,9 +11,7 @@ async function sendSMS() {
       from: process.env.TWILIO_PHONE_NUMBER,
       to: "+917801806153", // your verified mobile number
     });
-    console.log("Message sent:", msg.sid);
   } catch (err) {
-    console.error("Error sending SMS:", err.message);
   }
 }
 

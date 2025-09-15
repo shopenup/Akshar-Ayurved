@@ -16,8 +16,6 @@ export default async function orderPlacedHandler({
   status: string 
 }>) {
   try {
-    console.log("📱 SMS Subscriber triggered for order:", data.id);
-    console.log("📱 Event data received:", JSON.stringify(data, null, 2));
     
     const notificationModuleService = container.resolve("notification")
     
@@ -25,12 +23,9 @@ export default async function orderPlacedHandler({
     const phone = data.customer?.phone;
     
     if (!phone) {
-      console.warn("❌ No phone number found for order", data.id);
-      console.warn("❌ Customer data:", data.customer);
       return;
     }
     
-    console.log("✅ Phone number found:", phone);
     
     // Format phone number to ensure it starts with +91
     const formattedPhone = phone.startsWith('+91') ? phone : `+91${phone}`;
@@ -48,10 +43,8 @@ export default async function orderPlacedHandler({
       },
     });
     
-    console.log("✅ SMS notification sent successfully to:", formattedPhone);
     
-  } catch (error) {
-    console.error("❌ Error sending SMS notification:", error);
+  } catch {
   }
 }
 

@@ -28,16 +28,14 @@ export default function Cart() {
 
     try {
       await updateLineItemMutation.mutateAsync({ lineId, quantity: newQuantity });
-    } catch (error) {
-      console.error('Failed to update quantity:', error);
+    } catch {
     }
   };
 
   const removeItem = async (lineId: string) => {
     try {
       await deleteLineItemMutation.mutateAsync({ lineId });
-    } catch (error) {
-      console.error('Failed to remove item:', error);
+    } catch {
     }
   };
 

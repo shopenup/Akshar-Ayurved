@@ -75,6 +75,7 @@ const BillingAddress = ({
         first_name: address?.first_name || "",
         last_name: address?.last_name || "",
         address_1: address?.address_1 || "",
+        address_2: address?.address_2 || "",
         company: address?.company || "",
         postal_code: address?.postal_code || "",
         city: address?.city || "",

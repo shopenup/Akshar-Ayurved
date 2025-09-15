@@ -33,7 +33,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "app.aksharayurved.com",
+        hostname: "admin.aksharayurved.com",
       },
       {
         protocol: 'http',

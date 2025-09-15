@@ -150,8 +150,7 @@ export default function ProductCategoryPage() {
         ...prev,
         productCount: formattedProducts.length
       } : null);
-    } catch (err) {
-      console.error('Error fetching category data:', err);
+    } catch {
       setError('Failed to load category data');
     } finally {
       setLoading(false);
@@ -185,7 +184,6 @@ export default function ProductCategoryPage() {
       
       // Find the product
       const product = products.find(p => p.id === productId);
-      console.log(`product: `, product);
       
       if (!product) {
         showToast('Product not found', 'error');
@@ -209,7 +207,6 @@ export default function ProductCategoryPage() {
 
       const variantId = (productResponse.product as { variants?: Array<{ id?: string }> })?.variants?.[0]?.id;
       if (!variantId) {
-        console.error('No variant found for product:', productId);
         showToast('Product variant not found', 'error');
         return;
       }
@@ -223,8 +220,7 @@ export default function ProductCategoryPage() {
 
       showToast(`${product.name} added to cart`, 'success');
 
-    } catch (error) {
-      console.error('Error adding to cart:', error);
+    } catch {
       showToast('Failed to add product to cart', 'error');
     } finally {
       setAddingToCart(null);
@@ -265,8 +261,7 @@ export default function ProductCategoryPage() {
       // Save favorites
       localStorage.setItem('favorites', JSON.stringify(favorites));
 
-    } catch (error) {
-      console.error('Error managing favorites:', error);
+    } catch {
       showToast('Failed to update favorites', 'error');
     }
   };

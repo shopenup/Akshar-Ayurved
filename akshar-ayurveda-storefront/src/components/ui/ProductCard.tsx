@@ -55,7 +55,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   showAddToCart = true,
   className = '',
 }) => {
-  console.log('product', product);
+  //console.log('product', product);
   const handleProductClick = () => {
     if (onProductClick) {
       onProductClick(product.id);

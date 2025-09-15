@@ -13,10 +13,8 @@ export default function DebugSMSPage() {
     try {
       const result = await testSMSServiceHeaders();
       setHeaders(result);
-      console.log('Headers test result:', result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
-      console.error('Headers test error:', err);
     } finally {
       setLoading(false);
     }

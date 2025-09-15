@@ -81,8 +81,7 @@ export default function HomePage() {
                               null;
       
       return { productCount, productThumbnail };
-    } catch (error) {
-      console.error(`Error fetching data for category ${categoryId}:`, error);
+    } catch {
       return { productCount: 0, productThumbnail: null };
     }
   };
@@ -91,7 +90,6 @@ export default function HomePage() {
     const fetchCategoriesWithCounts = async () => {
       try {
         const res = await getCategoriesList();
-        console.log('Categories response:', res);
         
         const categoriesWithCounts = await Promise.all(
           (res.product_categories || []).map(async (category: Category) => {
@@ -104,11 +102,9 @@ export default function HomePage() {
           })
         );
         
-        console.log('Categories with counts:', categoriesWithCounts);
         setCategories(categoriesWithCounts as Category[]);
         setCategoriesLoading(false);
       } catch (err: unknown) {
-        console.error('Categories error:', err);
         setCategoriesError(err instanceof Error ? err.message : 'Failed to fetch categories');
         setCategoriesLoading(false);
       }
@@ -142,14 +138,12 @@ export default function HomePage() {
   };
 
   // const handleAddToCart = (productId: string) => {
-  //   console.log('Add to cart:', productId);
   // };
 
   const handleAddToCart = async (productId: string) => {
     try {
       // Find the product
       const product = newArrivals?.find(p => p.id === productId);
-      console.log(`product: `, product);
       
       if (!product) {
         showToast('Product not found', 'error');
@@ -173,7 +167,6 @@ export default function HomePage() {
 
       const variantId = productResponse.product?.variants?.[0]?.id;
       if (!variantId) {
-        console.error('No variant found for product:', productId);
         showToast('Product variant not found', 'error');
         return;
       }
@@ -188,13 +181,11 @@ export default function HomePage() {
       showToast(`${product.title} added to cart`, 'success');
 
     } catch {
-      console.error('Error adding to cart:');
       showToast('Failed to add product to cart', 'error');
     }
   };
 
-  const handleNewsletterSubmit = async (email: string) => {
-    console.log('Newsletter subscription:', email);
+  const handleNewsletterSubmit = async () => {
     // Add your newsletter subscription logic here
   };
 

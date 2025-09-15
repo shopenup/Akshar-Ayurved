@@ -74,7 +74,6 @@ export default function GalleryPage() {
       try {
         setCatLoading(true);
           const cats = await getCategoriesList();
-        console.log('cats', cats);
         setCategories(cats.product_categories || []);
       } catch (err: unknown) {
         setCatError(err instanceof Error ? err.message : 'Failed to fetch categories');
@@ -101,7 +100,6 @@ export default function GalleryPage() {
           query.category_id = selectedCategory;
         }
         
-        console.log('Fetching products with query:', query);
         
         const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
           '/store/products',
@@ -113,13 +111,9 @@ export default function GalleryPage() {
         );
         
         const sdkProducts = response.products || [];
-        console.log('API Response:', response);
-        console.log('Total products returned:', sdkProducts.length);
-        console.log('Product IDs:', sdkProducts.map(p => ({ id: p.id, title: p.title, status: p.status })));
         
         setProducts(sdkProducts as Product[]);
       } catch (err: unknown) {
-        console.error('Error fetching products:', err);
         setError(err instanceof Error ? err.message : 'Failed to fetch products');
       } finally {
         setLoading(false);

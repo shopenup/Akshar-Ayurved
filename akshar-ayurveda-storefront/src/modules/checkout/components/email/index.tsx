@@ -37,7 +37,6 @@ const Email = ({
   const validCountryCode = countryCode || 'in'
 
   const onSubmit = (values: z.infer<typeof emailFormSchema>) => {
-    console.log("🔍 Email form submitted with:", { email: values.email, countryCode: validCountryCode })
     mutate(
       { ...values, country_code: validCountryCode },
       {

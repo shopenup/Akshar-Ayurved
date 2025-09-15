@@ -9,7 +9,6 @@ export default async function sendPasswordResetNotification({
   const query = container.resolve(ContainerRegistrationKeys.QUERY);
   const notificationModuleService = container.resolve(Modules.NOTIFICATION);
 
-  console.log("data: ", data);
   const isCustomer = data.actor_type === "customer" || data.actor_type === "logged-in-customer";
   
   const fields = [
@@ -24,7 +23,6 @@ export default async function sendPasswordResetNotification({
     fields,
     filters: { email: data.entity_id },
   });
-  console.log("customers: ", customers);
   const customer = customers[0] as Pick<CustomerDTO, (typeof fields)[number]>;
 
   await notificationModuleService.createNotifications({

@@ -7,7 +7,6 @@ import { sdk } from '@lib/config';
 import { HttpTypes } from '@shopenup/types';
 import { useAddLineItem } from '@hooks/cart';
 import { useCountryCode } from '@hooks/country-code';
-import { productService } from '@lib/shopenup/product';
 
 // Product interface based on Shopenup API response
 interface Product {
@@ -98,7 +97,6 @@ export default function ProductPage() {
       
       try {
         setLoading(true);
-        //console.log('Fetching product with ID:', id);
         
         // Resolve a valid region_id (UUID) by looking up regions once and caching
         const cookieMatch = document.cookie.match(/(?:^|; )country-code=([^;]+)/)
@@ -131,8 +129,7 @@ export default function ProductPage() {
                 localStorage.setItem('country_code', countryCode)
               }
             }
-          } catch (e) {
-            console.warn('Failed to resolve regions, proceeding without region_id', e)
+          } catch {
           }
         }
         
@@ -154,9 +151,6 @@ export default function ProductPage() {
         });
 
         const productData = response.products[0];
-        //console.log('Fetched product data:', productData);
-        //console.log('Product images:', productData?.images);
-        //console.log('Product thumbnail:', productData?.thumbnail);
         
         if (productData) {
           // Use type assertion to bypass complex type mismatches
@@ -175,16 +169,14 @@ export default function ProductPage() {
   // After product is loaded, fetch related products
   React.useEffect(() => {
     const fetchRelated = async () => {
-      console.log('Fetching related products', product);
       // Fix: Check for product and at least one category with an id
       if (!product || !product.categories || !product.categories[0] || !product.categories[0].id) return;
       setRelatedLoading(true);
       try {
-        const products = await productService.getProducts({
-          category: product.categories[0].id,
-          limit: 8,
-        });
-        console.log('Related products:', products);
+        // const _products = await productService.getProducts({
+        //   category: product.categories[0].id,
+        //   limit: 8,
+        // });
         // Fix: Ensure type compatibility by mapping to the expected Product type
         // setRelatedProducts(
         //   (products as any[]).filter((p: any) => p.id !== product.id) as any
@@ -213,25 +205,13 @@ export default function ProductPage() {
   }
 
   // Debug logging
-  //console.log('Product data received:', product);
-  //console.log('Product price:', product?.price);
-  //console.log('Product original_price:', product?.original_price);
-  //console.log('Product variants:', product?.variants);
-  //console.log('Product images:', product?.images);
-  //console.log('Product images type:', typeof product?.images);
-  //console.log('Product images array:', Array.isArray(product?.images) ? product?.images : 'Not an array');
-  //console.log('Product thumbnail:', product?.thumbnail);
-  //console.log('Product thumbnail type:', typeof product?.thumbnail);
-  //console.log('Active image index:', activeImageIndex);
   
   // Log the complete product structure for debugging
   if (product) {
-    //console.log('🔍 Complete product structure:', JSON.stringify(product, null, 2));
   }
   
   // Success log
   if (product) {
-    //console.log('✅ Product page rendered successfully');
   }
 
   // Handle loading state
@@ -300,8 +280,7 @@ export default function ProductPage() {
       // Show success message
       showToast(`${product.title} (${quantity}) successfully added to cart!`, 'success');
       
-    } catch (error) {
-      console.error('Failed to add to cart:', error);
+    } catch {
       showToast('Failed to add item to cart. Please try again.', 'error');
     } finally {
       setIsLoading(false);
@@ -443,12 +422,6 @@ export default function ProductPage() {
                       : [];
 
                     const imageSrc = validImages[activeImageIndex] || product.thumbnail;
-                    //console.log('Valid images array:', validImages);
-                    //console.log('Main image source:', imageSrc);
-                    //console.log('Image source type:', typeof imageSrc);
-                    //console.log('Image source value:', imageSrc);
-                    //console.log('Product images:', product.images);
-                    //console.log('Product thumbnail:', product.thumbnail);
                     
                     if (imageSrc && typeof imageSrc === 'string') {
                       return (
@@ -459,7 +432,6 @@ export default function ProductPage() {
                           className="object-contain"
                           sizes="(max-width: 1024px) 100vw, 50vw"
                           onError={(e) => {
-                            console.error('Image failed to load:', imageSrc);
                             e.currentTarget.style.display = 'none';
                           }}
                           unoptimized={typeof imageSrc === 'string' && imageSrc.startsWith('http://localhost')} // Disable optimization for localhost
@@ -564,7 +536,6 @@ export default function ProductPage() {
                           height={80}
                           className="object-contain w-full h-full"
                           onError={(e) => {
-                            console.error('Thumbnail failed to load:', image);
                             e.currentTarget.style.display = 'none';
                           }}
                         />

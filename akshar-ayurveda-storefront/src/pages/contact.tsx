@@ -8,11 +8,10 @@ import Card from '../components/ui/Card';
 export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (formData: { name: string; email: string; subject: string; message: string }) => {
+  const handleSubmit = async () => {
     setIsSubmitting(true);
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 2000));
-    console.log('Contact form submitted:', formData);
     setIsSubmitting(false);
     // Here you would typically send the data to your backend
   };

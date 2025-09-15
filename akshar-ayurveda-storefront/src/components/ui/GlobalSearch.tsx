@@ -61,7 +61,7 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        console.log('GlobalSearch - Fetching products...');
+        ////console.log('GlobalSearch - Fetching products...');
 
         // Use the correct store products endpoint
         let productsData;
@@ -73,13 +73,13 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
               'x-publishable-api-key': process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || 'pk_03d087dc82a71a3723b4ebfc54024a1b7ad03ab5c58b15d27129f8c482bfac5f',
             },
           });
-        } catch (error) {
-          console.log('GlobalSearch - API call failed:', error);
+        } catch {
+          ////console.log('GlobalSearch - API call failed:', error);
           // Fallback to empty array if API fails
           productsData = { products: [] };
         }
 
-        console.log('GlobalSearch - Products data:', productsData);
+        ////console.log('GlobalSearch - Products data:', productsData);
 
         let productsArray: ApiProduct[] = [];
         if (Array.isArray(productsData)) {
@@ -105,7 +105,7 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
           }));
 
           setAllProducts(mappedProducts);
-          console.log('GlobalSearch - Mapped products:', mappedProducts);
+          ////console.log('GlobalSearch - Mapped products:', mappedProducts);
         }
       } catch (error) {
         console.error('GlobalSearch - Error fetching products:', error);
@@ -142,7 +142,7 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
           }
         ];
         setAllProducts(fallbackProducts);
-        console.log('GlobalSearch - Using fallback products:', fallbackProducts);
+        ////console.log('GlobalSearch - Using fallback products:', fallbackProducts);
       }
     };
 
@@ -153,9 +153,9 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
   const searchProducts = (searchQuery: string): Product[] => {
     if (!searchQuery.trim()) return [];
 
-    console.log('GlobalSearch - Searching for:', searchQuery);
-    console.log('GlobalSearch - Available products:', allProducts.length);
-    console.log('GlobalSearch - All products:', allProducts);
+    ////console.log('GlobalSearch - Searching for:', searchQuery);
+    ////console.log('GlobalSearch - Available products:', allProducts.length);
+    ////console.log('GlobalSearch - All products:', allProducts);
 
     const query = searchQuery.toLowerCase();
     const filteredProducts = allProducts.filter(product => {
@@ -163,18 +163,10 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
       const categoryMatch = product.category?.toLowerCase().includes(query);
       const descriptionMatch = product.description?.toLowerCase().includes(query);
 
-      console.log('GlobalSearch - Product:', product.name, {
-        nameMatch,
-        categoryMatch,
-        descriptionMatch,
-        productName: product.name,
-        productCategory: product.category
-      });
-
       return nameMatch || categoryMatch || descriptionMatch;
     });
 
-    console.log('GlobalSearch - Filtered results:', filteredProducts);
+    ////console.log('GlobalSearch - Filtered results:', filteredProducts);
     return filteredProducts.slice(0, 6); // Limit to 6 results for dropdown
   };
 

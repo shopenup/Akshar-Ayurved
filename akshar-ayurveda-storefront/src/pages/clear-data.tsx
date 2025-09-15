@@ -24,9 +24,7 @@ export default function ClearDataPage() {
       }
       
       setIsCleared(true);
-      console.log("✅ All Shopenup data cleared using proper utility functions!");
-    } catch (error) {
-      console.error("❌ Error clearing data:", error);
+    } catch {
     } finally {
       setIsClearing(false);
     }

@@ -61,13 +61,13 @@ export default function BuyAgainPage() {
 
   const handleAddToCart = () => {
     // Add selected items to cart
-    console.log('Adding to cart:', selectedItems);
+    //console.log('Adding to cart:', selectedItems);
     router.push('/cart');
   };
 
   const handleBuyNow = () => {
     // Add selected items to cart and go to checkout
-    console.log('Buying now:', selectedItems);
+    //console.log('Buying now:', selectedItems);
     router.push('/checkout');
   };
 

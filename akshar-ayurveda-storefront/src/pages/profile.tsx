@@ -83,8 +83,7 @@ export default function ProfilePage() {
     try {
       await updateCustomer.mutateAsync(editForm);
       setIsEditing(false);
-    } catch (error) {
-      console.error('Failed to update profile:', error);
+    } catch {
     }
   };
 
@@ -99,8 +98,7 @@ export default function ProfilePage() {
       resetAppState();
       
       router.push('/');
-    } catch (error) {
-      console.error('Failed to sign out:', error);
+    } catch {
     }
   };
 
@@ -404,8 +402,7 @@ export default function ProfilePage() {
                             country_code: 'IN',
                             phone: ''
                           });
-                        } catch (err) {
-                          console.error('Failed to add address', err);
+                        } catch {
                         }
                       }}
                       className="space-y-8"

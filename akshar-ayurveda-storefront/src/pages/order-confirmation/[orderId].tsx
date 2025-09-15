@@ -101,7 +101,6 @@ export default function OrderConfirmationPage() {
     try {
       if (!orderId) return;
 
-      console.log('🔍 Loading order:', orderId);
       
       // Fetch order from the backend
       const orderData = await sdk.store.order
@@ -116,7 +115,6 @@ export default function OrderConfirmationPage() {
         });
 
       setOrder(orderData.order as Order);
-      console.log('📦 Order data structure:', JSON.stringify(orderData.order, null, 2));
       setLoading(false);
     } catch (error) {
       console.error('Error loading order:', error);
@@ -133,11 +131,9 @@ export default function OrderConfirmationPage() {
         try {
           const authHeaders = await getAuthHeaders();
           if (!('authorization' in authHeaders) || !authHeaders.authorization) {
-            console.log('🔍 No auth token found on order confirmation page');
             // Try to restore from localStorage if available
             const storedToken = localStorage.getItem('_shopenup_jwt_backup');
             if (storedToken) {
-              console.log('🔧 Restoring auth token from backup');
               await setAuthToken(storedToken);
               localStorage.removeItem('_shopenup_jwt_backup');
             }

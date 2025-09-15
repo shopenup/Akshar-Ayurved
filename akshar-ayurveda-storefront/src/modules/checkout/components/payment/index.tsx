@@ -92,7 +92,6 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
   )
   
   // Debug: Log available payment methods
-  console.log("🔍 Available payment methods:", availablePaymentMethods)
   
   // Filter to only show Stripe and Manual Payment
   const supportedPaymentMethods = availablePaymentMethods?.filter(method => 
@@ -105,7 +104,6 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
   ]
   
   // Debug: Log filtered payment methods
-  console.log("✅ Supported payment methods:", supportedPaymentMethods)
 
   const isStripe = isStripeFunc(activeSession?.provider_id)
   const stripeReady = useContext(StripeContext)

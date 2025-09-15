@@ -36,18 +36,28 @@ export default function OrdersPage() {
         const response = await sdk.client.fetch<{ orders: HttpTypes.StoreOrder[] }>(
           '/store/orders',
           {
+            query: { 
+              limit: 100, 
+              offset: 0, 
+              order: "-created_at" 
+            },
             headers: authHeaders,
             cache: "no-store",
           }
         );
 
         if (response.orders) {
-          setOrders(response.orders);
+          // Sort orders by created_at in descending order (latest first)
+          const sortedOrders = response.orders.sort((a, b) => {
+            const dateA = new Date(a.created_at || 0).getTime();
+            const dateB = new Date(b.created_at || 0).getTime();
+            return dateB - dateA; // Descending order (latest first)
+          });
+          setOrders(sortedOrders);
         } else {
           setOrders([]);
         }
-      } catch (error) {
-        console.error('Error fetching orders:', error);
+      } catch {
         setError('Failed to load orders. Please try again.');
       } finally {
         setIsLoading(false);

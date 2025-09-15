@@ -42,7 +42,7 @@ export class ShopenupIntegration {
       await import('./ui').then(({ initializeShopenupUI }) => initializeShopenupUI());
       
       this.initialized = true;
-      console.log('Shopenup integration initialized successfully');
+      //console.log('Shopenup integration initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Shopenup integration:', error);
       throw error;

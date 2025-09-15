@@ -112,7 +112,6 @@ export default function OrderDetailsPage() {
         );
         if (response.order) {
           setOrder(response.order);
-          console.log("Order-details-page", response.order);
         } else {
           setError('Order not found.');
         }
@@ -404,16 +403,7 @@ export default function OrderDetailsPage() {
                     <span className="font-semibold">
                       ₹{(() => {
                         // Debug: Log all possible price fields
-                        console.log('Order price fields:', {
-                          subtotal: order.subtotal,
-                          total: order.total,
-                          items: order.items?.map(item => ({
-                            unit_price: item.unit_price,
-                            quantity: item.quantity,
-                            total: item.total
-                          })),
-                          raw_order: order
-                        });
+                       
                         
                         // Calculate from items if available
                         if (order.items && order.items.length > 0) {
@@ -432,15 +422,6 @@ export default function OrderDetailsPage() {
                     <span className="text-gray-600">Shipping:</span>
                     <span className="font-semibold">
                       ₹{(() => {
-                        // Debug: Log shipping fields
-                        console.log('Shipping fields:', {
-                          shipping_total: order.shipping_total,
-                          shipping_methods: order.shipping_methods,
-                          order_total: order.total,
-                          order_subtotal: order.subtotal,
-                          raw_order: order
-                        });
-                        
                         // Try different shipping fields
                         if (order.shipping_total) {
                           return order.shipping_total.toFixed(2);

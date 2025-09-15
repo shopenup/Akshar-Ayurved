@@ -61,7 +61,7 @@ const Review = ({ cart }: { cart: StoreCart }) => {
           <PaymentButton
             cart={cart}
             selectPaymentMethod={() => {
-              router.push("/order-success", { scroll: false })
+              router.push("/order-confirmation", { scroll: false })
             }}
           />
         </>

@@ -108,8 +108,8 @@ export class AyurvedaECommercePackageManager {
       // this.ayurvedaProduct = new AyurvedaProductIntegration(this.product);
       // this.ayurvedaCustomer = new AyurvedaCustomerIntegration(this.customer);
 
-      console.log('ShopenUp package integration layer initialized successfully');
-      console.log('Ready to integrate with 65 ShopenUp packages');
+      //console.log('ShopenUp package integration layer initialized successfully');
+      //console.log('Ready to integrate with 65 ShopenUp packages');
     } catch (error) {
       console.error('Error initializing package integration layer:', error);
       throw new Error('Failed to initialize ShopenUp package integration');

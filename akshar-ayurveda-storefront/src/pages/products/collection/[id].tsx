@@ -108,12 +108,12 @@ export default function CollectionPage() {
     router.push(`/products/${productId}`);
   };
 
-  const handleAddToCart = (productId: string) => {
-    console.log('Add to cart:', productId);
+  const handleAddToCart = () => {
+    //console.log('Add to cart:', productId);
   };
 
-  const handleSearch = (query: string) => {
-    console.log('Search:', query);
+  const handleSearch = () => {
+    //console.log('Search:', query);
   };
 
   const filteredProducts = products.filter(product => 

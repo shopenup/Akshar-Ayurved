@@ -44,21 +44,14 @@ export default async function orderPlacedHandler({
     ],
     filters: { id: data.id },
     })
-  console.log(order)
   // const phone =
   //   order.billing_address?.phone ||
   //   order.customer?.phone
 
   // if (!phone) {
-  //   console.warn("No phone number found on order", order.id)
-  //   console.warn("No phone number found on order", order)
-
-  //   console.log("customer.phone:", order.customer?.phone)
-  //   console.log("shipping_address.phone:", order.billing_address?.phone)
   //   return
   // }
 // const phone = 98
-  // console.log("✅ Phone number found:", phone)
 
   // await notificationModuleService.createNotifications({
   //   to: `+91` + order.billing_address.phone,
@@ -74,7 +67,6 @@ export default async function orderPlacedHandler({
   order.customer?.phone
 
 if (!phone) {
-  console.warn("No phone number found for order", order.id)
   return
 }
 

@@ -137,7 +137,6 @@
 // Initialize Shopenup app (placeholder for now)
 export async function initializeShopenup() {
   try {
-    console.log('Initializing ShopenUp framework...');
     
     // Placeholder app object for now
     const app = {
@@ -429,14 +428,12 @@ export async function initializeShopenup() {
         notification: null
       },
       initialize: async () => {
-        console.log('ShopenUp modules initialized (placeholder)');
       }
     };
     
     // Initialize core services
     await app.initialize();
     
-    console.log('ShopenUp framework initialized successfully');
     
     return app;
   } catch (error) {

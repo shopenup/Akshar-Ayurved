@@ -27,7 +27,6 @@ export const RazorpayPaymentButton = ({
   const placeOrder = usePlaceOrder()
 
   
-  console.log(`session_data: `+JSON.stringify(session))
   const onPaymentCompleted = useCallback(async () => {
     try {
       const result = await placeOrder.mutateAsync(null);
@@ -52,7 +51,6 @@ export const RazorpayPaymentButton = ({
               items: cart.items || [],
               status: 'processing'
             });
-            console.log('✅ SMS notification sent through subscriber system');
           }
         } catch (smsError) {
           console.warn('⚠️ Failed to send SMS notification through subscriber:', smsError);
@@ -61,7 +59,6 @@ export const RazorpayPaymentButton = ({
         
         // Redirect to order success page
         const orderId = (result as { order?: { id?: string } })?.order?.id || `ORD${Date.now()}`;
-        console.log('🚀 Razorpay: Navigating to order success page with orderId:', orderId);
         router.push(`/order-confirmation/${orderId}`);
       }
     } catch {
@@ -70,6 +67,7 @@ export const RazorpayPaymentButton = ({
     }
   }, [
     placeOrder,
+    router,
     cart.shipping_address?.phone,
     cart.email,
     cart.shipping_address?.first_name,
@@ -126,7 +124,6 @@ export const RazorpayPaymentButton = ({
       
       
     };
-    console.log(JSON.stringify(options.amount))
     //await waitForPaymentCompletion();
     
     
@@ -141,7 +138,6 @@ export const RazorpayPaymentButton = ({
     razorpay.on("payment.authorized", function () {
       placeOrder.mutate(null, {
         onSuccess: async (result) => {
-          console.log(`authorized: ${JSON.stringify(result)}`)
           if (result?.type === "order" && result.order) {
           // Send SMS notification through subscriber system
           try {
@@ -162,7 +158,6 @@ export const RazorpayPaymentButton = ({
                 items: cart.items || [],
                 status: 'processing'
               });
-              console.log('✅ SMS notification sent through subscriber system');
             }
           } catch (smsError) {
             console.warn('⚠️ Failed to send SMS notification through subscriber:', smsError);
@@ -184,6 +179,7 @@ export const RazorpayPaymentButton = ({
     // )
   }, [
     Razorpay,
+    router,
     cart.billing_address?.first_name,
     cart.billing_address?.last_name,
     cart.currency_code,
@@ -198,13 +194,11 @@ export const RazorpayPaymentButton = ({
     onPaymentCompleted,
     placeOrder
   ]);
-  console.log("orderData"+JSON.stringify(orderData))
   return (
     <>
       <Button
         disabled={submitting || notReady || !orderData?.razorpayOrder?.id||orderData?.razorpayOrder?.id == ''}
         onClick={()=>{
-          console.log(`processing order id: ${orderData.razorpayOrder.id}`)
           handlePayment()}
         }
       >

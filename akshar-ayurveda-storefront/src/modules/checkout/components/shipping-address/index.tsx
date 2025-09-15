@@ -31,32 +31,14 @@ const ShippingAddress = ({
 
   const formData = useWatch({ control })
 
-  // Debug logging
-  console.log('Customer addresses:', customer?.addresses)
-  console.log('Selected address ID:', selectedAddressId)
-  console.log('Form data:', formData)
-  console.log('Cart region:', cart?.region)
-  console.log('Cart region ID:', cart?.region?.id)
-  console.log('Cart region countries:', cart?.region?.countries)
-  console.log('Cart region countries ISO codes:', cart?.region?.countries?.map(c => ({ 
-    id: c.id, 
-    iso_2: c.iso_2, 
-    iso_3: c.iso_3, 
-    name: c.display_name,
-    numeric_code: c.num_code 
-  })))
-
 
 
 
   useEffect(() => {
-    console.log('useEffect triggered - cart:', cart, 'customer:', customer)
     
     // If customer has addresses and no address is selected yet, select the first one
     if (customer?.addresses?.length && !selectedAddressId) {
-      console.log('Setting default address selection')
       const defaultAddress = customer.addresses.find((a) => a.is_default_shipping) || customer.addresses[0]
-      console.log('Default address:', defaultAddress)
       
       setSelectedAddressId(defaultAddress.id)
       
@@ -70,7 +52,6 @@ const ShippingAddress = ({
       if (!regionCountry && cart?.region?.countries?.length) {
         const fallbackCountry = cart.region.countries[0]
         countryCodeToUse = fallbackCountry.iso_2 || ""
-        console.warn(`Default address country ${defaultAddress.country_code} not found in region. Using fallback: ${fallbackCountry.iso_2} (${fallbackCountry.display_name})`)
       }
       
       const addressData = {
@@ -86,7 +67,6 @@ const ShippingAddress = ({
         phone: defaultAddress.phone || "",
       }
       
-      console.log('Setting form data:', addressData)
       setValue("shipping_address", addressData)
     }
     
@@ -107,7 +87,6 @@ const ShippingAddress = ({
       })
       
       if (matchingAddress) {
-        console.log('Found matching address:', matchingAddress.id)
         setSelectedAddressId(matchingAddress.id)
       }
     }
@@ -145,7 +124,6 @@ const ShippingAddress = ({
           <div className="space-y-4">
             {customer?.addresses?.map((address) => {
               const isSelected = address.id === selectedAddressId
-              console.log('Rendering address:', address.id, 'Selected:', selectedAddressId, 'IsSelected:', isSelected)
               
               return (
                 <div
@@ -156,29 +134,21 @@ const ShippingAddress = ({
                       : 'border-gray-200 hover:border-green-300'
                   }`}
                   onClick={() => {
-                    console.log('Address clicked:', address.id)
-                    console.log('Address country_code:', address.country_code)
-                    console.log('Cart region countries:', cart?.region?.countries)
                     
                     // Check if the address country is in the region
                     const regionCountry = cart?.region?.countries?.find(
                       (c) => c.iso_2 === address.country_code
                     )
                     
-                    console.log('Found region country:', regionCountry)
                     
                     // If country not found in region, use the first available country as fallback
                     let countryCodeToUse = address.country_code || ""
                     if (!regionCountry && cart?.region?.countries?.length) {
                       const fallbackCountry = cart.region.countries[0]
                       countryCodeToUse = fallbackCountry.iso_2 || ""
-                      console.warn(`Country ${address.country_code} not found in region. Using fallback: ${fallbackCountry.iso_2} (${fallbackCountry.display_name})`)
                     }
                     
                     if (!regionCountry) {
-                      console.warn('Address country not found in region! Available countries:', 
-                        cart?.region?.countries?.map(c => ({ iso_2: c.iso_2, name: c.display_name }))
-                      )
                     }
                     
                     setSelectedAddressId(address.id)
@@ -196,7 +166,6 @@ const ShippingAddress = ({
                       phone: address.phone || "",
                     }
                     
-                    console.log('Setting address data:', addressData)
                     setValue("shipping_address", addressData)
                   }}
                 >
@@ -332,7 +301,6 @@ const ShippingAddress = ({
                           if (!regionCountry && cart?.region?.countries?.length) {
                             const fallbackCountry = cart.region.countries[0]
                             countryCodeToUse = fallbackCountry.iso_2 || ""
-                            console.warn(`New address country ${newAddressData.country_code} not found in region. Using fallback: ${fallbackCountry.iso_2} (${fallbackCountry.display_name})`)
                           }
                           
                           const addressData = {
@@ -410,7 +378,6 @@ const ShippingAddress = ({
               region: cart?.region,
               selectedKey: formData["shipping_address.country_code"] || null,
               onSelectionChange: (value) => {
-                console.log('Country selected:', value)
                 handleChange({
                   target: {
                     name: "shipping_address.country_code",

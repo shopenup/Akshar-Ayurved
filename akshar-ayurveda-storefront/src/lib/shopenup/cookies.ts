@@ -85,11 +85,11 @@ export const removeCartId = async () => {
 export const clearAllCartData = async () => {
   await removeCartId()
   await removeAuthToken()
-  console.log('🧹 All cart and auth data cleared')
+  //console.log('🧹 All cart and auth data cleared')
 }
 
 // Function to clear only auth data (for logout without clearing cart)
 export const clearAuthDataOnly = async () => {
   await removeAuthToken()
-  console.log('🔐 Auth data cleared, cart data preserved')
+  //console.log('🔐 Auth data cleared, cart data preserved')
 }

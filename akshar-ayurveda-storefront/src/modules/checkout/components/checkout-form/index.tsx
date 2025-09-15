@@ -19,31 +19,11 @@ export const CheckoutForm = withReactQueryProvider<{
   const { data: cart, isPending } = useCart({ enabled: true })
   const router = useRouter()
   
-  // Debug cart structure
-  React.useEffect(() => {
-    if (cart) {
-      console.log('🛒 Cart structure debug:', {
-        id: cart.id,
-        email: cart.email,
-        hasShippingAddress: !!cart.shipping_address?.address_1,
-        hasBillingAddress: !!cart.billing_address?.address_1,
-        shippingMethodsCount: cart.shipping_methods?.length || 0,
-        hasPaymentCollection: !!cart.payment_collection,
-        itemsCount: cart.items?.length || 0,
-        items: cart.items?.map(item => ({
-          id: item.id,
-          variant_id: item.variant_id,
-          quantity: item.quantity,
-          hasVariant: !!item.variant
-        }))
-      })
-    }
-  }, [cart])
+
 
   React.useEffect(() => {
     if (!step && cart) {
       const checkoutStep = getCheckoutStep(cart)
-      console.log('🔄 Redirecting to step:', checkoutStep)
       router.push(`/checkout?step=${checkoutStep}`)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

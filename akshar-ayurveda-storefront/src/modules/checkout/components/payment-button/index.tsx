@@ -115,14 +115,11 @@ const StripePaymentButton = ({
                 items: data.order.items || [],
                 status: data.order.status || 'processing'
               });
-              console.log('✅ SMS notification sent through subscriber system');
             }
-          } catch (smsError) {
-            console.warn('⚠️ Failed to send SMS notification through subscriber:', smsError);
+          } catch {
             // Continue with order placement even if SMS fails
           }
           
-          console.log('🚀 Stripe: Navigating to order confirmation page with orderId:', data.order.id)
           router.push(`/order-confirmation/${data.order.id}`)
         } else if (data?.type === "cart" && data.error) {
           setErrorMessage(data.error.message)
@@ -233,14 +230,11 @@ const PayPalPaymentButton = ({
                 items: data.order.items || [],
                 status: data.order.status || 'processing'
               });
-              console.log('✅ SMS notification sent through subscriber system');
             }
-          } catch (smsError) {
-            console.warn('⚠️ Failed to send SMS notification through subscriber:', smsError);
+          } catch {
             // Continue with order placement even if SMS fails
           }
           
-          console.log('🚀 PayPal: Navigating to order confirmation page with orderId:', data.order.id)
           router.push(`/order-confirmation/${data.order.id}`)
         } else if (data?.type === "cart" && (data as { error: { message: string } }).error) {
           setErrorMessage((data as { error: { message: string } }).error.message)
@@ -300,13 +294,16 @@ const PayPalPaymentButton = ({
 
 const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
-  const placeOrder = usePlaceOrder()
-
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [orderStatus, setOrderStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
   const router = useRouter()
 
-  const onPaymentCompleted = () => {
-    placeOrder.mutate(null, {
-      onSuccess: async (data) => {
+  const placeOrder = usePlaceOrder({
+    onSuccess: async (data) => {
+        
+        setOrderStatus('success')
+        setIsProcessing(false)
+        
         if (data?.type === "order" && data.order) {
           // Send SMS notification through subscriber system
           try {
@@ -327,38 +324,124 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
                 items: data.order.items || [],
                 status: data.order.status || 'processing'
               });
-              console.log('✅ SMS notification sent through subscriber system');
             }
-          } catch (smsError) {
-            console.warn('⚠️ Failed to send SMS notification through subscriber:', smsError);
+          } catch {
             // Continue with order placement even if SMS fails
           }
           
-          console.log('🚀 Manual Test: Navigating to order success page with orderId:', data.order.id)
           router.push(`/order-confirmation/${data.order.id}`)
         } else if (data?.type === "cart" && (data as { error: { message: string } }).error) {
           setErrorMessage(data.error.message)
+        } else {
         }
       },
       onError: (error) => {
         setErrorMessage(error.message)
+        setOrderStatus('error')
+        setIsProcessing(false)
       },
     })
+
+  const onPaymentCompleted = () => {
+    setIsProcessing(true)
+    setOrderStatus('processing')
+    setErrorMessage(null)
+    placeOrder.mutate(null)
   }
 
   const handlePayment = () => {
     onPaymentCompleted()
   }
 
+  const resetOrder = () => {
+    setOrderStatus('idle')
+    setIsProcessing(false)
+    setErrorMessage(null)
+  }
+
+  const getButtonContent = () => {
+    switch (orderStatus) {
+      case 'processing':
+        return (
+          <div className="flex items-center justify-center space-x-2">
+            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+            <span>Processing Order...</span>
+          </div>
+        )
+      case 'success':
+        return (
+          <div className="flex items-center justify-center space-x-2">
+            <div className="animate-pulse">✅</div>
+            <span>Order Placed!</span>
+          </div>
+        )
+      case 'error':
+        return (
+          <div className="flex items-center justify-center space-x-2">
+            <div className="animate-bounce">❌</div>
+            <span>Try Again</span>
+          </div>
+        )
+      default:
+        return 'Place Order'
+    }
+  }
+
+  const getButtonStyles = () => {
+    const baseStyles = "px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium transition-all duration-300 w-full transform"
+    
+    switch (orderStatus) {
+      case 'processing':
+        return `${baseStyles} bg-blue-600 text-white hover:bg-blue-700 animate-pulse`
+      case 'success':
+        return `${baseStyles} bg-green-600 text-white hover:bg-green-700 scale-105`
+      case 'error':
+        return `${baseStyles} bg-red-600 text-white hover:bg-red-700 animate-pulse`
+      default:
+        return `${baseStyles} bg-green-600 text-white hover:bg-green-700 hover:scale-105`
+    }
+  }
+
   return (
     <>
       <Button
-        disabled={notReady}
+        disabled={notReady || isProcessing}
         onClick={handlePayment}
-        className="bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors w-full"
+        className={getButtonStyles()}
       >
-        Place order
+        {getButtonContent()}
       </Button>
+      
+      {orderStatus === 'processing' && (
+        <div className="mt-2 text-center">
+          <div className="text-sm text-gray-600 animate-pulse">
+            Please wait while we process your order...
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+            <div className="bg-blue-600 h-2 rounded-full animate-pulse" style={{width: '100%'}}></div>
+          </div>
+        </div>
+      )}
+      
+      {orderStatus === 'success' && (
+        <div className="mt-2 text-center animate-fade-in">
+          <div className="text-sm text-green-600 font-medium">
+            🎉 Order placed successfully! Redirecting...
+          </div>
+        </div>
+      )}
+      
+      {orderStatus === 'error' && (
+        <div className="mt-2 text-center">
+          <Button
+            onClick={resetOrder}
+            className="bg-gray-600 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-gray-700 transition-colors"
+          >
+            Try Again
+          </Button>
+        </div>
+      )}
+      
       <ErrorMessage error={errorMessage} />
     </>
   )

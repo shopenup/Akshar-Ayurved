@@ -18,7 +18,7 @@ export default function Footer() {
     const fetchCategories = async () => {
       try {
         const categoriesData = await getCategoriesList();
-        console.log('Footer - Categories data:', categoriesData);
+        ////console.log('Footer - Categories data:', categoriesData);
         
         // Filter and limit to first 5 categories for footer
         const filteredCategories = categoriesData

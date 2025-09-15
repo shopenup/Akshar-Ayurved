@@ -17,7 +17,6 @@ async function getRegionMap() {
     !regionMap.keys().next().value ||
     regionMapUpdated < Date.now() - 3600 * 1000
   ) {
-    console.log({ PUBLISHABLE_API_KEY })
     // Fetch regions from Shopenup. We can't use the JS client here because middleware is running on Edge and the client needs a Node environment.
     try {
       const response = await fetch(`${BACKEND_URL}/store/regions`, {

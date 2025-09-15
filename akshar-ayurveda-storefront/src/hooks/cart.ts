@@ -251,14 +251,14 @@ export const addressesFormSchema = z
     shipping_address: z.object({
       first_name: z.string().min(1),
       last_name: z.string().min(1),
-      company: z.string().optional(),
+      company: z.string().optional().nullable(),
       address_1: z.string().min(1),
-      address_2: z.string().optional(),
+      address_2: z.string().optional().nullable(),
       city: z.string().min(1),
       postal_code: z.string().min(1),
-      province: z.string().optional(),
+      province: z.string().optional().nullable(),
       country_code: z.string().min(2),
-      phone: z.string().optional(),
+      phone: z.string().optional().nullable(),
     }),
   })
   .and(
@@ -271,14 +271,14 @@ export const addressesFormSchema = z
         billing_address: z.object({
           first_name: z.string().min(1),
           last_name: z.string().min(1),
-          company: z.string().optional(),
+          company: z.string().optional().nullable(),
           address_1: z.string().min(1),
-          address_2: z.string().optional(),
+          address_2: z.string().optional().nullable(),
           city: z.string().min(1),
           postal_code: z.string().min(1),
-          province: z.string().optional(),
+          province: z.string().optional().nullable(),
           country_code: z.string().min(2),
-          phone: z.string().optional(),
+          phone: z.string().optional().nullable(),
         }),
       }),
     ])
@@ -460,7 +460,12 @@ export const usePlaceOrder = (
         updateCartCount(0)
       }
 
-      await options?.onSuccess?.(...args)
+      if (options?.onSuccess) {
+        try {
+          await options.onSuccess(...args)
+        } catch {
+        }
+      }
     },
   })
 }

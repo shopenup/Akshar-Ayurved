@@ -17,11 +17,11 @@ import {
 } from "hooks/customer"
 
 // Client-side compatible revalidation function
-const revalidateTag = (tag: string) => {
+const revalidateTag = (_tag: string) => {
   // In client-side context, we'll trigger a page refresh or use other methods
   if (typeof window !== 'undefined') {
     // Optionally trigger a page refresh or use other client-side cache invalidation
-    console.log(`Revalidating tag: ${tag}`)
+    console.log(`Revalidating tag: ${_tag}`)
   }
 }
 

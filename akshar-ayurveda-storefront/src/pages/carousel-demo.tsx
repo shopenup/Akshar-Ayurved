@@ -171,17 +171,6 @@ export default function CarouselDemo() {
     }
   ];
 
-  const handleProductClick = (productId: string) => {
-    console.log('Product clicked:', productId);
-  };
-
-  const handleAddToCart = (productId: string) => {
-    console.log('Add to cart:', productId);
-  };
-
-  const handleImageClick = (imageId: string) => {
-    console.log('Image clicked:', imageId);
-  };
 
   return (
     <Layout cartItemCount={3} favouriteCount={5} isLoggedIn={false}>
@@ -231,8 +220,8 @@ export default function CarouselDemo() {
           interval={4000}
           showArrows={true}
           showDots={true}
-          onProductClick={handleProductClick}
-          onAddToCart={handleAddToCart}
+          // onProductClick={handleProductClick}
+          // onAddToCart={handleAddToCart}
         />
       </Section>
 
@@ -264,7 +253,7 @@ export default function CarouselDemo() {
           showDots={true}
           showThumbnails={true}
           height="h-96"
-          onImageClick={handleImageClick}
+          // onImageClick={handleImageClick}
         />
       </Section>
 

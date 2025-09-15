@@ -83,10 +83,8 @@ export default function ProductsPage() {
       try {
         setCategoriesLoading(true);
         const cats = await getCategoriesList();
-        //console.log('Categories fetched:', cats);
         setCategories(cats.product_categories || []);
       } catch (err: unknown) {
-        console.error('Error fetching categories:', err);
         setError((err as Error).message);
       } finally {
         setCategoriesLoading(false);
@@ -116,7 +114,6 @@ export default function ProductsPage() {
           query.q = filters.searchQuery;
         }
         
-        //console.log('Fetching products with query:', query);
         
         const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
           '/store/products',
@@ -128,9 +125,6 @@ export default function ProductsPage() {
         );
         
         const sdkProducts = response.products || [];
-        console.log('sdkProducts', sdkProducts);
-        //console.log('Products fetched:', sdkProducts.length);
-        //console.log('Raw products:', sdkProducts.map(p => ({ id: p.id, title: p.title, status: p.status, price: p.variants?.[0]?.calculated_price })));
 
         // Map StoreProduct[] to Product[] by ensuring 'price' is present
         const mappedProducts = sdkProducts.map((p) => {
@@ -158,7 +152,6 @@ export default function ProductsPage() {
             price = (p as { original_price?: number }).original_price!;
           }
           
-          console.log(`Product ${p.title} - Price extracted:`, price, 'from variants:', p.variants);
           
           return {
             id: p.id,
@@ -183,10 +176,8 @@ export default function ProductsPage() {
           };
         });
 
-        //console.log('Mapped products:', mappedProducts.map(p => ({ id: p.id, title: p.title, status: p.status, price: p.price })));
         setProducts(mappedProducts as Product[]);
       } catch (err: unknown) {
-        console.error('Error fetching products:', err);
         setError((err as Error).message);
       } finally {
         setLoading(false);
@@ -197,8 +188,6 @@ export default function ProductsPage() {
 
   // Filter and sort products
   const filteredAndSortedProducts = React.useMemo(() => {
-    //console.log('Filtering products:', products.length, 'products');
-    //console.log('Filter settings:', filters);
     
     const filtered = products.filter(() => {
       // Temporarily disable all filters for debugging
@@ -206,21 +195,18 @@ export default function ProductsPage() {
       
       // Stock filter
       // if (filters.inStock && product.status !== 'published') {
-      //   //console.log('Filtered out by stock:', product.title, 'status:', product.status);
       //   return false;
       // }
       
       // Price range filter
       // const price = product.price || 0;
       // if (price < filters.priceRange[0] || price > filters.priceRange[1]) {
-      //   //console.log('Filtered out by price:', product.title, 'price:', price, 'range:', filters.priceRange);
       //   return false;
       // }
       
       // return true;
     });
 
-    //console.log('After filtering:', filtered.length, 'products remain');
 
     // Sort products
     filtered.sort((a, b) => {
@@ -260,11 +246,9 @@ export default function ProductsPage() {
       // Get the first variant ID (most products have only one variant)
       const variantId = (product?.variants?.[0] as { id?: string })?.id;
       if (!variantId) {
-        console.error('No variant found for product:', productId);
         return;
       }
 
-      //console.log('Adding to cart:', { productId, variantId, quantity: 1 });
       
       await addLineItem({
         variantId,
@@ -272,9 +256,7 @@ export default function ProductsPage() {
         countryCode: 'in' // Default to India
       });
 
-      //console.log('✅ Product added to cart successfully');
-    } catch (error) {
-      console.error('Error adding to cart:', error);
+    } catch {
       showToast('Failed to add item to cart. Please try again.', 'error');
     }
     
@@ -556,7 +538,6 @@ export default function ProductsPage() {
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                       {filteredAndSortedProducts.map((product) => (
-                        console.log(product),
                         <ProductCard
                           key={product.id}
                           product={{
