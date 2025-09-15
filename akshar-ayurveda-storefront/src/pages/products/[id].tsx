@@ -69,7 +69,7 @@ interface Product {
     rating?: number;
     review_count?: number;
   };
-  categories?: any[];
+  categories?: { id: string; name: string; value: string }[];
 }
 
 export default function ProductPage() {
@@ -186,10 +186,10 @@ export default function ProductPage() {
         });
         console.log('Related products:', products);
         // Fix: Ensure type compatibility by mapping to the expected Product type
-        setRelatedProducts(
-          (products as any[]).filter((p: any) => p.id !== product.id) as any
-        );
-      } catch (e) {
+        // setRelatedProducts(
+        //   (products as any[]).filter((p: any) => p.id !== product.id) as any
+        // );
+      } catch {
         setRelatedProducts([]);
       }
       setRelatedLoading(false);

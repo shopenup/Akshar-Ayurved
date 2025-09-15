@@ -122,8 +122,8 @@ const StripePaymentButton = ({
             // Continue with order placement even if SMS fails
           }
           
-          console.log('🚀 Stripe: Navigating to order success page with orderId:', data.order.id)
-          router.push(`/order-success?orderId=${data.order.id}`)
+          console.log('🚀 Stripe: Navigating to order confirmation page with orderId:', data.order.id)
+          router.push(`/order-confirmation/${data.order.id}`)
         } else if (data?.type === "cart" && data.error) {
           setErrorMessage(data.error.message)
         }
@@ -240,8 +240,8 @@ const PayPalPaymentButton = ({
             // Continue with order placement even if SMS fails
           }
           
-          console.log('🚀 PayPal: Navigating to order success page with orderId:', data.order.id)
-          router.push(`/order-success?orderId=${data.order.id}`)
+          console.log('🚀 PayPal: Navigating to order confirmation page with orderId:', data.order.id)
+          router.push(`/order-confirmation/${data.order.id}`)
         } else if (data?.type === "cart" && (data as { error: { message: string } }).error) {
           setErrorMessage((data as { error: { message: string } }).error.message)
         }
@@ -335,7 +335,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
           }
           
           console.log('🚀 Manual Test: Navigating to order success page with orderId:', data.order.id)
-          router.push(`/order-success?orderId=${data.order.id}`)
+          router.push(`/order-confirmation/${data.order.id}`)
         } else if (data?.type === "cart" && (data as { error: { message: string } }).error) {
           setErrorMessage(data.error.message)
         }

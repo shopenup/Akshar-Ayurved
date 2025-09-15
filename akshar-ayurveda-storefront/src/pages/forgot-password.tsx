@@ -26,7 +26,7 @@ export default function ForgotPasswordPage() {
       } else if (result.state === 'error') {
         setError(result.error);
       }
-    } catch (err) {
+    } catch {
       setError('An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);

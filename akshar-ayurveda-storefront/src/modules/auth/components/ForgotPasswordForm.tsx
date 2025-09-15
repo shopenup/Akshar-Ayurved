@@ -25,7 +25,7 @@ export const ForgotPasswordForm: React.FC = () => {
         .then((result) => {
           setFormState(result)
         })
-        .catch((error) => {
+        .catch(() => {
           setFormState({
             state: "error",
             error: "An unexpected error occurred. Please try again."

@@ -7,6 +7,7 @@ import { HttpTypes } from "@shopenup/types"
 import { usePlaceOrder } from "@hooks/cart"
 import { CurrencyCode } from "react-razorpay/dist/constants/currency"
 import { triggerOrderPlacedEvent } from "@lib/services/sms-service"
+import { useRouter } from 'next/router';
 export const RazorpayPaymentButton = ({
   session,
   notReady,
@@ -16,6 +17,7 @@ export const RazorpayPaymentButton = ({
   notReady: boolean
   cart: HttpTypes.StoreCart
 }) => {
+  const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
   const {Razorpay
@@ -60,7 +62,7 @@ export const RazorpayPaymentButton = ({
         // Redirect to order success page
         const orderId = (result as { order?: { id?: string } })?.order?.id || `ORD${Date.now()}`;
         console.log('🚀 Razorpay: Navigating to order success page with orderId:', orderId);
-        window.location.href = `/order-success?orderId=${orderId}`;
+        router.push(`/order-confirmation/${orderId}`);
       }
     } catch {
       setErrorMessage("An error occurred, please try again.")
@@ -167,7 +169,7 @@ export const RazorpayPaymentButton = ({
           }
           
           // Redirect to order confirmation page
-          window.location.href = `/order-confirmation/${result.order.id}`;
+          router.push(`/order-confirmation/${result.order.id}`)
         }
       },
       onError: (error) => {

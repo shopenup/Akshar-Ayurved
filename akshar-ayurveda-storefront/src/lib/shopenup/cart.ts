@@ -15,7 +15,6 @@ import {
 } from "@lib/shopenup/cookies"
 import { getRegion } from "@lib/shopenup/regions"
 import { addressesFormSchema } from "hooks/cart"
-import { useRouter } from 'next/router';
 
 // Client-side compatible revalidation function
 const revalidateTag = (tag: string) => {
@@ -28,10 +27,8 @@ const revalidateTag = (tag: string) => {
 
 // Client-side compatible redirect function
 const redirect = (url: string) => {
-  const router = useRouter();
-
   if (typeof window !== 'undefined') {
-    router.push(url);
+    window.location.href = url;
   }
 }
 
