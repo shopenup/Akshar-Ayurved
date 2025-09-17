@@ -10,6 +10,7 @@ import ProductActions from '@modules/products/components/product-actions';
 import { useAddLineItem, useCartWithSync } from '@hooks/cart';
 import { useCountryCode } from '@hooks/country-code';
 import { productService } from '@lib/shopenup/product';
+import ProductVariantSelector from '@components/products/ProductVariantSelector';
 
 // Product interface based on Shopenup API response
 interface Product {
@@ -92,6 +93,7 @@ export default function ProductPage() {
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(true);
+
 
 
   // Fetch product data when component mounts
@@ -274,10 +276,12 @@ export default function ProductPage() {
     
     setIsLoading(true);
     try {
-      // Validate that we have a proper variant ID
+      // Use selected variant if available, otherwise fallback to first variant
       let variantId: string | null = null;
       
-      if (product.variants && product.variants.length > 0) {
+      if (selectedVariant && selectedVariant.id) {
+        variantId = selectedVariant.id;
+      } else if (product.variants && product.variants.length > 0) {
         // Find a variant with calculated price
         const variantWithPrice = product.variants.find(v => 
           v.id && (v.calculated_price?.calculated_amount || (v.prices && v.prices.length > 0))
@@ -301,7 +305,8 @@ export default function ProductPage() {
       });
       
       // Show success message
-      showToast(`${product.title} (${quantity}) successfully added to cart!`, 'success');
+      const variantInfo = selectedVariant ? ` (${selectedVariant.options?.map((opt: any) => opt.value).join(', ') || ''})` : '';
+      showToast(`${product.title}${variantInfo} (${quantity}) successfully added to cart!`, 'success');
       
     } catch (error) {
       console.error('Failed to add to cart:', error);
@@ -685,29 +690,54 @@ export default function ProductPage() {
               </div>
             </div>
 
+            {/* Product Variants */}
+            {product.variants && product.variants.length > 0 && product.options && product.options.length > 0 && (
+              <div className="mb-6">
+                <ProductVariantSelector
+                  variants={product.variants}
+                  options={product.options}
+                  selectedVariant={selectedVariant}
+                  onVariantChange={setSelectedVariant}
+                  onImageChange={setActiveImageIndex}
+                />
+              </div>
+            )}
+
             {/* Price */}
             <div className="mb-6">
-              {/* Simple price display that works */}
               <div className="flex items-center space-x-4">
                 {(() => {
-                  // Enhanced price extraction for Shopenup API structure
+                  // Use selected variant price if available, otherwise fallback to product price
                   let price = null;
                   let originalPrice = null;
                   
-                  // Try direct product price fields first
-                  if (product.price) price = product.price;
-                  else if (product.unit_price) price = product.unit_price;
-                  else if (product.amount) price = product.amount;
-                  
-                  // Try variants with calculated_price (Shopenup structure)
-                  if (!price && product.variants && product.variants.length > 0) {
-                    const variant = product.variants[0];
-                    if (variant.calculated_price?.calculated_amount) {
-                      price = variant.calculated_price.calculated_amount;
-                      originalPrice = variant.calculated_price.original_amount;
-                    } else if (variant.prices && variant.prices.length > 0) {
-                      price = variant.prices[0].amount;
-                      originalPrice = variant.prices[0].original_amount;
+                  if (selectedVariant && selectedVariant.calculated_price) {
+                    price = selectedVariant.calculated_price.calculated_amount;
+                    originalPrice = selectedVariant.calculated_price.original_amount;
+                  } else if (selectedVariant && selectedVariant.prices && selectedVariant.prices.length > 0) {
+                    price = selectedVariant.prices[0].amount;
+                    originalPrice = selectedVariant.prices[0].original_amount;
+                  } else {
+                    // Fallback to product price
+                    if (product.price) price = product.price;
+                    else if (product.unit_price) price = product.unit_price;
+                    else if (product.amount) price = product.amount;
+                    
+                    // Try variants with calculated_price (Shopenup structure)
+                    if (!price && product.variants && product.variants.length > 0) {
+                      const variant = product.variants[0];
+                      if (variant.calculated_price?.calculated_amount) {
+                        price = variant.calculated_price.calculated_amount;
+                        originalPrice = variant.calculated_price.original_amount;
+                      } else if (variant.prices && variant.prices.length > 0) {
+                        price = variant.prices[0].amount;
+                        originalPrice = variant.prices[0].original_amount;
+                      }
+                    }
+                    
+                    // Try metadata or other fields
+                    if (!price && (product.metadata as Record<string, unknown>)?.price) {
+                      price = (product.metadata as Record<string, unknown>).price as number;
                     }
                   }
                   
@@ -762,10 +792,15 @@ export default function ProductPage() {
                 variant="primary"
                 size="lg"
                 onClick={handleAddToCart}
-                disabled={isLoading}
+                disabled={isLoading || (product.variants && product.variants.length > 0 && !selectedVariant)}
                 fullWidth
               >
-                {isLoading ? 'Adding...' : 'Add to Cart'}
+                {isLoading 
+                  ? 'Adding...' 
+                  : product.variants && product.variants.length > 0 && !selectedVariant
+                    ? 'Select Variant'
+                    : 'Add to Cart'
+                }
               </Button>
               <Button
                 variant="secondary"
