@@ -36,6 +36,7 @@
     "@shopenup/shopenup": "1.0.11",
     "@shopenup/types": "1.0.10",
     "@shopenup/ui": "^1.0.10",
+    "@shopenup/shopenup-plugin-razorpay-v2": "1.0.10",
     "@tanstack/react-query": "5.64.2",
     "ajv": "^8.17.1",
     "ajv-draft-04": "^1.0.0",
@@ -44,6 +45,7 @@
     "meilisearch": "0.47.0",
     "pg": "^8.13.3",
     "react-dropzone": "^14.3.8",
+    "razorpay": "^2.9.6",
     "resend": "^4.1.2",
     "twilio": "^5.8.0",
     "zod": "3.25.76"

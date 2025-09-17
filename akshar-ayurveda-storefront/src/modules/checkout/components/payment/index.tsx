@@ -26,7 +26,8 @@ import { StoreCart, StorePaymentSession } from "@shopenup/types"
 
 // Payment info map for available methods - only include what's actually configured
 const paymentInfoMap: Record<string, { title: string; icon: React.ReactNode }> = {
-  pp_stripe_stripe: { title: "Credit Card", icon: "💳" },
+  // pp_stripe_stripe: { title: "Credit Card", icon: "💳" },
+  pp_razorpay_razorpay: { title: "Razorpay", icon: "💳" },
   pp_system_default: { title: "Manual Payment", icon: "📝" },
 }
 
@@ -95,7 +96,9 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
   
   // Filter to only show Stripe and Manual Payment
   const supportedPaymentMethods = availablePaymentMethods?.filter(method => 
-    method.type === 'pp_stripe_stripe' || method.type === 'pp_system_default'
+    method.type === 'pp_stripe_stripe' || 
+    method.type === 'pp_razorpay_razorpay' || 
+    method.type === 'pp_system_default'
   ) || []
   
   // Add Manual Payment if not already present (for testing purposes)

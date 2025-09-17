@@ -15,11 +15,11 @@ export default async function OrderCompletedTemplate({
   order,
 }: OrderCompletedTemplateProps) {
   const customer = await getCustomer()
-  let matchingOrders = []
+  // let matchingOrders = []
 
   if (customer) {
     const { orders } = await listOrders()
-    matchingOrders = orders?.filter((o) => o.id === order?.id)
+    // matchingOrders = orders?.filter((o) => o.id === order?.id)
   }
 
   return (
@@ -41,11 +41,11 @@ export default async function OrderCompletedTemplate({
           Your order number is <strong>#{order.display_id}</strong>.
         </p>
         <div className="flex gap-x-6 gap-y-4 max-sm:flex-col mb-16">
-          {Boolean(matchingOrders.length) && (
+          {/* {Boolean(matchingOrders.length) && (
             <LocalizedButtonLink href={`/account/my-orders/${order.id}`}>
               Check order details
             </LocalizedButtonLink>
-          )}
+          )} */}
           <LocalizedButtonLink href="/" variant="outline">
             Back to home
           </LocalizedButtonLink>

@@ -10,11 +10,11 @@ export default function StatusPage() {
       status: 'operational',
       description: 'Main website and e-commerce platform'
     },
-    {
-      name: 'Payment Processing',
-      status: 'operational',
-      description: 'Credit card, UPI, and COD payments'
-    },
+    // {
+    //   name: 'Payment Processing',
+    //   status: 'operational',
+    //   description: 'Credit card, UPI, and COD payments'
+    // },
     {
       name: 'Order Processing',
       status: 'operational',

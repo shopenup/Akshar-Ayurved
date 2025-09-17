@@ -12,6 +12,7 @@ import {
   getCompleteHeaders,
   removeCartId,
   setAuthToken,
+  clearAllCartData
 } from "@lib/shopenup/cookies"
 import { getRegion } from "@lib/shopenup/regions"
 import { addressesFormSchema } from "hooks/cart"
@@ -26,11 +27,6 @@ const revalidateTag = (_tag: string) => {
 }
 
 // Client-side compatible redirect function
-const redirect = (url: string) => {
-  if (typeof window !== 'undefined') {
-    window.location.href = url;
-  }
-}
 
 export async function retrieveCart() {
   // First, check if user is logged in
@@ -636,20 +632,20 @@ export async function placeOrder() {
       .complete(cartId, {}, await getCompleteHeaders())
       .then(async (cartRes) => {
         
-        // Restore auth token if it was cleared by backend (non-blocking)
-        if (authToken) {
-          // Use requestAnimationFrame to ensure this doesn't block navigation
-          requestAnimationFrame(async () => {
-            const authHeadersAfterComplete = await getAuthHeaders()
-            if (!('authorization' in authHeadersAfterComplete) || !authHeadersAfterComplete.authorization) {
-              await setAuthToken(authToken)
-              // Clean up backup token
-              if (typeof window !== 'undefined') {
-                localStorage.removeItem('_shopenup_jwt_backup')
-              }
-            }
-          })
-        }
+        // // Restore auth token if it was cleared by backend (non-blocking)
+        // if (authToken) {
+        //   // Use requestAnimationFrame to ensure this doesn't block navigation
+        //   requestAnimationFrame(async () => {
+        //     const authHeadersAfterComplete = await getAuthHeaders()
+        //     if (!('authorization' in authHeadersAfterComplete) || !authHeadersAfterComplete.authorization) {
+        //       await setAuthToken(authToken)
+        //       // Clean up backup token
+        //       if (typeof window !== 'undefined') {
+        //         localStorage.removeItem('_shopenup_jwt_backup')
+        //       }
+        //     }
+        //   })
+        // }
         
         revalidateTag("cart")
         revalidateTag("orders")
@@ -657,12 +653,27 @@ export async function placeOrder() {
       })
 
     if (cartRes?.type === "order") {
-      await removeCartId()
-      // router.push(`/order-confirmation/${cartRes.order.id}`)
+      await clearAllCartData()
+      console.log('✅ Cart data cleared after successful order placement')
+      return cartRes
+    } else if (cartRes?.type === "cart") {
+      if (cartRes.cart.payment_collection?.payment_sessions) {
+        const failedSessions = cartRes.cart.payment_collection.payment_sessions.filter(
+          (session: any) => session.status === 'error' || !session.data || Object.keys(session.data).length === 0
+        )
+        if (failedSessions.length > 0) {
+          console.log('❌ Found failed payment sessions:', failedSessions)
+          throw new Error('Payment sessions failed. Please try again with a different payment method.')
+        }
+      }
+      
+      throw new Error('Order completion failed. Cart was not converted to order. Please check payment status.')
+    } else {
+      console.log('❌ Unexpected response type:', cartRes)  
+      throw new Error('Unexpected response from order completion')
     }
 
-    return cartRes
-  } catch (error: unknown) {
+  } catch (error: any) {
     
     // Handle inventory error specifically
     if (error instanceof Error && error.message && error.message.includes('not stocked at location')) {
@@ -675,10 +686,15 @@ export async function placeOrder() {
 
 /**
  * Updates the countryCode param and revalidate the regions cache
- * @param regionId
  * @param countryCode
+ * @param currentPath
+ * @param redirectCallback Optional callback function to handle redirection
  */
-export async function updateRegion(countryCode: string, currentPath: string) {
+export async function updateRegion(
+  countryCode: string, 
+  currentPath: string, 
+  redirectCallback?: (url: string) => void
+) {
   if (typeof countryCode !== "string") {
     throw new Error("Invalid country code")
   }
@@ -702,5 +718,22 @@ export async function updateRegion(countryCode: string, currentPath: string) {
   revalidateTag("regions")
   revalidateTag("products")
 
-  redirect(`/${countryCode}${currentPath}`)
+  const redirectUrl = `/${countryCode}${currentPath}`
+  
+  // If redirect callback is provided, use it for client-side navigation
+  if (redirectCallback) {
+    redirectCallback(redirectUrl)
+  } else {
+    // Use Next.js router for client-side navigation without page reload
+    if (typeof window !== 'undefined') {
+      // Dynamic import to avoid SSR issues
+      import('next/router').then(({ default: router }) => {
+        router.push(redirectUrl)
+      }).catch(() => {
+        // Fallback to history API if Next.js router is not available
+        window.history.pushState({}, '', redirectUrl)
+        window.dispatchEvent(new PopStateEvent('popstate'))
+      })
+    }
+  }
 }

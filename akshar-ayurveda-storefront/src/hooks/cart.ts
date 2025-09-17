@@ -94,11 +94,18 @@ export const useCartShippingMethods = (cartId: string) => {
 
 export const useCartPaymentMethods = (regionId: string) => {
   return useQuery({
-    queryKey: [regionId],
+    queryKey: ['payment-methods', regionId],
     queryFn: async () => {
       const res = await listCartPaymentMethods(regionId)
       return res
     },
+    retry: (failureCount, error) => {
+      console.error('🔄 Payment methods query retry:', failureCount, error)
+      return failureCount < 2
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   })
 }
 

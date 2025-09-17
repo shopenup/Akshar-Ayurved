@@ -155,6 +155,13 @@ export async function signout(countryCode: string) {
   await sdk.auth.logout()
   await clearAuthDataOnly()
   revalidateTag("customer")
+  // try {
+  //   const { clearCartEmail } = await import("./cart")
+  //   await clearCartEmail()
+  //   console.log('🧹 Cart email cleared on signout')
+  // } catch (error) {
+  //   console.warn('⚠️ Failed to clear cart email on signout:', error)
+  // }
   // Don't revalidate cart - keep cart data
   // revalidateTag("cart")
   return countryCode

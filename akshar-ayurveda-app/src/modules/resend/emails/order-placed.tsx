@@ -198,7 +198,7 @@ export default function OrderPlacedEmail({
       </Section>
       <Section className="border border-solid border-grayscale-200 rounded-xs p-4">
         <Row>
-          <Column className="w-1/2 flex items-center" valign="top">
+          {/* <Column className="w-1/2 flex items-center" valign="top">
             <Img
               src="./credit-card.png"
               alt="Credit card"
@@ -206,7 +206,7 @@ export default function OrderPlacedEmail({
               height="16"
             />
             <Text className="m-0 ml-2">Payment</Text>
-          </Column>
+          </Column> */}
           <Column className="w-1/2">
             <Section>
               <Row className="mb-2">

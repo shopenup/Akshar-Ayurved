@@ -47,6 +47,10 @@ export class ShopenupPaymentService {
       this.customerModule = await getCustomerModule();
     } catch (error) {
       console.error("Failed to initialize payment modules:", error);
+
+      this.paymentModule = null;
+      this.orderModule = null;
+      this.customerModule = null;
     }
   }
 
@@ -443,27 +447,40 @@ export class ShopenupPaymentService {
     } catch (error) {
       console.error("Failed to get supported payment methods:", error);
       // Return default payment methods
-      return [
-        {
-          id: "card",
-          type: "card",
-          name: "Credit/Debit Card",
-          description: "Pay with Visa, Mastercard, or other cards",
-          icon: "credit-card",
-          enabled: true,
-        },
-        {
-          id: "upi",
-          type: "upi",
-          name: "UPI",
-          description: "Pay using UPI apps like Google Pay, PhonePe",
-          icon: "mobile",
-          enabled: true,
-        }
-      ];
+      return this.getDefaultPaymentMethods();
     }
   }
+  private getDefaultPaymentMethods() {
+    return [
+      // {
+      //   id: "pp_stripe_stripe",
+      //   type: "pp_stripe_stripe",
+      //   name: "Credit Card",
+      //   description: "Pay with Visa, Mastercard, or other cards",
+      //   icon: "credit-card",
+      //   enabled: true,
+      // },
+      {
+        id: "pp_razorpay_razorpay",
+        type: "pp_razorpay_razorpay",
+        name: "Razorpay",
+        description: "Pay using Razorpay payment gateway",
+        icon: "credit-card",
+        enabled: true,
+      },
+      {
+        id: "pp_system_default",
+        type: "pp_system_default",
+        name: "Manual Payment",
+        description: "Manual payment for testing purposes",
+        icon: "manual",
+        enabled: true,
+      }
+    ];
+  }
 }
+
+
 
 // Export singleton instance
 export const paymentService = new ShopenupPaymentService();
