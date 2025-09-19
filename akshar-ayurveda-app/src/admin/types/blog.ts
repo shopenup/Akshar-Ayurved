@@ -4,7 +4,7 @@ export interface BlogArticle {
   subtitle: string;
   author: string;
   author_expert_title: string;
-  url_slug: string;
+  // url_slug: string;
   seo_title: string;
   seo_description: string;
   thumbnail_image: string;
@@ -33,7 +33,7 @@ export interface BlogArticleFormData {
   subtitle: string;
   author: string;
   author_expert_title: string;
-  url_slug: string;
+  // url_slug: string;
   seo_title: string;
   seo_description: string;
   thumbnail_image: string;

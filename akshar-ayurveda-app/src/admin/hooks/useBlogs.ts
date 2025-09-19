@@ -148,7 +148,7 @@ export const useBlogs = (options: UseBlogsOptions = {}): UseBlogsReturn => {
         subtitle: article.subtitle || '',
         author: article.author,
         author_expert_title: article.author_expert_title || 'Expert',
-        url_slug: article.url_slug,
+        // url_slug: article.url_slug,
         seo_title: article.seo_title || '',
         seo_description: article.seo_description || '',
         thumbnail_image: article.thumbnail_image || '',
@@ -173,8 +173,8 @@ export const useBlogs = (options: UseBlogsOptions = {}): UseBlogsReturn => {
       filtered = filtered.filter(article => 
         article.title.toLowerCase().includes(searchTerm) ||
         article.subtitle?.toLowerCase().includes(searchTerm) ||
-        article.author.toLowerCase().includes(searchTerm) ||
-        article.url_slug.toLowerCase().includes(searchTerm)
+        article.author.toLowerCase().includes(searchTerm)
+        // article.url_slug.toLowerCase().includes(searchTerm)
       );
     }
 

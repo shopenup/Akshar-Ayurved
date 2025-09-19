@@ -317,8 +317,6 @@ export default function BlogPost() {
                 sizes="(max-width: 768px) 100vw, 800px"
                 priority={true} 
                 quality={85} 
-                placeholder="blur" 
-                blurDataURL={process.env.NEXT_PUBLIC_BLUR_DATA_URL} 
                 onError={(e) => {
                   const target = e.target as HTMLImageElement;
                   target.src = '/assets/homeimage1.jpg';

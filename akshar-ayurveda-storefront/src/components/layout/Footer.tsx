@@ -96,11 +96,11 @@ export default function Footer() {
                   Products
                 </Link>
               </li>
-              {/* <li>
+              <li>
                 <Link href="/blogs" className="text-gray-300 hover:text-green-400 transition-colors">
                   Blogs
                 </Link>
-              </li> */}
+              </li>
               <li>
                 <Link href="/gallery" className="text-gray-300 hover:text-green-400 transition-colors">
                   Gallery

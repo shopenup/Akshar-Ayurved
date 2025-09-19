@@ -287,8 +287,6 @@ const BlogSection: React.FC<BlogSectionProps> = ({
                   priority={index < 3} 
                   loading={index < 3 ? "eager" : "lazy"} 
                   quality={75} 
-                  placeholder="blur" 
-                  blurDataURL={process.env.NEXT_PUBLIC_BLUR_DATA_URL} 
                   onError={(e) => {
                     const target = e.target as HTMLImageElement;
                     target.src = '/assets/homeimage1.jpg';

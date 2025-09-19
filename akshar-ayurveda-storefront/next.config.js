@@ -60,6 +60,8 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    // Optimize for memory usage
+    unoptimized: process.env.NODE_ENV === 'development', // Disable optimization in dev to save memory
   },
 
   // Environment variables
@@ -132,6 +134,23 @@ const nextConfig = {
       };
     }
 
+    // Memory optimization for large static assets
+    config.module.rules.push({
+      test: /\.(png|jpe?g|gif|svg|webp)$/i,
+      type: 'asset/resource',
+      generator: {
+        filename: 'static/images/[hash][ext][query]'
+      }
+    });
+
+    // Increase memory limits for worker threads
+    config.optimization.minimizer = config.optimization.minimizer || [];
+    config.optimization.minimizer.forEach((plugin) => {
+      if (plugin.constructor.name === 'TerserPlugin') {
+        plugin.options.parallel = false; // Disable parallel processing to reduce memory usage
+      }
+    });
+
     return config;
   },
 
@@ -139,6 +158,18 @@ const nextConfig = {
   experimental: {
     // Modern Next.js features are enabled by default in Next.js 14
     // No longer need concurrentFeatures, serverComponents, or appDir
+    // Memory optimization
+    workerThreads: false, // Disable worker threads to reduce memory usage
+    cpus: 1, // Limit CPU usage during build
+  },
+
+  // Output configuration for better memory management
+  output: 'standalone',
+  
+  // Compiler options for memory optimization
+  compiler: {
+    // Remove console logs in production to reduce bundle size
+    removeConsole: process.env.NODE_ENV === 'production',
   },
 };
 

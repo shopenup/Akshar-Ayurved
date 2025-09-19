@@ -318,8 +318,8 @@ export default function BlogsPage() {
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     priority={index < 3}
                     quality={85} 
-                    placeholder="blur" 
-                    blurDataURL={process.env.NEXT_PUBLIC_BLUR_DATA_URL} 
+                    // placeholder="blur" 
+                    // blurDataURL={process.env.NEXT_PUBLIC_BLUR_DATA_URL} 
                       onError={(e) => {
                         const target = e.target as HTMLImageElement;
                         target.src = '/assets/homeimage1.jpg';

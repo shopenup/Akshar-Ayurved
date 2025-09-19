@@ -102,7 +102,7 @@ const BlogsPage = () => {
         subtitle: data.subtitle,
         author: data.author,
         author_expert_title: data.author_expert_title || 'Expert',
-        url_slug: data.url_slug,
+        // url_slug: data.url_slug,
         seo_title: data.seo_title,
         seo_description: data.seo_description,
         thumbnail_image: data.thumbnail_image,
@@ -133,7 +133,7 @@ const BlogsPage = () => {
         subtitle: data.subtitle,
         author: data.author,
         author_expert_title: data.author_expert_title,
-        url_slug: data.url_slug,
+        // url_slug: data.url_slug,
         seo_title: data.seo_title,
         seo_description: data.seo_description,
         thumbnail_image: data.thumbnail_image,
@@ -312,7 +312,7 @@ const BlogsPage = () => {
                   subtitle: selectedArticle.subtitle,
                   author: selectedArticle.author,
                   author_expert_title: selectedArticle.author_expert_title,
-                  url_slug: selectedArticle.url_slug,
+                  // url_slug: selectedArticle.url_slug,
                   seo_title: selectedArticle.seo_title,
                   seo_description: selectedArticle.seo_description,
                   thumbnail_image: selectedArticle.thumbnail_image,
@@ -434,12 +434,12 @@ const BlogsPage = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
+                  {/* <div>
                     <Text className="font-medium mb-1">URL Slug:</Text>
                     <Text className="text-gray-600 dark:text-gray-400">
                       {selectedArticle.url_slug}
                     </Text>
-                  </div>
+                  </div> */}
                   <div>
                     <Text className="font-medium mb-1">SEO Title:</Text>
                     <Text className="text-gray-600 dark:text-gray-400">

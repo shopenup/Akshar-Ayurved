@@ -35,7 +35,7 @@ const blogFormSchema = z.object({
   subtitle: z.string().optional(),
   author: z.string().min(1, 'Author is required'),
   author_expert_title: z.string().transform(val => val?.trim()).pipe(z.string().min(1, 'Author expert title is required')),
-  url_slug: z.string().min(1, 'URL slug is required').regex(/^[a-z0-9-]+$/, 'URL slug must contain only lowercase letters, numbers, and hyphens'),
+  // url_slug: z.string().min(1, 'URL slug is required').regex(/^[a-z0-9-]+$/, 'URL slug must contain only lowercase letters, numbers, and hyphens'),
   seo_title: z.string().optional(),
   seo_description: z.string().optional(),
   thumbnail_image: imageFieldSchema().optional().nullable(),
@@ -214,7 +214,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({
       subtitle: data.subtitle || '',
       author: data.author,
       author_expert_title: data.author_expert_title?.trim() || '',
-      url_slug: data.url_slug,
+      // url_slug: data.url_slug,
       seo_title: data.seo_title || '',
       seo_description: data.seo_description || '',
       thumbnail_image: thumbnailUrl,
@@ -237,7 +237,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({
         subtitle: initialData?.subtitle || '',
         author: initialData?.author || '',
         author_expert_title: initialData?.author_expert_title || '',
-        url_slug: initialData?.url_slug || '',
+        // url_slug: initialData?.url_slug || '',
         seo_title: initialData?.seo_title || '',
         seo_description: initialData?.seo_description || '',
         thumbnail_image: initialData?.thumbnail_image ? { 
@@ -310,19 +310,25 @@ export const BlogForm: React.FC<BlogFormProps> = ({
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <InputField
+          {/* <InputField
             name="url_slug"
             label="URL Slug"
             isRequired
             inputProps={{
               placeholder: 'article-url-slug',
             }}
-          />
+          /> */}
           <ImageField
+          // isRequired
             name="thumbnail_image"
             label="Thumbnail Image"
             dropzoneRootClassName="h-40"
             sizeRecommendation="1200 x 630 (16:9) recommended, up to 10MB"
+          />
+           <TagInput
+            name="tags"
+            label="Tags"
+            placeholder="Type a tag and press Enter"
           />
         </div>
 
@@ -334,11 +340,7 @@ export const BlogForm: React.FC<BlogFormProps> = ({
               placeholder: 'SEO optimized title',
             }}
           />
-          <TagInput
-            name="tags"
-            label="Tags"
-            placeholder="Type a tag and press Enter"
-          />
+         
         </div>
 
         <TextareaField

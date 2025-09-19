@@ -98,9 +98,9 @@ export const BlogTable: React.FC<BlogTableProps> = ({
                   <Calendar className="w-4 h-4" />
                   <span>{formatDate(article.created_at)}</span>
                 </div>
-                <div className="flex items-center space-x-1">
+                {/* <div className="flex items-center space-x-1">
                   <span>Slug: {article.url_slug}</span>
-                </div>
+                </div> */}
               </div>
 
               {article.tags && article.tags.length > 0 && (

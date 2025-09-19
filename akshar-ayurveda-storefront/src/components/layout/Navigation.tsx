@@ -151,7 +151,7 @@ export default function Navigation({
     { name: 'Home', href: '/' },
     { name: 'Products', href: '/products' },
     { name: 'About Us', href: '/about' },
-    // { name: 'Blogs', href: '/blogs' },
+    { name: 'Blogs', href: '/blogs' },
     // { name: 'Gallery', href: '/gallery' },
     { name: 'Contact Us', href: '/contact' }
   ];
