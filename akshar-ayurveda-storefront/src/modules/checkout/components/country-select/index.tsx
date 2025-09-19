@@ -24,9 +24,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
   ...props
 }) => {
   const countryOptions = useMemo(() => {
-    console.log('CountrySelect - region:', region)
-    console.log('CountrySelect - region.countries:', region?.countries)
-    console.log('CountrySelect - selectedKey:', props.selectedKey)
     
     if (!region || !region.countries) {
       // Fallback countries if no region data
@@ -37,7 +34,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
         { value: 'ca', label: 'Canada' },
         { value: 'au', label: 'Australia' },
       ]
-      console.log('CountrySelect - using fallback:', fallback)
       return fallback
     }
 
@@ -45,7 +41,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
       value: country.iso_2,
       label: country.display_name,
     }))
-    console.log('CountrySelect - mapped options:', options)
     return options
   }, [region])
 
@@ -56,7 +51,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
         className="w-full h-14 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400"
         value={props.selectedKey || ""}
         onChange={(e) => {
-          console.log('HTML select changed:', e.target.value)
           if (props.onSelectionChange) {
             props.onSelectionChange(e.target.value)
           }
@@ -78,8 +72,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
       {...props}
       placeholder={placeholder}
       selectedKey={props.selectedKey || null}
-      onOpenChange={(isOpen) => {
-        console.log('Dropdown open state:', isOpen)
+      onOpenChange={() => {
       }}
     >
       <UiSelectButton className="!h-14">
@@ -89,7 +82,6 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
       <ReactAria.Popover className="w-[--trigger-width]">
         <UiSelectListBox>
           {countryOptions?.map(({ value, label }, index) => {
-            console.log('Rendering option:', { value, label, index })
             return (
               <UiSelectListBoxItem key={value || index} id={value}>
                 {label}

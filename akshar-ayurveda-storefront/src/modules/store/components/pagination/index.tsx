@@ -59,7 +59,7 @@ export function Pagination({
 
   // Function to render page buttons based on the current page and total pages
   const renderPageButtons = () => {
-    const buttons = []
+    const buttons: React.ReactNode[] = []
 
     if (totalPages <= 7) {
       // Show all pages

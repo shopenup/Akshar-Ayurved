@@ -27,7 +27,7 @@ export const Toast: React.FC<ToastProps> = ({
   }, [duration, onClose]);
 
   const getToastStyles = () => {
-    const baseStyles = "fixed top-4 right-4 z-50 p-4 rounded-lg shadow-xl transform transition-all duration-300 ease-out border hover:shadow-2xl";
+    const baseStyles = "fixed top-4 right-4 z-1001 p-4 rounded-lg shadow-xl transform transition-all duration-300 ease-out border hover:shadow-2xl";
     
     switch (type) {
       case 'success':
@@ -115,7 +115,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   return (
     <ToastContext.Provider value={{ showToast }}>
       {children}
-      <div className="fixed top-4 right-4 z-50 space-y-2">
+      <div className="fixed top-4 right-4 space-y-2" style={{ zIndex: 1000 }}>
         {toasts.map(toast => (
           <Toast
             key={toast.id}

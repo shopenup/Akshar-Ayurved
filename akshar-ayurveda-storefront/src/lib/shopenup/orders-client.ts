@@ -40,7 +40,7 @@ export interface Order {
   fulfillment_status: string;
   created_at: string;
   updated_at: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface CreateOrderData {
@@ -54,7 +54,7 @@ export interface CreateOrderData {
   payment_method: string;
   shipping_method: string;
   currency_code?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 /**
@@ -110,9 +110,9 @@ export async function createOrder(orderData: CreateOrderData): Promise<Order> {
         province: order.billing_address?.province ?? '',
         postal_code: order.billing_address?.postal_code ?? '',
         country_code: order.billing_address?.country_code ?? 'in',
-        company: order.billing_address?.company,
-        address_2: order.billing_address?.address_2,
-        phone: order.billing_address?.phone,
+        company: order.billing_address?.company || "",
+        address_2: order.billing_address?.address_2 || "",
+        phone: order.billing_address?.phone || "",
       },
       shipping_address: {
         first_name: order.shipping_address?.first_name ?? '',
@@ -122,9 +122,9 @@ export async function createOrder(orderData: CreateOrderData): Promise<Order> {
         province: order.shipping_address?.province ?? '',
         postal_code: order.shipping_address?.postal_code ?? '',
         country_code: order.shipping_address?.country_code ?? 'in',
-        company: order.shipping_address?.company,
-        address_2: order.shipping_address?.address_2,
-        phone: order.shipping_address?.phone,
+        company: order.shipping_address?.company || "",
+        address_2: order.shipping_address?.address_2 || "",
+        phone: order.shipping_address?.phone || "",
       },
       items: (order.items ?? []).map(item => ({
         id: item.id ?? '',
@@ -174,9 +174,9 @@ export async function getOrder(orderId: string): Promise<Order | null> {
         province: order.billing_address?.province ?? '',
         postal_code: order.billing_address?.postal_code ?? '',
         country_code: order.billing_address?.country_code ?? 'in',
-        company: order.billing_address?.company,
-        address_2: order.billing_address?.address_2,
-        phone: order.billing_address?.phone,
+        company: order.billing_address?.company || "",
+        address_2: order.billing_address?.address_2 || "",
+        phone: order.billing_address?.phone || "",
       },
       shipping_address: {
         first_name: order.shipping_address?.first_name ?? '',
@@ -186,9 +186,9 @@ export async function getOrder(orderId: string): Promise<Order | null> {
         province: order.shipping_address?.province ?? '',
         postal_code: order.shipping_address?.postal_code ?? '',
         country_code: order.shipping_address?.country_code ?? 'in',
-        company: order.shipping_address?.company,
-        address_2: order.shipping_address?.address_2,
-        phone: order.shipping_address?.phone,
+        company: order.shipping_address?.company || "",
+        address_2: order.shipping_address?.address_2 || "",
+        phone: order.shipping_address?.phone || "",
       },
       items: (order.items ?? []).map(item => ({
         id: item.id ?? '',
@@ -238,9 +238,9 @@ export async function listCustomerOrders(): Promise<Order[]> {
         province: order.billing_address?.province ?? '',
         postal_code: order.billing_address?.postal_code ?? '',
         country_code: order.billing_address?.country_code ?? 'in',
-        company: order.billing_address?.company,
-        address_2: order.billing_address?.address_2,
-        phone: order.billing_address?.phone,
+        company: order.billing_address?.company || "",
+        address_2: order.billing_address?.address_2 || "",
+        phone: order.billing_address?.phone || "",
       },
       shipping_address: {
         first_name: order.shipping_address?.first_name ?? '',
@@ -250,9 +250,9 @@ export async function listCustomerOrders(): Promise<Order[]> {
         province: order.shipping_address?.province ?? '',
         postal_code: order.shipping_address?.postal_code ?? '',
         country_code: order.shipping_address?.country_code ?? 'in',
-        company: order.shipping_address?.company,
-        address_2: order.shipping_address?.address_2,
-        phone: order.shipping_address?.phone,
+        company: order.shipping_address?.company || "",
+        address_2: order.shipping_address?.address_2 || "",
+        phone: order.shipping_address?.phone || "",
       },
       items: (order.items ?? []).map(item => ({
         id: item.id ?? '',
@@ -303,9 +303,9 @@ export async function updateOrderStatus(orderId: string, status: string): Promis
         province: order.billing_address?.province ?? '',
         postal_code: order.billing_address?.postal_code ?? '',
         country_code: order.billing_address?.country_code ?? 'in',
-        company: order.billing_address?.company,
-        address_2: order.billing_address?.address_2,
-        phone: order.billing_address?.phone,
+        company: order.billing_address?.company || "",
+        address_2: order.billing_address?.address_2 || "",
+        phone: order.billing_address?.phone || "",
       },
       shipping_address: {
         first_name: order.shipping_address?.first_name ?? '',
@@ -315,9 +315,9 @@ export async function updateOrderStatus(orderId: string, status: string): Promis
         province: order.shipping_address?.province ?? '',
         postal_code: order.shipping_address?.postal_code ?? '',
         country_code: order.shipping_address?.country_code ?? 'in',
-        company: order.shipping_address?.company,
-        address_2: order.shipping_address?.address_2,
-        phone: order.shipping_address?.phone,
+        company: order.shipping_address?.company || "",
+        address_2: order.shipping_address?.address_2 || "",
+        phone: order.shipping_address?.phone || "",
       },
       items: (order.items ?? []).map(item => ({
         id: item.id ?? '',
@@ -367,9 +367,9 @@ export async function cancelOrder(orderId: string): Promise<Order | null> {
         province: order.billing_address?.province ?? '',
         postal_code: order.billing_address?.postal_code ?? '',
         country_code: order.billing_address?.country_code ?? 'in',
-        company: order.billing_address?.company,
-        address_2: order.billing_address?.address_2,
-        phone: order.billing_address?.phone,
+        company: order.billing_address?.company || "",
+        address_2: order.billing_address?.address_2 || "",
+        phone: order.billing_address?.phone || "",
       },
       shipping_address: {
         first_name: order.shipping_address?.first_name ?? '',
@@ -379,9 +379,9 @@ export async function cancelOrder(orderId: string): Promise<Order | null> {
         province: order.shipping_address?.province ?? '',
         postal_code: order.shipping_address?.postal_code ?? '',
         country_code: order.shipping_address?.country_code ?? 'in',
-        company: order.shipping_address?.company,
-        address_2: order.shipping_address?.address_2,
-        phone: order.shipping_address?.phone,
+        company: order.shipping_address?.company || "",
+        address_2: order.shipping_address?.address_2 || "",
+        phone: order.shipping_address?.phone || "",
       },
       items: (order.items ?? []).map(item => ({
         id: item.id ?? '',
@@ -402,4 +402,3 @@ export async function cancelOrder(orderId: string): Promise<Order | null> {
     throw error;
   }
 }
-

@@ -5,11 +5,10 @@ import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { CollectionsSlider } from "@modules/store/components/collections-slider"
 
-import { getCollectionsList } from "@lib/data/collections"
-import { getCategoriesList } from "@lib/data/categories"
-import { getProductTypesList } from "@lib/data/product-types"
+import { productService } from "@lib/shopenup/product"
+import { getCategoriesList } from "@lib/shopenup/categories"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
-import { getRegion } from "@lib/data/regions"
+import { getRegion } from "@lib/shopenup/regions"
 
 const StoreTemplate = async ({
   sortBy,
@@ -28,10 +27,9 @@ const StoreTemplate = async ({
 }) => {
   const pageNumber = page ? parseInt(page, 10) : 1
 
-  const [collections, categories, types, region] = await Promise.all([
-    getCollectionsList(0, 100, ["id", "title", "handle"]),
+  const [collections, categories, region] = await Promise.all([
+    productService.getCollections(),
     getCategoriesList(0, 100, ["id", "name", "handle"]),
-    getProductTypesList(0, 100, ["id", "value"]),
     getRegion(countryCode),
   ])
 
@@ -40,16 +38,14 @@ const StoreTemplate = async ({
       <CollectionsSlider />
       <RefinementList
         collections={Object.fromEntries(
-          collections.collections.map((c) => [c.handle, c.title])
+          collections.map((c) => [c.id, c.title])
         )}
         collection={collection}
         categories={Object.fromEntries(
           categories.product_categories.map((c) => [c.handle, c.name])
         )}
         category={category}
-        types={Object.fromEntries(
-          types.productTypes.map((t) => [t.value, t.value])
-        )}
+        types={{}}
         type={type}
         sortBy={sortBy}
       />
@@ -62,8 +58,8 @@ const StoreTemplate = async ({
             collectionId={
               !collection
                 ? undefined
-                : collections.collections
-                    .filter((c) => collection.includes(c.handle))
+                : collections
+                    .filter((c) => collection.includes(c.id))
                     .map((c) => c.id)
             }
             categoryId={
@@ -73,13 +69,7 @@ const StoreTemplate = async ({
                     .filter((c) => category.includes(c.handle))
                     .map((c) => c.id)
             }
-            typeId={
-              !type
-                ? undefined
-                : types.productTypes
-                    .filter((t) => type.includes(t.value))
-                    .map((t) => t.id)
-            }
+            typeId={undefined}
           />
         )}
       </Suspense>

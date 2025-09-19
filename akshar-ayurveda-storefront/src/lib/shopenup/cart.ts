@@ -9,31 +9,24 @@ import {
   getCartId,
   getAuthHeaders,
   setCartId,
-  removeCartId,
-  clearAllCartData,
   getCompleteHeaders,
+  removeCartId,
+  setAuthToken,
+  clearAllCartData
 } from "@lib/shopenup/cookies"
 import { getRegion } from "@lib/shopenup/regions"
 import { addressesFormSchema } from "hooks/cart"
-import { useRouter } from 'next/router';
 
 // Client-side compatible revalidation function
-const revalidateTag = (tag: string) => {
+const revalidateTag = (_tag: string) => {
   // In client-side context, we'll trigger a page refresh or use other methods
   if (typeof window !== 'undefined') {
     // Optionally trigger a page refresh or use other client-side cache invalidation
-    console.log(`Revalidating tag: ${tag}`)
+    console.log(`Revalidating tag: ${_tag}`)
   }
 }
 
 // Client-side compatible redirect function
-const redirect = (url: string) => {
-  const router = useRouter();
-
-  if (typeof window !== 'undefined') {
-    router.push(url);
-  }
-}
 
 export async function retrieveCart() {
   // First, check if user is logged in
@@ -51,8 +44,7 @@ export async function retrieveCart() {
           cache: "no-store",
         })
         .then(({ customer }) => customer)
-        .catch((error) => {
-          console.error('❌ Error fetching customer:', error)
+        .catch(() => {
           return null
         })
 
@@ -71,8 +63,7 @@ export async function retrieveCart() {
             cache: "no-store",
           })
           .then(({ cart }) => cart)
-          .catch((error) => {
-            console.error('❌ Error fetching cart by ID:', error)
+          .catch(() => {
             return null
           })
 
@@ -87,11 +78,9 @@ export async function retrieveCart() {
 
       // If no cart found, skip the problematic endpoint and return null
       // This avoids CORS preflight issues with /store/customers/me/carts
-      console.log('No cart found in storage, skipping customer carts fetch to avoid CORS issues')
       return null
 
-    } catch (error) {
-      console.error('❌ Error fetching customer cart:', error)
+    } catch {
       // Fall back to cart ID approach
       return await retrieveCartById()
     }
@@ -118,8 +107,7 @@ async function retrieveCartById() {
     .then(({ cart }) => {
       return cart
     })
-    .catch((error) => {
-      console.error('❌ Error fetching cart by ID:', error)
+    .catch(() => {
       return null
     })
 
@@ -188,8 +176,7 @@ export async function getOrSetCart(input: unknown) {
       }
       
       return cart
-    } catch (error) {
-      console.error('❌ Error with customer cart, falling back to guest cart:', error)
+    } catch {
       // Fall back to guest cart approach
     }
   }
@@ -233,20 +220,14 @@ async function updateCart(data: HttpTypes.StoreUpdateCart) {
     throw new Error("No existing cart found, please create one before updating")
   }
 
-  console.log('=== UPDATE CART DEBUG ===')
-  console.log('Cart ID:', cartId)
-  console.log('Update data:', data)
-  console.log('========================')
 
   return sdk.store.cart
     .update(cartId, data, {}, await getCompleteHeaders())
     .then(({ cart }) => {
-      console.log('Cart update successful:', cart)
       revalidateTag("cart")
       return cart
     })
     .catch((error) => {
-      console.error('Cart update failed:', error)
       return shopenupError(error)
     })
 }
@@ -308,17 +289,14 @@ export async function addToCart({
         cache: "no-store",
       })
       .then(({ cart }) => cart)
-      .catch((error) => {
-        console.error('❌ Error verifying cart after adding item:', error)
+      .catch(() => {
         return null
       })
     
     if (updatedCart) {
-        console.log('✅ Cart verification - Items after adding:', updatedCart.items?.length || 0)
     }
     
   } catch (error) {
-    console.error('❌ Error adding line item:', error)
     shopenupError(error)
   }
 }
@@ -428,10 +406,8 @@ export async function getPaymentMethod(id: string) {
 }
 
 export async function initiatePaymentSession(provider_id: unknown) {
-  console.log("🚀 Initiating payment session with provider:", provider_id)
   
   const cart = await retrieveCart()
-  console.log("📦 Retrieved cart:", cart?.id)
 
   if (!cart) {
     throw new Error("Can't initiate payment without cart")
@@ -465,11 +441,9 @@ export async function initiatePaymentSession(provider_id: unknown) {
         await getCompleteHeaders()
       )
     
-    console.log("✅ Payment session initiated successfully:", response)
     revalidateTag("cart")
     return response
   } catch (error) {
-    console.error("❌ Payment session initiation failed:", error)
     throw shopenupError(error)
   }
 }
@@ -503,8 +477,6 @@ export async function setEmail({
       }
     }
 
-    console.log("🔍 Setting email for cart:", cartId)
-    console.log("🔍 Country code:", country_code)
     
     const countryCode = z.string().min(2).safeParse(country_code)
     if (!countryCode.success) {
@@ -512,11 +484,9 @@ export async function setEmail({
     }
 
     await updateCart({ email })
-    console.log("✅ Email set successfully")
 
     return { success: true, error: null }
   } catch (e) {
-    console.error("❌ Error setting email:", e)
     return {
       success: false,
       error: e instanceof Error ? e.message : "Could not set email",
@@ -535,35 +505,38 @@ export async function setAddresses(
     if (!cartId) {
       throw new Error("No existing cart found when setting addresses")
     }
-
-    console.log('=== CART UPDATE DEBUG ===')
-    console.log('Form data received:', formData)
-    console.log('Shipping address:', formData.shipping_address)
-    console.log('Billing address:', formData.same_as_billing === "on" ? formData.shipping_address : formData.billing_address)
-    console.log('Same as billing:', formData.same_as_billing)
-    console.log('========================')
-
+    // Ensure all fields are strings, not null
+    const sanitizeAddress = (address: Record<string, unknown>): HttpTypes.StoreAddAddress => ({
+      first_name: String(address.first_name || ""),
+      last_name: String(address.last_name || ""),
+      company: String(address.company || ""),
+      address_1: String(address.address_1 || ""),
+      address_2: String(address.address_2 || ""),
+      city: String(address.city || ""),
+      postal_code: String(address.postal_code || ""),
+      province: String(address.province || ""),
+      country_code: String(address.country_code || ""),
+      phone: String(address.phone || ""),
+    })
     const updateData = {
-      shipping_address: formData.shipping_address,
-      billing_address:
+      shipping_address: sanitizeAddress(formData.shipping_address),
+      billing_address: sanitizeAddress(
         formData.same_as_billing === "on"
           ? formData.shipping_address
-          : formData.billing_address,
+          : formData.billing_address
+      ),
     }
-
-    console.log('Update data being sent:', updateData)
-
     await updateCart(updateData)
     revalidateTag("shipping")
     return { success: true, error: null }
   } catch (e) {
-    console.error('Error in setAddresses:', e)
     return {
       success: false,
       error: e instanceof Error ? e.message : "Could not set addresses",
     }
   }
 }
+
 
 export async function placeOrder() {
   const cartId = await getCartId()
@@ -578,24 +551,6 @@ export async function placeOrder() {
   }
 
   // Debug: Log cart details for shipping validation
-  console.log('🔍 Cart details for order placement:', {
-    cartId: cart.id,
-    items: cart.items?.map(item => ({
-      id: item.id,
-      variant_id: item.variant_id,
-      quantity: item.quantity,
-      title: item.title,
-      variant: item.variant ? {
-        id: item.variant.id,
-        title: item.variant.title,
-        product_id: item.variant.product_id
-      } : null
-    })),
-    shipping_methods: cart.shipping_methods,
-    shipping_address: cart.shipping_address,
-    email: cart.email,
-    payment_collection: cart.payment_collection?.id
-  })
 
   // Clean up cart by removing items with invalid variants
   if (cart.items && cart.items.length > 0) {
@@ -604,16 +559,13 @@ export async function placeOrder() {
     )
     
     if (invalidItems.length > 0) {
-      console.log('⚠️ Found invalid items in cart, removing them:', invalidItems)
       
       // Remove invalid items
       for (const item of invalidItems) {
         try {
           await sdk.store.cart
             .deleteLineItem(cart.id, item.id)
-          console.log(`✅ Removed invalid item: ${item.id}`)
-        } catch (error) {
-          console.error(`❌ Failed to remove invalid item ${item.id}:`, error)
+        } catch {
         }
       }
       
@@ -665,14 +617,36 @@ export async function placeOrder() {
     }
   }
 
-  console.log('🛒 Placing order with cart ID:', cartId)
-  console.log('🛒 Cart validation passed, proceeding with order completion')
 
   try {
+    // Preserve auth token before cart completion
+    const authHeadersBeforeComplete = await getAuthHeaders()
+    const authToken = 'authorization' in authHeadersBeforeComplete ? authHeadersBeforeComplete.authorization.replace('Bearer ', '') : null
+    
+    // Backup auth token to localStorage as additional safety
+    if (authToken && typeof window !== 'undefined') {
+      localStorage.setItem('_shopenup_jwt_backup', authToken)
+    }
+    
     const cartRes = await sdk.store.cart
       .complete(cartId, {}, await getCompleteHeaders())
-      .then((cartRes) => {
-        console.log('✅ Order completed successfully:', cartRes)
+      .then(async (cartRes) => {
+        
+        // // Restore auth token if it was cleared by backend (non-blocking)
+        // if (authToken) {
+        //   // Use requestAnimationFrame to ensure this doesn't block navigation
+        //   requestAnimationFrame(async () => {
+        //     const authHeadersAfterComplete = await getAuthHeaders()
+        //     if (!('authorization' in authHeadersAfterComplete) || !authHeadersAfterComplete.authorization) {
+        //       await setAuthToken(authToken)
+        //       // Clean up backup token
+        //       if (typeof window !== 'undefined') {
+        //         localStorage.removeItem('_shopenup_jwt_backup')
+        //       }
+        //     }
+        //   })
+        // }
+        
         revalidateTag("cart")
         revalidateTag("orders")
         return cartRes
@@ -681,15 +655,28 @@ export async function placeOrder() {
     if (cartRes?.type === "order") {
       await clearAllCartData()
       console.log('✅ Cart data cleared after successful order placement')
+      return cartRes
+    } else if (cartRes?.type === "cart") {
+      if (cartRes.cart.payment_collection?.payment_sessions) {
+        const failedSessions = cartRes.cart.payment_collection.payment_sessions.filter(
+          (session: any) => session.status === 'error' || !session.data || Object.keys(session.data).length === 0
+        )
+        if (failedSessions.length > 0) {
+          console.log('❌ Found failed payment sessions:', failedSessions)
+          throw new Error('Payment sessions failed. Please try again with a different payment method.')
+        }
+      }
+      
+      throw new Error('Order completion failed. Cart was not converted to order. Please check payment status.')
+    } else {
+      console.log('❌ Unexpected response type:', cartRes)  
+      throw new Error('Unexpected response from order completion')
     }
 
-    return cartRes
   } catch (error: any) {
-    console.error('❌ Error completing order:', error)
     
     // Handle inventory error specifically
-    if (error.message && error.message.includes('not stocked at location')) {
-      console.log('⚠️ Inventory error detected - this is a backend configuration issue')
+    if (error instanceof Error && error.message && error.message.includes('not stocked at location')) {
       throw new Error('Order completion failed due to inventory configuration. Please contact support or try again later.')
     }
     
@@ -699,10 +686,15 @@ export async function placeOrder() {
 
 /**
  * Updates the countryCode param and revalidate the regions cache
- * @param regionId
  * @param countryCode
+ * @param currentPath
+ * @param redirectCallback Optional callback function to handle redirection
  */
-export async function updateRegion(countryCode: string, currentPath: string) {
+export async function updateRegion(
+  countryCode: string, 
+  currentPath: string, 
+  redirectCallback?: (url: string) => void
+) {
   if (typeof countryCode !== "string") {
     throw new Error("Invalid country code")
   }
@@ -726,5 +718,22 @@ export async function updateRegion(countryCode: string, currentPath: string) {
   revalidateTag("regions")
   revalidateTag("products")
 
-  redirect(`/${countryCode}${currentPath}`)
+  const redirectUrl = `/${countryCode}${currentPath}`
+  
+  // If redirect callback is provided, use it for client-side navigation
+  if (redirectCallback) {
+    redirectCallback(redirectUrl)
+  } else {
+    // Use Next.js router for client-side navigation without page reload
+    if (typeof window !== 'undefined') {
+      // Dynamic import to avoid SSR issues
+      import('next/router').then(({ default: router }) => {
+        router.push(redirectUrl)
+      }).catch(() => {
+        // Fallback to history API if Next.js router is not available
+        window.history.pushState({}, '', redirectUrl)
+        window.dispatchEvent(new PopStateEvent('popstate'))
+      })
+    }
+  }
 }

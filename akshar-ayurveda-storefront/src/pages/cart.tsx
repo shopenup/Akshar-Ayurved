@@ -4,14 +4,11 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { Button, Card, Badge } from '@components/ui';
 import { useCartWithSync, useUpdateLineItem, useDeleteLineItem } from '@hooks/cart';
-import { useCountryCode } from '@hooks/country-code';
 import { convertToLocale } from '@lib/util/money';
-import { HttpTypes } from '@shopenup/types';
 
 export default function Cart() {
   const router = useRouter();
-  const countryCode = useCountryCode() || 'in'; // Default to 'IN' if no country code found
-
+  
   // Use the synchronized cart hook - enable cart fetching even without country code
   const { data: cart, isLoading: cartLoading, error: cartError } = useCartWithSync({
     enabled: true // Always enable cart fetching
@@ -31,16 +28,14 @@ export default function Cart() {
 
     try {
       await updateLineItemMutation.mutateAsync({ lineId, quantity: newQuantity });
-    } catch (error) {
-      console.error('Failed to update quantity:', error);
+    } catch {
     }
   };
 
   const removeItem = async (lineId: string) => {
     try {
       await deleteLineItemMutation.mutateAsync({ lineId });
-    } catch (error) {
-      console.error('Failed to remove item:', error);
+    } catch {
     }
   };
 

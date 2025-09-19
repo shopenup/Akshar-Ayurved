@@ -56,7 +56,7 @@ export default function ReviewPage() {
     
     // Simulate API call
     setTimeout(() => {
-      console.log('Submitting reviews:', reviews);
+      //console.log('Submitting reviews:', reviews);
       setIsSubmitting(false);
       router.push('/orders');
     }, 2000);

@@ -8,9 +8,8 @@ import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import PaginatedProducts from "@modules/store/templates/paginated-products"
 import { Layout, LayoutColumn } from "@components/Layout"
-import { getCategoriesList } from "@lib/data/categories"
-import { getProductTypesList } from "@lib/data/product-types"
-import { getRegion } from "@lib/data/regions"
+import { getCategoriesList } from "@lib/shopenup/categories"
+import { getRegion } from "@lib/shopenup/regions"
 
 export default async function CollectionTemplate({
   sortBy,
@@ -33,9 +32,8 @@ export default async function CollectionTemplate({
     collection.metadata ?? {}
   )
 
-  const [categories, types, region] = await Promise.all([
+  const [categories, region] = await Promise.all([
     getCategoriesList(0, 100, ["id", "name", "handle"]),
-    getProductTypesList(0, 100, ["id", "value"]),
     getRegion(countryCode),
   ])
 
@@ -87,10 +85,6 @@ export default async function CollectionTemplate({
           categories.product_categories.map((c) => [c.handle, c.name])
         )}
         category={category}
-        types={Object.fromEntries(
-          types.productTypes.map((t) => [t.value, t.value])
-        )}
-        type={type}
       />
       <Suspense fallback={<SkeletonProductGrid />}>
         {region && (
@@ -109,8 +103,8 @@ export default async function CollectionTemplate({
             typeId={
               !type
                 ? undefined
-                : types.productTypes
-                    .filter((t) => type.includes(t.value))
+                : categories.product_categories
+                    .filter((t) => type.includes(t.handle))
                     .map((t) => t.id)
             }
           />

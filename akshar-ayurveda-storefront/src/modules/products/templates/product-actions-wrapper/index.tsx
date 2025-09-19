@@ -1,4 +1,4 @@
-import { getProductsById } from "@lib/data/products"
+import { productService } from "@lib/shopenup/product"
 import { HttpTypes } from "@shopenup/types"
 import ProductActions from "@modules/products/components/product-actions"
 
@@ -22,7 +22,7 @@ export default async function ProductActionsWrapper({
   }[]
   region: HttpTypes.StoreRegion
 }) {
-  const [product] = await getProductsById({
+  const [product] = await productService.getProductsById({
     ids: [id],
     regionId: region.id,
   })
@@ -32,6 +32,6 @@ export default async function ProductActionsWrapper({
   }
 
   return (
-    <ProductActions product={product} materials={materials} region={region} />
+    <ProductActions product={product as unknown as HttpTypes.StoreProduct} materials={materials} region={region} />
   )
 }

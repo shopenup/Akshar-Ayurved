@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { twJoin } from "tailwind-merge"
 import compareAddresses from "@lib/util/compare-addresses"
 import { SubmitButton } from "@modules/common/components/submit-button"
@@ -20,14 +20,14 @@ const addressesFormSchema = z
     shipping_address: z.object({
       first_name: z.string().min(1),
       last_name: z.string().min(1),
-      company: z.string().optional(),
+      company: z.string().optional().nullable(),
       address_1: z.string().min(1),
-      address_2: z.string().optional(),
+      address_2: z.string().optional().nullable(),
       city: z.string().min(1),
       postal_code: z.string().min(1),
-      province: z.string().optional(),
+      province: z.string().optional().nullable(),
       country_code: z.string().min(2),
-      phone: z.string().optional(),
+      phone: z.string().optional().nullable(),
     }),
   })
   .and(
@@ -40,14 +40,14 @@ const addressesFormSchema = z
         billing_address: z.object({
           first_name: z.string().min(1),
           last_name: z.string().min(1),
-          company: z.string().optional(),
+          company: z.string().optional().nullable(),
           address_1: z.string().min(1),
-          address_2: z.string().optional(),
+          address_2: z.string().optional().nullable(),
           city: z.string().min(1),
           postal_code: z.string().min(1),
-          province: z.string().optional(),
+          province: z.string().optional().nullable(),
           country_code: z.string().min(2),
-          phone: z.string().optional(),
+          phone: z.string().optional().nullable(),
         }),
       }),
     ])
@@ -56,7 +56,6 @@ const addressesFormSchema = z
 const Addresses = ({ cart }: { cart: StoreCart }) => {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const pathname = usePathname()
 
   const isOpen = searchParams.get("step") === "delivery"
 
@@ -79,6 +78,29 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
   const { mutate, isPending, data } = useSetShippingAddress()
 
   const onSubmit = (values: z.infer<typeof addressesFormSchema>) => {
+    
+    // Check for null values in required fields
+    const requiredFields = ['first_name', 'last_name', 'address_1', 'city', 'postal_code', 'country_code']
+    const shippingIssues = requiredFields.filter(field => 
+      !values.shipping_address[field as keyof typeof values.shipping_address] || 
+      values.shipping_address[field as keyof typeof values.shipping_address] === null
+    )
+    
+    if (shippingIssues.length > 0) {
+    }
+    
+    // Handle billing address based on discriminated union
+    if (values.same_as_billing === "off" && 'billing_address' in values) {
+      const billingAddress = (values as { billing_address: Record<string, unknown> }).billing_address
+      const billingIssues = requiredFields.filter(field => 
+        !billingAddress[field] || billingAddress[field] === null
+      )
+      
+      if (billingIssues.length > 0) {
+      }
+    }
+    
+    
     mutate(values, {
               onSuccess: (data) => {
           if (isOpen && data.success) {

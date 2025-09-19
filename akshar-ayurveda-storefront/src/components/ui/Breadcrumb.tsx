@@ -85,7 +85,7 @@ const Breadcrumb: React.FC<BreadcrumbProps> = ({
         
         return (
           <React.Fragment key={index}>
-            <div className={getItemClasses(isLast, isClickable)}>
+            <div className={getItemClasses(isLast, !!isClickable)}>
               {item.icon && <span className="mr-2">{item.icon}</span>}
               
               {isClickable ? (

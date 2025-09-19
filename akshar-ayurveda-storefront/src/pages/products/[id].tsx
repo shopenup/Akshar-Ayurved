@@ -1,16 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Badge, Product360View, useToast } from '@components/ui';
 import { sdk } from '@lib/config';
 import { HttpTypes } from '@shopenup/types';
-import ProductPrice from '@modules/products/components/product-price';
-import ProductActions from '@modules/products/components/product-actions';
+import ProductVariantSelector from '@components/products/ProductVariantSelector';
 import { useAddLineItem, useCartWithSync } from '@hooks/cart';
 import { useCountryCode } from '@hooks/country-code';
-import { productService } from '@lib/shopenup/product';
-import ProductVariantSelector from '@components/products/ProductVariantSelector';
+import { useAppContext } from '../../context/AppContext';
 
 // Product interface based on Shopenup API response
 interface Product {
@@ -72,15 +70,43 @@ interface Product {
     rating?: number;
     review_count?: number;
   };
-  categories?: any[];
+  categories?: { id: string; name: string; value: string }[];
 }
+
+interface WishlistProduct {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  thumbnail?: string;
+  images?: { url: string }[];
+  categories?: { id: string; name: string }[];
+}
+
+interface WishlistProductVariant {
+  id: string;
+  title?: string;
+  prices?: { amount: number }[];
+  product: WishlistProduct;
+}
+
+interface WishlistItem {
+  id: string;
+  product_variant_id?: string;
+  product_variant: WishlistProductVariant;
+}
+
+interface Wishlist {
+  id: string;
+  items: WishlistItem[];
+}
+
 
 export default function ProductPage() {
   const router = useRouter();
   const { id } = router.query;
   const { showToast } = useToast();
   const countryCode = useCountryCode();
-  const { data: cart } = useCartWithSync({ enabled: !!countryCode });
   const addLineItemMutation = useAddLineItem();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -90,9 +116,16 @@ export default function ProductPage() {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('description');
   const [is360ViewActive, setIs360ViewActive] = useState(false);
-  const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(true);
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [wishlist, setWishlist] = useState<Wishlist | null>(null);
+  const [wishlistLoading, setWishlistLoading] = useState(true);
+  const [isInFav, setIsInWishlist] = useState(false);
+
+  const { updateFavouriteCount } = useAppContext();
+
+
 
 
 
@@ -103,7 +136,6 @@ export default function ProductPage() {
       
       try {
         setLoading(true);
-        //console.log('Fetching product with ID:', id);
         
         // Resolve a valid region_id (UUID) by looking up regions once and caching
         const cookieMatch = document.cookie.match(/(?:^|; )country-code=([^;]+)/)
@@ -136,12 +168,11 @@ export default function ProductPage() {
                 localStorage.setItem('country_code', countryCode)
               }
             }
-          } catch (e) {
-            console.warn('Failed to resolve regions, proceeding without region_id', e)
+          } catch {
           }
         }
         
-        const query: Record<string, any> = {
+        const query: Record<string, unknown> = {
           id: id,
           fields: "*variants.calculated_price,*categories"
         }
@@ -159,13 +190,11 @@ export default function ProductPage() {
         });
 
         const productData = response.products[0];
-        //console.log('Fetched product data:', productData);
-        //console.log('Product images:', productData?.images);
-        //console.log('Product thumbnail:', productData?.thumbnail);
+      
         
         if (productData) {
           // Use type assertion to bypass complex type mismatches
-          setProduct(productData as any);
+          setProduct(productData as unknown as Product); 
         } else {
           setError('Product not found');
         }
@@ -180,27 +209,166 @@ export default function ProductPage() {
   // After product is loaded, fetch related products
   React.useEffect(() => {
     const fetchRelated = async () => {
-      console.log('Fetching related products', product);
       // Fix: Check for product and at least one category with an id
       if (!product || !product.categories || !product.categories[0] || !product.categories[0].id) return;
       setRelatedLoading(true);
       try {
-        const products = await productService.getProducts({
-          category: product.categories[0].id,
-          limit: 8,
-        });
-        console.log('Related products:', products);
+        // const _products = await productService.getProducts({
+        //   category: product.categories[0].id,
+        //   limit: 8,
+        // });
         // Fix: Ensure type compatibility by mapping to the expected Product type
-        setRelatedProducts(
-          (products as any[]).filter((p: any) => p.id !== product.id) as any
-        );
-      } catch (e) {
+        // setRelatedProducts(
+        //   (products as any[]).filter((p: any) => p.id !== product.id) as any
+        // );
+      } catch {
         setRelatedProducts([]);
       }
       setRelatedLoading(false);
     };
     fetchRelated();
   }, [product]);
+
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        setWishlistLoading(true);
+        const response = await sdk.client.fetch<{ wishlist: Wishlist }>(
+          '/store/customers/me/wishlists',
+          {
+            next: { tags: ['wishlist'] },
+          }
+        );
+  
+        setWishlist(response.wishlist || null);
+      } catch (err) {
+        console.error('Error fetching wishlist:', err);
+      } finally {
+        setWishlistLoading(false);
+      }
+    };
+  
+    fetchWishlist();
+  }, [updateFavouriteCount]);
+
+  
+const getCookie = (name: string) => {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
+
+const customerToken = getCookie('_shopenup_jwt');
+
+const addToFavourites = async (product: Product, selectedVariant?: any) => {
+  try {
+    // 1. Get correct variantId
+    let variantId: string | null = null;
+
+    if (selectedVariant && selectedVariant.id) {
+      variantId = selectedVariant.id;
+    } else if (product.variants && product.variants.length > 0) {
+      // fallback: use first variant
+      variantId = product.variants[0].id;
+    }
+
+    if (!variantId) {
+      showToast("No variant available for this product", "error");
+      return;
+    }
+
+    // 2. Handle guest wishlist
+    if (!customerToken) {
+      const guestWishlist = JSON.parse(localStorage.getItem("guest_wishlist") || "[]");
+      if (!guestWishlist.includes(variantId)) {
+        guestWishlist.push(variantId);
+        localStorage.setItem("guest_wishlist", JSON.stringify(guestWishlist));
+      }
+      showToast("Item added! Login to keep it in your wishlist.", "info");
+      router.push("/login");
+      return;
+    }
+
+    // 3. Fetch or create wishlist
+    let wishlist;
+    try {
+      const wishlistRes: { wishlist?: any } = await sdk.client.fetch(
+        "/store/customers/me/wishlists",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+            "Authorization": `Bearer ${customerToken}`,
+          },
+        }
+      );
+      wishlist = wishlistRes?.wishlist;
+    } catch {}
+
+    if (!wishlist) {
+      const createRes: { wishlist?: any } = await sdk.client.fetch(
+        "/store/customers/me/wishlists",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+            "Authorization": `Bearer ${customerToken}`,
+          },
+        }
+      );
+      wishlist = createRes?.wishlist;
+    }
+
+    if (!wishlist) {
+      showToast("Could not create wishlist", "error");
+      return;
+    }
+
+    // 4. Add correct variant to wishlist
+    try {
+      await sdk.client.fetch("/store/customers/me/wishlists/items", {
+        method: "POST",
+        body: {
+          variant_id: variantId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+          "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+          "Authorization": `Bearer ${customerToken}`,
+        },
+      });
+
+      const variantInfo = selectedVariant
+        ? ` (${selectedVariant.options?.map((opt: any) => opt.value).join(", ")})`
+        : "";
+
+      showToast(`${product.title}${variantInfo} Added to favorites!`, "success");
+      setIsInWishlist(true);
+      updateFavouriteCount((wishlist?.items?.length || 0) + 1);
+    } catch (err: any) {
+      if (
+        err?.message?.includes("Variant is already in wishlist") ||
+        err?.type === "invalid_data"
+      ) {
+        showToast("Product already in favorites", "info");
+      } else {
+        console.error("Error adding to wishlist:", err);
+        showToast("Failed to add to favorites", "error");
+      }
+    }
+  } catch (error) {
+    console.error("Error adding to wishlist:", error);
+    showToast("Failed to add to favorites", "error");
+  }
+};
+
+  const isInWishlist = wishlist?.items?.some(
+  (item) => item?.product_variant_id === selectedVariant?.id
+);
 
   // Handle case when ID is not available yet
   if (!id) {
@@ -217,26 +385,15 @@ export default function ProductPage() {
     );
   }
 
-  // Debug logging
-  //console.log('Product data received:', product);
-  //console.log('Product price:', product?.price);
-  //console.log('Product original_price:', product?.original_price);
-  //console.log('Product variants:', product?.variants);
-  //console.log('Product images:', product?.images);
-  //console.log('Product images type:', typeof product?.images);
-  //console.log('Product images array:', Array.isArray(product?.images) ? product?.images : 'Not an array');
-  //console.log('Product thumbnail:', product?.thumbnail);
-  //console.log('Product thumbnail type:', typeof product?.thumbnail);
-  //console.log('Active image index:', activeImageIndex);
-  
+
   // Log the complete product structure for debugging
   if (product) {
-    //console.log('🔍 Complete product structure:', JSON.stringify(product, null, 2));
+    // console.log('🔍 Complete product structure:', JSON.stringify(product, null, 2));
   }
   
   // Success log
   if (product) {
-    //console.log('✅ Product page rendered successfully');
+    // console.log('✅ Product page rendered successfully');
   }
 
   // Handle loading state
@@ -308,8 +465,7 @@ export default function ProductPage() {
       const variantInfo = selectedVariant ? ` (${selectedVariant.options?.map((opt: any) => opt.value).join(', ') || ''})` : '';
       showToast(`${product.title}${variantInfo} (${quantity}) successfully added to cart!`, 'success');
       
-    } catch (error) {
-      console.error('Failed to add to cart:', error);
+    } catch {
       showToast('Failed to add item to cart. Please try again.', 'error');
     } finally {
       setIsLoading(false);
@@ -402,7 +558,7 @@ export default function ProductPage() {
                   // Extract valid image URLs
                   const validImages = Array.isArray(product.images)
                     ? product.images
-                        .map((img: any) =>
+                        .map((img: unknown) =>
                           typeof img === 'string'
                             ? img
                             : img && typeof img === 'object' && 'url' in img && typeof img.url === 'string'
@@ -434,7 +590,7 @@ export default function ProductPage() {
                     // Fix type error by allowing for possible image object shape
                     const validImages = Array.isArray(product.images)
                       ? product.images
-                          .map((img: any) =>
+                          .map((img: unknown) =>
                             typeof img === 'string'
                               ? img
                               : (img && typeof img === 'object' && 'url' in img && typeof img.url === 'string')
@@ -451,12 +607,6 @@ export default function ProductPage() {
                       : [];
 
                     const imageSrc = validImages[activeImageIndex] || product.thumbnail;
-                    //console.log('Valid images array:', validImages);
-                    //console.log('Main image source:', imageSrc);
-                    //console.log('Image source type:', typeof imageSrc);
-                    //console.log('Image source value:', imageSrc);
-                    //console.log('Product images:', product.images);
-                    //console.log('Product thumbnail:', product.thumbnail);
                     
                     if (imageSrc && typeof imageSrc === 'string') {
                       return (
@@ -467,7 +617,6 @@ export default function ProductPage() {
                           className="object-contain"
                           sizes="(max-width: 1024px) 100vw, 50vw"
                           onError={(e) => {
-                            console.error('Image failed to load:', imageSrc);
                             e.currentTarget.style.display = 'none';
                           }}
                           unoptimized={typeof imageSrc === 'string' && imageSrc.startsWith('http://localhost')} // Disable optimization for localhost
@@ -520,7 +669,7 @@ export default function ProductPage() {
             {!is360ViewActive && (() => {
               const validImages = Array.isArray(product.images)
                 ? product.images
-                    .map((img: any) =>
+                    .map((img: unknown) =>
                       typeof img === 'string'
                         ? img
                         : img && typeof img === 'object' && 'url' in img
@@ -541,7 +690,7 @@ export default function ProductPage() {
                 {(() => {
                   const validImages = Array.isArray(product.images)
                     ? product.images
-                        .map((img: any) =>
+                        .map((img: unknown) =>
                           typeof img === 'string'
                             ? img
                             : img && typeof img === 'object' && 'url' in img
@@ -572,7 +721,6 @@ export default function ProductPage() {
                           height={80}
                           className="object-contain w-full h-full"
                           onError={(e) => {
-                            console.error('Thumbnail failed to load:', image);
                             e.currentTarget.style.display = 'none';
                           }}
                         />
@@ -708,30 +856,30 @@ export default function ProductPage() {
               <div className="flex items-center space-x-4">
                 {(() => {
                   // Use selected variant price if available, otherwise fallback to product price
-                  let price = null;
-                  let originalPrice = null;
+                  let price: number | null = null;
+                  let originalPrice: number | null = null;
                   
                   if (selectedVariant && selectedVariant.calculated_price) {
                     price = selectedVariant.calculated_price.calculated_amount;
-                    originalPrice = selectedVariant.calculated_price.original_amount;
+                    originalPrice = selectedVariant.calculated_price.original_amount || null;
                   } else if (selectedVariant && selectedVariant.prices && selectedVariant.prices.length > 0) {
-                    price = selectedVariant.prices[0].amount;
-                    originalPrice = selectedVariant.prices[0].original_amount;
+                    price = selectedVariant.prices[0].amount || null;
+                    originalPrice = selectedVariant.prices[0].original_amount || null;
                   } else {
                     // Fallback to product price
-                    if (product.price) price = product.price;
-                    else if (product.unit_price) price = product.unit_price;
-                    else if (product.amount) price = product.amount;
+                    if (typeof product.price === "number") price = product.price;
+                    else if (typeof product.unit_price === "number") price = product.unit_price;
+                    else if (typeof product.amount === "number") price = product.amount;
                     
                     // Try variants with calculated_price (Shopenup structure)
                     if (!price && product.variants && product.variants.length > 0) {
                       const variant = product.variants[0];
                       if (variant.calculated_price?.calculated_amount) {
                         price = variant.calculated_price.calculated_amount;
-                        originalPrice = variant.calculated_price.original_amount;
+                        originalPrice = variant.calculated_price.original_amount || null;
                       } else if (variant.prices && variant.prices.length > 0) {
-                        price = variant.prices[0].amount;
-                        originalPrice = variant.prices[0].original_amount;
+                        price = variant.prices[0].amount || null;
+                        originalPrice = variant.prices[0].original_amount || null;
                       }
                     }
                     
@@ -739,11 +887,6 @@ export default function ProductPage() {
                     if (!price && (product.metadata as Record<string, unknown>)?.price) {
                       price = (product.metadata as Record<string, unknown>).price as number;
                     }
-                  }
-                  
-                  // Try metadata or other fields
-                  if (!price && (product.metadata as any)?.price) {
-                    price = (product.metadata as any).price;
                   }
                   
                   if (price) {
@@ -802,15 +945,30 @@ export default function ProductPage() {
                     : 'Add to Cart'
                 }
               </Button>
+              
+              {/* add to favourites button */}
               <Button
                 variant="secondary"
                 size="lg"
-                onClick={() => showToast('Added to favorites!', 'success')}
+                onClick={() => addToFavourites(product,selectedVariant)}
+                className="bg-transparent p-0 border-none outline-none cursor-pointer hover:bg-transparent focus:bg-transparent"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                <svg
+                  className={`w-6 h-6 transition-colors ${isInWishlist ? "text-red-600 fill-red-600" : "text-black fill-none"
+                    }`}
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  />
                 </svg>
               </Button>
+
+
             </div>
             
             {/* Trust Indicators */}

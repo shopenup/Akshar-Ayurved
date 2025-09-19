@@ -14,7 +14,6 @@ import {
   updateCustomer,
   updateCustomerAddress,
 } from "@lib/shopenup/customer"
-import { clearAllCartData } from "@lib/shopenup/cookies"
 import { z } from "zod"
 import { StoreCustomer } from "@shopenup/types"
 
@@ -68,7 +67,7 @@ export const useSignout = (
       return signout(countryCode)
     },
     onSuccess: async (...args) => {
-      console.log('🔄 Clearing queries after signout (keeping cart data)...')
+      //console.log('🔄 Clearing queries after signout (keeping cart data)...')
       
       // Only invalidate customer-related queries, keep cart data
       await queryClient.invalidateQueries({ queryKey: ["customer"] })
@@ -80,7 +79,7 @@ export const useSignout = (
       // Don't clear cart data - only clear auth token
       // await clearAllCartData()
       
-      console.log('✅ Customer queries cleared, cart data preserved')
+      //console.log('✅ Customer queries cleared, cart data preserved')
       
       await options?.onSuccess?.(...args)
     },

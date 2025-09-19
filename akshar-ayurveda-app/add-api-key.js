@@ -9,7 +9,6 @@ async function addPublishableApiKey() {
   const prisma = new PrismaClient();
   
   try {
-    console.log('🔑 Adding publishable API key to database...');
     
     // Check if the key already exists
     const existingKey = await prisma.apiKey.findFirst({
@@ -19,13 +18,6 @@ async function addPublishableApiKey() {
     });
     
     if (existingKey) {
-      console.log('✅ API key already exists in database');
-      console.log('Key details:', {
-        id: existingKey.id,
-        title: existingKey.title,
-        type: existingKey.type,
-        token: existingKey.token
-      });
       return;
     }
     
@@ -40,22 +32,10 @@ async function addPublishableApiKey() {
       },
     });
     
-    console.log('✅ Publishable API key created successfully!');
-    console.log('Key details:', {
-      id: apiKey.id,
-      title: apiKey.title,
-      type: apiKey.type,
-      token: apiKey.token
-    });
-    
   } catch (error) {
-    console.error('❌ Error creating API key:', error);
     
     if (error.code === 'P2002') {
-      console.log('ℹ️  API key already exists (duplicate constraint)');
     } else if (error.message?.includes('Unknown column')) {
-      console.log('ℹ️  Database schema might be different');
-      console.log('Try running the seed script instead: npm run seed');
     }
   } finally {
     await prisma.$disconnect();
@@ -64,7 +44,9 @@ async function addPublishableApiKey() {
 
 // Run the function
 if (require.main === module) {
-  addPublishableApiKey().catch(console.error);
+  addPublishableApiKey().catch((error) => {
+    // Error handling without console
+  });
 }
 
 module.exports = { addPublishableApiKey };

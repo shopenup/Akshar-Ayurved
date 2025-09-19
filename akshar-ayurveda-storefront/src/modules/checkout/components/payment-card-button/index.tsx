@@ -163,15 +163,15 @@ const PaymentMethodButton = ({
   const initiatePaymentSession = useInitiatePaymentSession()
 
   const handleSubmit = () => {
-    console.log("🚀 Initiating payment session for:", selectedPaymentMethod)
+    //console.log("🚀 Initiating payment session for:", selectedPaymentMethod)
     setIsLoading(true)
     initiatePaymentSession.mutate(
       {
         providerId: selectedPaymentMethod,
       },
       {
-        onSuccess: (data) => {
-          console.log("✅ Payment session initiated successfully:", data)
+        onSuccess: () => {
+          //console.log("✅ Payment session initiated successfully:", data)
           if (!isStripe(selectedPaymentMethod)) {
             return router.push(
               pathname + "?" + createQueryString("step", "review"),

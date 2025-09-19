@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@components/ui';
 import { sdk } from '@lib/config';
-import { getAuthHeaders } from '@lib/shopenup/cookies';
+import { getAuthHeaders, setAuthToken } from '@lib/shopenup/cookies';
 
 interface OrderItem {
   id: string;
@@ -50,6 +51,30 @@ interface Customer {
   };
 }
 
+interface Address {
+  first_name?: string;
+  last_name?: string;
+  address_1?: string;
+  address_2?: string;
+  city?: string;
+  postal_code?: string;
+  country_code?: string;
+  phone?: string;
+  province?: string;
+}
+
+interface ShippingMethod {
+  id: string;
+  name: string;
+  amount: number;
+}
+
+interface PaymentCollection {
+  id: string;
+  status: string;
+  amount: number;
+}
+
 interface Order {
   id: string;
   status: string;
@@ -60,10 +85,10 @@ interface Order {
   items: OrderItem[];
   created_at: string;
   updated_at: string;
-  shipping_address?: any;
-  billing_address?: any;
-  shipping_methods?: any[];
-  payment_collection?: any;
+  shipping_address?: Address;
+  billing_address?: Address;
+  shipping_methods?: ShippingMethod[];
+  payment_collection?: PaymentCollection;
 }
 
 export default function OrderConfirmationPage() {
@@ -72,17 +97,10 @@ export default function OrderConfirmationPage() {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (orderId) {
-      loadOrder();
-    }
-  }, [orderId]);
-
-  const loadOrder = async () => {
+  const loadOrder = useCallback(async () => {
     try {
       if (!orderId) return;
 
-      console.log('🔍 Loading order:', orderId);
       
       // Fetch order from the backend
       const orderData = await sdk.store.order
@@ -97,13 +115,37 @@ export default function OrderConfirmationPage() {
         });
 
       setOrder(orderData.order as Order);
-      console.log('📦 Order data structure:', JSON.stringify(orderData.order, null, 2));
       setLoading(false);
     } catch (error) {
       console.error('Error loading order:', error);
       setLoading(false);
     }
-  };
+  }, [orderId]);
+
+  useEffect(() => {
+    if (orderId) {
+      loadOrder();
+      
+      // Check and restore auth token if it was cleared during order placement
+      const checkAndRestoreAuth = async () => {
+        try {
+          const authHeaders = await getAuthHeaders();
+          if (!('authorization' in authHeaders) || !authHeaders.authorization) {
+            // Try to restore from localStorage if available
+            const storedToken = localStorage.getItem('_shopenup_jwt_backup');
+            if (storedToken) {
+              await setAuthToken(storedToken);
+              localStorage.removeItem('_shopenup_jwt_backup');
+            }
+          }
+        } catch (error) {
+          console.error('Error checking auth token:', error);
+        }
+      };
+      
+      checkAndRestoreAuth();
+    }
+  }, [orderId, loadOrder]);
 
   if (loading) {
     return (
@@ -122,7 +164,7 @@ export default function OrderConfirmationPage() {
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">❌</div>
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Order Not Found</h1>
-          <p className="text-gray-600 mb-8">The order you're looking for could not be found.</p>
+          <p className="text-gray-600 mb-8">The order you&apos;re looking for could not be found.</p>
                         <Button variant="primary" onClick={() => router.push('/')}>
               Return to Home
             </Button>
@@ -196,7 +238,7 @@ export default function OrderConfirmationPage() {
                   <div><span className="font-medium">Order Status:</span> {order.status}</div>
                   <div>
                     <span className="font-medium">Email:</span>{" "}
-                    {order.email || order.customer?.email || order.billing_address?.email || order.shipping_address?.email || 'Not available'}
+                    {order.email || order.customer?.email || 'Not available'}
                   </div>
                   <div><span className="font-medium">Order Date:</span> {formatDate(order.created_at)}</div>
                 </div>
@@ -213,7 +255,13 @@ export default function OrderConfirmationPage() {
                 <div key={item.id} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
                   <div className="w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
                     {item.variant?.product?.thumbnail ? (
-                      <img src={item.variant.product.thumbnail} alt={item.title} className="w-full h-full object-cover rounded-lg" />
+                      <Image 
+                        src={item.variant.product.thumbnail} 
+                        alt={item.title} 
+                        width={64}
+                        height={64}
+                        className="w-full h-full object-cover rounded-lg" 
+                      />
                     ) : (
                       <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -279,10 +327,10 @@ export default function OrderConfirmationPage() {
 
           {/* Next Steps */}
           <div className="bg-blue-50 rounded-lg p-6 mb-8">
-            <h3 className="text-lg font-semibold text-blue-900 mb-3">What's Next?</h3>
+            <h3 className="text-lg font-semibold text-blue-900 mb-3">What&apos;s Next?</h3>
             <div className="space-y-2 text-sm text-blue-800">
-              <p>• You'll receive an email confirmation shortly</p>
-              <p>• We'll notify you via SMS when your order ships</p>
+              <p>• You&apos;ll receive an email confirmation shortly</p>
+              <p>• We&apos;ll notify you via SMS when your order ships</p>
               <p>• Track your order using your order ID: {order.id}</p>
               <p>• Order placed on: {formatDate(order.created_at)}</p>
             </div>

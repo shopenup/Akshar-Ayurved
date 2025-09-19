@@ -1,6 +1,51 @@
 import { getProductModule, getInventoryModule } from './init';
 import { sdk } from '@lib/config';
 
+// Minimal API shapes used below to avoid `any`
+type ApiImage = { url?: string } | string;
+interface ApiCalculatedPrice { calculated_amount?: number; original_amount?: number }
+interface ApiVariant {
+  id?: string;
+  price?: number;
+  prices?: Array<{ amount?: number }>;
+  calculated_price?: ApiCalculatedPrice | number;
+  inventory_quantity?: number;
+  inventoryQuantity?: number;
+}
+interface ApiProduct {
+  id: string;
+  title: string;
+  description?: string;
+  price?: number;
+  original_price?: number;
+  images?: ApiImage[];
+  thumbnail?: string;
+  type?: { value?: string; label?: string };
+  rating?: number;
+  review_count?: number;
+  in_stock?: boolean;
+  variants?: ApiVariant[];
+  tags?: string[];
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+}
+interface ApiCategory {
+  id: string;
+  name: string;
+  description?: string;
+  image?: string;
+  product_count?: number;
+  parent_id?: string;
+  children?: ApiCategory[];
+}
+interface ApiCollection {
+  id: string;
+  title: string;
+  description?: string;
+  image?: string;
+}
+
 export interface Product {
   id: string;
   title: string;
@@ -99,8 +144,8 @@ export class ShopenupProductService {
 
   private async initializeModules() {
     try {
-      this.productModule = await getProductModule();
-      this.inventoryModule = await getInventoryModule();
+      this.productModule = await getProductModule() as Record<string, unknown>;
+      this.inventoryModule = await getInventoryModule() as Record<string, unknown>;
     } catch (error) {
       console.error('Failed to initialize product modules:', error);
     }
@@ -109,7 +154,7 @@ export class ShopenupProductService {
   // Get all products with optional filtering
   async getProducts(params?: ProductSearchParams): Promise<Product[]> {
     try {
-      const query: any = {
+      const query: Record<string, unknown> = {
         ...(params?.q && { q: params.q }),
         ...(params?.category && { category_id: params.category }),
         ...(params?.collection && { collection_id: params.collection }),
@@ -125,7 +170,7 @@ export class ShopenupProductService {
         offset: params?.offset || 0,
         fields: '*variants.calculated_price', // Add this to get price information
       };
-      const response = await sdk.client.fetch<{ products: any[] }>(
+      const response = await sdk.client.fetch<{ products: ApiProduct[] }>(
         '/store/products',
         {
           query,
@@ -133,17 +178,19 @@ export class ShopenupProductService {
           // cache: 'force-cache',
         }
       );
-      
-      return (response.products || []).map((product: any) => {
+
+      return (response.products || []).map((product: ApiProduct) => {
         // Extract price from variants if available
         let price = 0;
         let originalPrice = 0;
-        
-        if (product.variants && product.variants[0] && product.variants[0].calculated_price) {
-          price = product.variants[0].calculated_price.calculated_amount || 0;
-          originalPrice = product.variants[0].calculated_price.original_amount || 0;
-        } else if (product.variants && product.variants[0] && typeof product.variants[0].calculated_price === 'number') {
-          price = product.variants[0].calculated_price;
+        if (product.variants && product.variants[0]) {
+          const cp = product.variants[0].calculated_price;
+          if (cp && typeof cp !== 'number') {
+            price = cp.calculated_amount || 0;
+            originalPrice = cp.original_amount || 0;
+          } else if (typeof cp === 'number') {
+            price = cp;
+          }
         } else if (product.variants && product.variants[0] && typeof product.variants[0].price === 'number') {
           price = product.variants[0].price;
         } else if (product.variants && product.variants[0] && product.variants[0].prices && product.variants[0].prices[0]) {
@@ -153,24 +200,28 @@ export class ShopenupProductService {
           price = product.price;
         }
         
+        const normalizedImages = (product.images ?? []).map((img) =>
+          typeof img === 'string' ? { url: img } : { url: img.url || '' }
+        ) as { url: string }[];
+
         return {
           id: product.id,
           title: product.title,
           description: product.description,
           price: price,
           originalPrice: originalPrice,
-          images: product.images || [],
+          images: normalizedImages,
           thumbnail: product.thumbnail,
           category: product.type?.value || 'General',
-          type: product.type,
+          type: product.type ? { value: product.type.value ?? '', label: product.type.label ?? '' } : undefined,
           rating: product.rating,
           reviewCount: product.review_count,
-          inStock: product.in_stock,
-          variants: product.variants,
+          inStock: Boolean(product.in_stock),
+          variants: product.variants as ProductVariant[] | undefined,
           tags: product.tags,
           metadata: product.metadata,
-          createdAt: product.created_at,
-          updatedAt: product.updated_at,
+          createdAt: product.created_at || new Date().toISOString(),
+          updatedAt: product.updated_at || new Date().toISOString(),
         };
       });
     } catch (error) {
@@ -240,29 +291,32 @@ export class ShopenupProductService {
   // Get product by ID
   async getProduct(productId: string): Promise<Product> {
     try {
-      const response = await sdk.client.fetch<{ product: any }>(`/store/products/${productId}`, {
+      const response = await sdk.client.fetch<{ product: ApiProduct }>(`/store/products/${productId}`, {
         next: { tags: ['products'] },
         // cache: 'force-cache',
       });
       const product = response.product;
+      const normalizedImages = (product.images ?? []).map((img) =>
+        typeof img === 'string' ? { url: img } : { url: img.url || '' }
+      ) as { url: string }[];
       return {
         id: product.id,
         title: product.title,
         description: product.description,
-        price: product.price,
-        originalPrice: product.original_price,
-        images: product.images || [],
+        price: Number(product.price ?? 0),
+        originalPrice: Number(product.original_price ?? 0),
+        images: normalizedImages,
         thumbnail: product.thumbnail,
         category: product.type?.value || 'General',
-        type: product.type,
+        type: product.type ? { value: product.type.value ?? '', label: product.type.label ?? '' } : undefined,
         rating: product.rating,
         reviewCount: product.review_count,
-        inStock: product.in_stock,
-        variants: product.variants,
+        inStock: Boolean(product.in_stock),
+        variants: product.variants as ProductVariant[] | undefined,
         tags: product.tags,
         metadata: product.metadata,
-        createdAt: product.created_at,
-        updatedAt: product.updated_at,
+        createdAt: product.created_at || new Date().toISOString(),
+        updatedAt: product.updated_at || new Date().toISOString(),
       };
     } catch (error) {
       console.error('Failed to get product:', error);
@@ -294,9 +348,9 @@ export class ShopenupProductService {
   }
 
   // Fetch prices for a specific product
-  async fetchProductPrices(productId: string): Promise<any> {
+  async fetchProductPrices(productId: string): Promise<Record<string, unknown> | null> {
     try {
-      const response = await sdk.client.fetch<any>(
+      const response = await sdk.client.fetch<Record<string, unknown>>(
         `/store/products/${productId}`,
         {
           next: { tags: ['products'] },
@@ -350,7 +404,7 @@ export class ShopenupProductService {
   // Get all categories
   async getCategories(): Promise<ProductCategory[]> {
     try {
-      const response = await sdk.client.fetch<{ product_categories: any[] }>(
+      const response = await sdk.client.fetch<{ product_categories: ApiCategory[] }>(
         '/store/product-categories',
         {
           query: {},
@@ -358,14 +412,14 @@ export class ShopenupProductService {
           // cache: 'force-cache',
         }
       );
-      return (response.product_categories || []).map((category: any) => ({
+      return (response.product_categories || []).map((category: ApiCategory) => ({
         id: category.id,
         name: category.name,
         description: category.description,
         image: category.image,
-        count: category.product_count,
+        count: Number(category.product_count ?? 0),
         parentId: category.parent_id,
-        children: category.children,
+        children: category.children as unknown as ProductCategory[] | undefined,
       }));
     } catch (error) {
       console.error('Failed to get categories:', error);
@@ -376,7 +430,7 @@ export class ShopenupProductService {
   // Get category by ID
   async getCategory(categoryId: string): Promise<ProductCategory> {
     try {
-      const response = await sdk.client.fetch<{ product_category: any }>(
+      const response = await sdk.client.fetch<{ product_category: ApiCategory }>(
         `/store/product-categories/${categoryId}`,
         {
           next: { tags: ['categories'] },
@@ -389,9 +443,9 @@ export class ShopenupProductService {
         name: category.name,
         description: category.description,
         image: category.image,
-        count: category.product_count,
+        count: Number(category.product_count ?? 0),
         parentId: category.parent_id,
-        children: category.children,
+        children: category.children as unknown as ProductCategory[] | undefined,
       };
     } catch (error) {
       console.error('Failed to get category:', error);
@@ -402,7 +456,7 @@ export class ShopenupProductService {
   // Get all collections
   async getCollections(): Promise<ProductCollection[]> {
     try {
-      const response = await sdk.client.fetch<{ product_collections: any[] }>(
+      const response = await sdk.client.fetch<{ product_collections: ApiCollection[] }>(
         '/store/collections',
         {
           query: {},
@@ -410,7 +464,7 @@ export class ShopenupProductService {
           // cache: 'force-cache',
         }
       );
-      return (response.product_collections || []).map((collection: any) => ({
+      return (response.product_collections || []).map((collection: ApiCollection) => ({
         id: collection.id,
         title: collection.title,
         description: collection.description,
@@ -426,7 +480,7 @@ export class ShopenupProductService {
   // Get collection by ID
   async getCollection(collectionId: string): Promise<ProductCollection> {
     try {
-      const response = await sdk.client.fetch<{ product_collection: any }>(
+      const response = await sdk.client.fetch<{ product_collection: ApiCollection }>(
         `/store/collections/${collectionId}`,
         {
           next: { tags: ['collections'] },
@@ -450,7 +504,7 @@ export class ShopenupProductService {
   // Get product recommendations
   async getProductRecommendations(productId: string, limit: number = 4): Promise<Product[]> {
     try {
-      const response = await sdk.client.fetch<{ products: any[] }>(
+      const response = await sdk.client.fetch<{ products: ApiProduct[] }>(
         `/store/products/${productId}/recommendations`,
         {
           query: { limit },
@@ -458,25 +512,30 @@ export class ShopenupProductService {
           // cache: 'force-cache',
         }
       );
-      return (response.products || []).map((product: any) => ({
+      return (response.products || []).map((product: ApiProduct) => {
+        const normalizedImages = (product.images ?? []).map((img) =>
+          typeof img === 'string' ? { url: img } : { url: img.url || '' }
+        ) as { url: string }[];
+        return ({
         id: product.id,
         title: product.title,
         description: product.description,
-        price: product.price,
-        originalPrice: product.original_price,
-        images: product.images || [],
+        price: Number(product.price ?? 0),
+        originalPrice: Number(product.original_price ?? 0),
+        images: normalizedImages,
         thumbnail: product.thumbnail,
         category: product.type?.value || 'General',
-        type: product.type,
+        type: product.type ? { value: product.type.value ?? '', label: product.type.label ?? '' } : undefined,
         rating: product.rating,
         reviewCount: product.review_count,
-        inStock: product.in_stock,
-        variants: product.variants,
+        inStock: Boolean(product.in_stock),
+        variants: product.variants as ProductVariant[] | undefined,
         tags: product.tags,
         metadata: product.metadata,
-        createdAt: product.created_at,
-        updatedAt: product.updated_at,
-      }));
+        createdAt: product.created_at || new Date().toISOString(),
+        updatedAt: product.updated_at || new Date().toISOString(),
+      });
+      });
     } catch (error) {
       console.error('Failed to get product recommendations:', error);
       throw error;
@@ -490,7 +549,7 @@ export class ShopenupProductService {
     lowStockThreshold: number;
   }> {
     try {
-      const response = await sdk.client.fetch<{ inventory: any }>(
+      const response = await sdk.client.fetch<{ inventory: { in_stock?: boolean; quantity?: number; low_stock_threshold?: number } }>(
         `/store/products/${productId}/inventory`,
         {
           next: { tags: ['products'] },
@@ -499,9 +558,9 @@ export class ShopenupProductService {
       );
       const inventory = response.inventory;
       return {
-        inStock: inventory.in_stock,
-        quantity: inventory.quantity,
-        lowStockThreshold: inventory.low_stock_threshold,
+        inStock: Boolean(inventory.in_stock),
+        quantity: Number(inventory.quantity ?? 0),
+        lowStockThreshold: Number(inventory.low_stock_threshold ?? 0),
       };
     } catch (error) {
       console.error('Failed to get product inventory:', error);
@@ -510,7 +569,7 @@ export class ShopenupProductService {
   }
 
   // Get products by IDs
-  async getProductsById(params: { ids: string[]; regionId: string }): Promise<any[]> {
+  async getProductsById(params: { ids: string[]; regionId: string }): Promise<ApiProduct[]> {
     try {
       const { ids, regionId } = params;
       
@@ -518,7 +577,7 @@ export class ShopenupProductService {
         return [];
       }
 
-      const response = await sdk.client.fetch<{ products: any[] }>('/store/products', {
+      const response = await sdk.client.fetch<{ products: ApiProduct[] }>('/store/products', {
         query: {
           id: ids,
           region_id: regionId,

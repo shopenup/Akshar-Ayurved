@@ -1,5 +1,5 @@
-const { loadEnv, defineConfig } = require('@shopenup/framework/utils');
-const { Modules, ContainerRegistrationKeys } = require('@shopenup/framework');
+const { loadEnv, defineConfig, Modules } = require('@shopenup/framework/utils');
+const { ContainerRegistrationKeys } = require('@shopenup/framework');
 
 loadEnv(process.env.NODE_ENV, process.cwd());
 
@@ -21,41 +21,56 @@ module.exports = defineConfig({
     },
   },
   // plugins: ["medusa-plugin-razorpay-v2"],
+
+  plugins: [
+    {
+      resolve: "@shopenup/shopenup-plugin-wishlist",
+      options: {
+      },
+    },
+    {
+      resolve: "@shopenup/shopenup-plugin-blog",
+      options: {
+      }, // Add any options your plugin requires
+    }
+  ],
   modules: [
+    {
+      resolve: '@shopenup/shopenup/cart',
+    },
     {
       resolve: '@shopenup/shopenup/payment',
       options: {
         providers: [
-          {
-            id: 'stripe',
-            resolve: '@shopenup/shopenup/payment-stripe',
-            options: {
-              apiKey: process.env.STRIPE_API_KEY,
-              webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
-            },
-          },
           // {
-          //   resolve:
-          //     "medusa-plugin-razorpay-v2/providers/payment-razorpay/src",
-          //   id: "razorpay",
+          //   id: 'stripe',
+          //   resolve: '@shopenup/shopenup/payment-stripe',
           //   options: {
-          //     key_id:
-          //       process?.env?.RAZORPAY_TEST_KEY_ID ??
-          //       process?.env?.RAZORPAY_ID,
-          //     key_secret:
-          //       process?.env?.RAZORPAY_TEST_KEY_SECRET ??
-          //       process?.env?.RAZORPAY_SECRET,
-          //     razorpay_account:
-          //       process?.env?.RAZORPAY_TEST_ACCOUNT ??
-          //       process?.env?.RAZORPAY_ACCOUNT,
-          //     automatic_expiry_period: 30 /* any value between 12minuts and 30 days expressed in minutes*/,
-          //     manual_expiry_period: 20,
-          //     refund_speed: "normal",
-          //     webhook_secret:
-          //       process?.env?.RAZORPAY_TEST_WEBHOOK_SECRET ??
-          //       process?.env?.RAZORPAY_WEBHOOK_SECRET
-          //   }
-          // }
+          //     apiKey: process.env.STRIPE_API_KEY,
+          //     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
+          //   },
+          // },
+          {
+            resolve: "./src/modules/razorpay",
+            id: "razorpay",
+            options: {
+              key_id:
+                process?.env?.RAZORPAY_TEST_KEY_ID ??
+                process?.env?.RAZORPAY_ID,
+              key_secret:
+                process?.env?.RAZORPAY_TEST_KEY_SECRET ??
+                process?.env?.RAZORPAY_SECRET,
+              razorpay_account:
+                process?.env?.RAZORPAY_TEST_ACCOUNT ??
+                process?.env?.RAZORPAY_ACCOUNT,
+              automatic_expiry_period: 30 /* any value between 12minuts and 30 days expressed in minutes*/,
+              manual_expiry_period: 20,
+              refund_speed: "normal",
+              webhook_secret:
+                process?.env?.RAZORPAY_TEST_WEBHOOK_SECRET ??
+                process?.env?.RAZORPAY_WEBHOOK_SECRET
+            }
+          }
         ],
       },
     },

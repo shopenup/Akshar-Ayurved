@@ -40,15 +40,14 @@ const Thumbnail: React.FC<ThumbnailProps> = ({
       )}
       data-testid={dataTestid}
     >
-      <ImageOrPlaceholder image={initialImage} size={size} />
+      <ImageOrPlaceholder image={initialImage} />
     </div>
   )
 }
 
 const ImageOrPlaceholder = ({
   image,
-  size,
-}: Pick<ThumbnailProps, "size"> & { image?: string }) => {
+}: { image?: string }) => {
   return image ? (
     <Image
       src={image}
@@ -61,7 +60,7 @@ const ImageOrPlaceholder = ({
     />
   ) : (
     <div className="w-full h-full absolute inset-0 flex items-center justify-center">
-      <PlaceholderImage size={size === "small" ? 16 : 24} />
+      <PlaceholderImage name="case" />
     </div>
   )
 }

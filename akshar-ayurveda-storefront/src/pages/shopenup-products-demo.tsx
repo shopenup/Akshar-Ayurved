@@ -2,8 +2,8 @@ import React from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Layout } from '../components/layout';
-import { Button, Card, Badge, Spinner, Alert } from '../components/ui';
+import Layout from '@components/layout/Layout';
+import { Button, Card, Badge, Spinner, Alert } from '@components/ui';
 import { 
   useProducts, 
   useNewArrivals, 
@@ -11,8 +11,8 @@ import {
   useProductsOnSale, 
   useCategories, 
   useCollections
-} from '../hooks/useShopenupProducts';
-import { type Product, type ProductCategory, type ProductCollection } from '../lib/shopenup/product';
+} from '@hooks/useShopenupProducts';
+import { type Product, type ProductCategory, type ProductCollection } from '@lib/shopenup/product';
 import { useRouter } from 'next/router';
 
 export default function ShopenupProductsDemo() {
@@ -29,9 +29,8 @@ export default function ShopenupProductsDemo() {
     router.push(`/products/${productId}`);
   };
 
-  const handleAddToCart = (productId: string) => {
-    console.log('Add to cart:', productId);
-  };
+  // const handleAddToCart = (_productId: string) => {
+  // };
 
   const LoadingSpinner = () => (
     <div className="flex justify-center py-8">
@@ -47,7 +46,7 @@ export default function ShopenupProductsDemo() {
     <Card className="p-4 hover:shadow-lg transition-shadow">
       <div className="relative mb-4">
         <Image
-          src={product.thumbnail || product.images?.[0] || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`}
+          src={product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : product.images?.[0]?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`}
           alt={product.title}
           width={300}
           height={300}
@@ -95,7 +94,7 @@ export default function ShopenupProductsDemo() {
         <Button 
           variant="outline" 
           size="sm"
-          onClick={() => handleAddToCart(product.id)}
+          // onClick={() => handleAddToCart(product.id)}
           disabled={!product.inStock}
         >
           Add to Cart

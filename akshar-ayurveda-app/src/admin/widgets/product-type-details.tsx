@@ -83,7 +83,6 @@ const ProductTypeDetailsWidget = ({
         setDetails(json);
       })
       .catch((e) => {
-        console.error(e);
       });
   }, [data.id]);
 

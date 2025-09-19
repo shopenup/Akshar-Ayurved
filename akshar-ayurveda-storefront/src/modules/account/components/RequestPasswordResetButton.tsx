@@ -6,7 +6,7 @@ import { Button } from "@components/Button"
 import { UiCloseButton, UiDialog, UiDialogTrigger } from "@components/Dialog"
 import { Icon } from "@components/Icon"
 import { UiModal, UiModalOverlay } from "@components/ui/Modal"
-import { requestPasswordReset } from "@lib/data/customer"
+import { requestPasswordReset } from "@lib/shopenup/customer"
 
 export const RequestPasswordResetButton: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = React.useState(false)
@@ -48,7 +48,7 @@ export const RequestPasswordResetButton: React.FC = () => {
         >
           Reset password
         </Button>
-        <UiModalOverlay isDismissable={false} className="bg-transparent">
+        <UiModalOverlay className="bg-transparent">
           <UiModal className="relative">
             <UiDialog>
               <p className="text-md mb-12">Reset password</p>

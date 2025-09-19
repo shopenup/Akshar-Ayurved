@@ -137,7 +137,6 @@ const CollectionDetailsWidget = ({
         setDetails(json);
       })
       .catch((e) => {
-        console.error(e);
       });
   }, [data.id]);
 

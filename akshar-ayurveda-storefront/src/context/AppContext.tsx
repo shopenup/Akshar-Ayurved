@@ -70,7 +70,7 @@ export function AppProvider({ children }: AppProviderProps) {
     setCartItemCount(0);
     setFavouriteCount(0);
     setIsLoggedIn(false);
-    console.log('🔄 App state reset - user logged out');
+    ////console.log('🔄 App state reset - user logged out');
   };
 
   const value = {

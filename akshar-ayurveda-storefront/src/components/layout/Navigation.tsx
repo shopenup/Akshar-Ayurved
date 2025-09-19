@@ -7,6 +7,8 @@ import { GlobalSearch } from '../ui';
 import { useSignout } from '@hooks/customer';
 import { useAppContext } from '@context/AppContext';
 import { useCartWithSync } from '@hooks/cart';
+import { sdk } from '@lib/config';
+
 
 
 interface Category {
@@ -24,33 +26,88 @@ interface NavigationProps {
   resetAppState?: () => void;
 }
 
+interface WishlistProduct {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  thumbnail?: string;
+  images?: { url: string }[];
+  categories?: { id: string; name: string }[];
+}
+
+interface WishlistProductVariant {
+  id: string;
+  title?: string;
+  prices?: { amount: number }[];
+  product: WishlistProduct;
+}
+
+interface WishlistItem {
+  id: string;
+  product_variant_id?: string;
+  product_variant: WishlistProductVariant;
+}
+
+interface Wishlist {
+  id: string;
+  items: WishlistItem[];
+}
+
 export default function Navigation({ 
   cartItemCount = 0, 
   favouriteCount = 0, 
   isLoggedIn = false,
-  updateCartCount,
-  setLoggedIn,
   resetAppState
 }: NavigationProps) {
   const router = useRouter();
   const { mutateAsync: signout, isPending: isSigningOut } = useSignout();
   const { resetAppState: contextResetAppState, updateCartCount: contextUpdateCartCount } = useAppContext();
+  const [wishlist, setWishlist] = useState<Wishlist | null>(null);
+  const [wishlistLoading, setWishlistLoading] = useState(true);
+  const { updateFavouriteCount } = useAppContext();
+    
   
   // Use cart hook to get real-time cart data with automatic context sync
-  const { data: cart } = useCartWithSync({ enabled: true });
+  useCartWithSync({ enabled: true });
   
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [categoriesError, setCategoriesError] = useState<string | null>(null);
   const [isProductsDropdownOpen, setIsProductsDropdownOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
 
   // Use the cart count from context - it's automatically synced by useCartWithSync
   const currentCartCount = cartItemCount;
+   favouriteCount = wishlist?.items?.length || 0;
 
   const toggleProductsDropdown = () => {
     setIsProductsDropdownOpen(!isProductsDropdownOpen);
   };
+
+  
+
+ useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        setWishlistLoading(true);
+        const response = await sdk.client.fetch<{ wishlist: Wishlist }>(
+          '/store/customers/me/wishlists',
+          {
+            next: { tags: ['wishlist'] },
+          }
+        );
+  
+        setWishlist(response.wishlist || null);
+      } catch (err) {
+        console.error('Error fetching wishlist:', err);
+      } finally {
+        setWishlistLoading(false);
+      }
+    };
+  
+    fetchWishlist();
+  }, [updateFavouriteCount]);
+
 
   // Fetch categories when component mounts
   useEffect(() => {
@@ -102,7 +159,6 @@ export default function Navigation({
   const handleSignout = async () => {
     try {
       await signout('in');
-      
       // Reset app state but keep cart data
       if (contextResetAppState) {
         contextResetAppState();

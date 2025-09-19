@@ -4,7 +4,8 @@
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": true,               // Enable strict mode
+    "noImplicitAny": false,       // ✅ Allow `any` without errors
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,

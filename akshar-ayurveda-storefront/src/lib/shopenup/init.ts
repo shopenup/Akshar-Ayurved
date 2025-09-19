@@ -137,7 +137,6 @@
 // Initialize Shopenup app (placeholder for now)
 export async function initializeShopenup() {
   try {
-    console.log('Initializing ShopenUp framework...');
     
     // Placeholder app object for now
     const app = {
@@ -382,7 +381,7 @@ export async function initializeShopenup() {
             ];
             return collections.find(c => c.id === collectionId) || collections[0];
           },
-          getProductRecommendations: async (productId: string, params: Record<string, unknown>) => {
+          getProductRecommendations: async (_productId: string, params: Record<string, unknown>) => {
             const mockProducts = [
               {
                 id: '2',
@@ -407,11 +406,13 @@ export async function initializeShopenup() {
           }
         },
         inventory: {
-          checkStock: async (productId: string) => {
+          checkStock: async (_productId: string) => {
+            void _productId;
             // Mock stock status - most products are in stock
             return Math.random() > 0.1; // 90% chance of being in stock
           },
-          getInventory: async (productId: string) => {
+          getInventory: async (_productId: string) => {
+            void _productId;
             return {
               in_stock: true,
               quantity: Math.floor(Math.random() * 100) + 10,
@@ -427,14 +428,12 @@ export async function initializeShopenup() {
         notification: null
       },
       initialize: async () => {
-        console.log('ShopenUp modules initialized (placeholder)');
       }
     };
     
     // Initialize core services
     await app.initialize();
     
-    console.log('ShopenUp framework initialized successfully');
     
     return app;
   } catch (error) {
@@ -454,47 +453,48 @@ export async function getShopenupApp() {
 }
 
 // Export individual module getters for easy access
-export async function getProductModule() {
+    export async function getProductModule() {
   const app = await getShopenupApp();
-  return app.modules.product;
+  // Type assertion to fix 'app.modules' is of type 'unknown'
+  return (app as { modules: { product: unknown } }).modules.product;
 }
 
 export async function getInventoryModule() {
   const app = await getShopenupApp();
-  return app.modules.inventory;
+  return (app as { modules: { inventory: unknown } }).modules.inventory;
 }
 
 export async function getOrderModule() {
   const app = await getShopenupApp();
-  return app.modules.order;
+  return (app as { modules: { order: unknown } }).modules.order;
 }
 
 export async function getPaymentModule() {
   const app = await getShopenupApp();
-  return app.modules.payment;
+  return (app as { modules: { payment: unknown } }).modules.payment;
 }
 
 export async function getCustomerModule() {
   const app = await getShopenupApp();
-  return app.modules.customer;
+  return (app as { modules: { customer: unknown } }).modules.customer;
 }
 
 export async function getCartModule() {
   const app = await getShopenupApp();
-  return app.modules.cart;
+  return (app as { modules: { cart: unknown } }).modules.cart;
 }
 
 export async function getAuthModule() {
   const app = await getShopenupApp();
-  return app.modules.auth;
+  return (app as { modules: { auth: unknown } }).modules.auth;
 }
 
 export async function getNotificationModule() {
   const app = await getShopenupApp();
-  return app.modules.notification;
+  return (app as { modules: { notification: unknown } }).modules.notification;
 }
 
 export async function getAnalyticsModule() {
   const app = await getShopenupApp();
-  return app.modules.analytics;
+  return (app as { modules: { analytics: unknown } }).modules.analytics;
 }

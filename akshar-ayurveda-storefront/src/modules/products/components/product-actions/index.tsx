@@ -6,7 +6,8 @@ import { HttpTypes } from "@shopenup/types"
 import * as ReactAria from "react-aria-components"
 import { getVariantItemsInStock } from "@lib/util/inventory"
 import { Button } from "@components/Button"
-import { NumberField } from "@components/NumberField"
+// import NumberField from "@components/ui/Input"
+import { Input } from "@components/ui"
 import {
   UiSelectButton,
   UiSelectIcon,
@@ -130,7 +131,7 @@ function ProductActions({ product, materials, disabled }: ProductActionsProps) {
       })
       
 
-    } catch (error) {
+    } catch {
       toast.error("Oops!! Something went wrong. Please try again...", {
         duration: 2000,
       })
@@ -206,7 +207,7 @@ function ProductActions({ product, materials, disabled }: ProductActionsProps) {
                 >
                   <UiSelectButton className="!h-12 px-4 gap-2 max-md:text-base">
                     <UiSelectValue />
-                    <UiSelectIcon className="h-6 w-6" />
+                    <UiSelectIcon />
                   </UiSelectButton>
                   <ReactAria.Popover className="w-[--trigger-width]">
                     <UiSelectListBox>
@@ -231,13 +232,12 @@ function ProductActions({ product, materials, disabled }: ProductActionsProps) {
                     </span>
                   </p>
                   <UiRadioGroup
-                    value={options[colorOption.id] ?? null}
+                    value={options[colorOption.id] ?? undefined}
                     onChange={(value) => {
                       setOptionValue(colorOption.id, value)
                     }}
                     aria-label="Color"
                     className="flex gap-6"
-                    isDisabled={!!disabled || isPending}
                   >
                     {selectedMaterial.colors.map((color) => (
                       <ReactAria.Radio
@@ -277,7 +277,7 @@ function ProductActions({ product, materials, disabled }: ProductActionsProps) {
                   >
                     <UiSelectButton className="!h-12 px-4 gap-2 max-md:text-base">
                       <UiSelectValue />
-                      <UiSelectIcon className="h-6 w-6" />
+                      <UiSelectIcon />
                     </UiSelectButton>
                     <ReactAria.Popover className="w-[--trigger-width]">
                       <UiSelectListBox>
@@ -300,21 +300,19 @@ function ProductActions({ product, materials, disabled }: ProductActionsProps) {
         </div>
       )}
       <div className="flex max-sm:flex-col gap-4">
-        <NumberField
-          isDisabled={
+        <Input
+          type="number"
+          disabled={
             !itemsInStock || !selectedVariant || !!disabled || isPending
           }
-          value={quantity}
-          onChange={setQuantity}
-          minValue={1}
-          maxValue={itemsInStock}
+          value={quantity.toString()}
+          onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)}
           className="w-full sm:w-35 max-md:justify-center max-md:gap-2"
-          aria-label="Quantity"
         />
         <Button
           onPress={handleAddToCart}
-          isDisabled={!itemsInStock || !selectedVariant || !!disabled}
-          isLoading={isPending}
+            disabled={!itemsInStock || !selectedVariant || !!disabled}
+              isLoading={isPending}
           className="sm:flex-1"
         >
           {!selectedVariant

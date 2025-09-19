@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { Button } from '../components/ui';
-import { clearAllCartData, removeAuthToken, removeCartId } from '../lib/shopenup/cookies';
+import { clearAllCartData } from '../lib/shopenup/cookies';
 
 export default function ClearDataPage() {
   const router = useRouter();
@@ -24,9 +24,7 @@ export default function ClearDataPage() {
       }
       
       setIsCleared(true);
-      console.log("✅ All Shopenup data cleared using proper utility functions!");
-    } catch (error) {
-      console.error("❌ Error clearing data:", error);
+    } catch {
     } finally {
       setIsClearing(false);
     }

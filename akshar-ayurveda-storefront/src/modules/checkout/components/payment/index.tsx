@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useContext, useEffect, useMemo, useState } from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { CreditCard } from "@shopenup/icons"
 import { CardElement } from "@stripe/react-stripe-js"
 import { StripeCardElementOptions } from "@stripe/stripe-js"
@@ -26,7 +26,8 @@ import { StoreCart, StorePaymentSession } from "@shopenup/types"
 
 // Payment info map for available methods - only include what's actually configured
 const paymentInfoMap: Record<string, { title: string; icon: React.ReactNode }> = {
-  pp_stripe_stripe: { title: "Credit Card", icon: "💳" },
+  // pp_stripe_stripe: { title: "Credit Card", icon: "💳" },
+  pp_razorpay_razorpay: { title: "Razorpay", icon: "💳" },
   pp_system_default: { title: "Manual Payment", icon: "📝" },
 }
 
@@ -38,7 +39,6 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
 
   const searchParams = useSearchParams()
   const router = useRouter()
-  const pathname = usePathname()
 
   const isOpen = searchParams.get("step") === "payment"
 
@@ -93,11 +93,12 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
   )
   
   // Debug: Log available payment methods
-  console.log("🔍 Available payment methods:", availablePaymentMethods)
   
   // Filter to only show Stripe and Manual Payment
   const supportedPaymentMethods = availablePaymentMethods?.filter(method => 
-    method.type === 'pp_stripe_stripe' || method.type === 'pp_system_default'
+    method.type === 'pp_stripe_stripe' || 
+    method.type === 'pp_razorpay_razorpay' || 
+    method.type === 'pp_system_default'
   ) || []
   
   // Add Manual Payment if not already present (for testing purposes)
@@ -106,7 +107,6 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
   ]
   
   // Debug: Log filtered payment methods
-  console.log("✅ Supported payment methods:", supportedPaymentMethods)
 
   const isStripe = isStripeFunc(activeSession?.provider_id)
   const stripeReady = useContext(StripeContext)

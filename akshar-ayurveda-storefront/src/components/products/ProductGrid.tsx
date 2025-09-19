@@ -38,7 +38,6 @@ const ProductGrid: React.FC<ProductGridProps> = ({
   className = '',
   loading = false,
   emptyMessage = 'No products found',
-  addingToCart = null,
 }) => {
   const gridCols = {
     1: 'grid-cols-1',

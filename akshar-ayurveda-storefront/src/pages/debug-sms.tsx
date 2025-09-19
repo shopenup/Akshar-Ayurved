@@ -13,10 +13,8 @@ export default function DebugSMSPage() {
     try {
       const result = await testSMSServiceHeaders();
       setHeaders(result);
-      console.log('Headers test result:', result);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
-      console.error('Headers test error:', err);
     } finally {
       setLoading(false);
     }
@@ -99,7 +97,7 @@ export default function DebugSMSPage() {
                 <ul className="text-blue-800 text-sm space-y-1">
                   <li>• Check that environment variables are loaded correctly</li>
                   <li>• Verify the publishable key is set</li>
-                  <li>• Test headers generation to see what's being sent</li>
+                  <li>• Test headers generation to see what&apos;s being sent</li>
                   <li>• Check browser console for detailed logs</li>
                 </ul>
               </div>

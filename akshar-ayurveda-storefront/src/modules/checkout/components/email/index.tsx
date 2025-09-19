@@ -1,16 +1,12 @@
 "use client"
 
 import React from "react"
-import { usePathname, useRouter, useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { twJoin } from "tailwind-merge"
 import { z } from "zod"
 import { SubmitButton } from "@modules/common/components/submit-button"
 import { Button } from "@components/Button"
 import { Form, InputField } from "@components/Forms"
-import { UiCloseButton, UiDialog, UiDialogTrigger } from "@components/Dialog"
-import { UiModal, UiModalOverlay } from "@components/ui/Modal"
-import { Icon } from "@components/Icon"
-import { LoginForm } from "@modules/auth/components/LoginForm"
 import ErrorMessage from "@modules/checkout/components/error-message"
 import { useCustomer } from "hooks/customer"
 import { useSetEmail } from "hooks/cart"
@@ -30,7 +26,6 @@ const Email = ({
 }) => {
   const searchParams = useSearchParams()
   const router = useRouter()
-  const pathname = usePathname()
 
   const { data: customer, isPending: customerPending } = useCustomer()
 
@@ -42,7 +37,6 @@ const Email = ({
   const validCountryCode = countryCode || 'in'
 
   const onSubmit = (values: z.infer<typeof emailFormSchema>) => {
-    console.log("🔍 Email form submitted with:", { email: values.email, countryCode: validCountryCode })
     mutate(
       { ...values, country_code: validCountryCode },
       {

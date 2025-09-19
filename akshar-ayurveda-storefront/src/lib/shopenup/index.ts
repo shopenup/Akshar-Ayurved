@@ -5,13 +5,12 @@ export * from './payment';
 export * from './ui';
 
 // Re-export core services for easy access
-export { cartService } from './cart';
-export { paymentService } from './payment';
-export { productService } from './product';
-export { initializeShopenupUI, shopenupUIComponents } from './ui';
+export * from './cart';
+export * from './payment';
+export * from './product';
+export { initializeShopenupUI, shopenupUIComponents } from './ui';  
 
 // Export types for use in components
-export type { Cart, CartItem } from './cart';
 export type { PaymentIntent, PaymentMethod, PaymentData } from './payment';
 export type { ShopenupUIComponents } from './ui';
 export type { Product, ProductVariant, ProductCategory, ProductCollection, ProductFilter, ProductSearchParams } from './product';
@@ -43,7 +42,7 @@ export class ShopenupIntegration {
       await import('./ui').then(({ initializeShopenupUI }) => initializeShopenupUI());
       
       this.initialized = true;
-      console.log('Shopenup integration initialized successfully');
+      //console.log('Shopenup integration initialized successfully');
     } catch (error) {
       console.error('Failed to initialize Shopenup integration:', error);
       throw error;
@@ -64,13 +63,16 @@ export async function initializeShopenup() {
 }
 
 export async function getCartService() {
-  const { cartService } = await import('./cart');
-  return cartService;
+  return await import('./cart');
 }
 
 export async function getPaymentService() {
-  const { paymentService } = await import('./payment');
-  return paymentService;
+  return await import('./payment');
+}
+
+export async function getProductService() {
+  const { productService } = await import('./product');
+  return productService;
 }
 
 export async function getUIComponents() {

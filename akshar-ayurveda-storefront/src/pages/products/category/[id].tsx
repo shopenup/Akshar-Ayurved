@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
 import { sdk } from '@lib/config';
@@ -8,7 +8,6 @@ import Hero from '@components/layout/Hero';
 import Section from '@components/layout/Section';
 import { Button } from '@components/ui';
 import { useToast } from '@components/ui';
-import { useAppContext } from '@context/AppContext';
 import { useAddLineItem } from '@hooks/cart';
 import { useCountryCode } from '@hooks/country-code';
 
@@ -40,9 +39,8 @@ export default function ProductCategoryPage() {
   const router = useRouter();
   const { id } = router.query;
   const { showToast } = useToast();
-  const { updateCartCount } = useAppContext();
   const countryCode = useCountryCode() || 'in';
-  const { mutateAsync: addLineItem, isPending: isAddingToCart } = useAddLineItem();
+  const { mutateAsync: addLineItem } = useAddLineItem();
   
   const [category, setCategory] = useState<Category | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
@@ -52,20 +50,13 @@ export default function ProductCategoryPage() {
   const [error, setError] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (id) {
-      fetchCategoryAndProducts();
-    }
-  }, [id]);
-
-
-  const fetchCategoryAndProducts = async () => {
+  const fetchCategoryAndProducts = useCallback(async () => {
     try {
       setLoading(true);
       
       // Fetch categories
       const categoriesResponse = await getCategoriesList();   
-      const categoryData = categoriesResponse.product_categories.find((cat: any) => cat.id === id);
+      const categoryData = categoriesResponse.product_categories.find((cat: unknown) => (cat as { id: string }).id === id);
       
       if (!categoryData) {
         setError('Category not found');
@@ -78,13 +69,13 @@ export default function ProductCategoryPage() {
         id: categoryData.id,
         name: categoryData.name,
         description: categoryData.description || '',
-        image: (categoryData as any).thumbnail || '',
+        image: (categoryData as { thumbnail?: string }).thumbnail || '',
         productCount: 0, // Will be updated after fetching products
-        isActive: (categoryData as any).is_active !== undefined ? (categoryData as any).is_active : true
+        isActive: (categoryData as { is_active?: boolean }).is_active ?? true
       });
 
       // Fetch products for this category from API
-      const query: any = {
+      const query: Record<string, unknown> = {
         limit: 100,
         offset: 0,
         fields: '*variants.calculated_price',
@@ -92,7 +83,7 @@ export default function ProductCategoryPage() {
       };
       
       
-      const productsResponse = await sdk.client.fetch<{ products: any[]; count: number }>(
+      const productsResponse = await sdk.client.fetch<{ products: unknown[]; count: number }>(
         '/store/products',
         {
           query,
@@ -101,33 +92,53 @@ export default function ProductCategoryPage() {
       );
       
 
-      const formattedProducts: Product[] = (productsResponse.products || []).map((product: any) => {
+      const formattedProducts: Product[] = (productsResponse.products || []).map((product: unknown) => {
+        const p = product as {
+          id: string;
+          title: string;
+          description?: string;
+          price?: number;
+          original_price?: number;
+          thumbnail?: string;
+          images?: Array<{ url?: string }>;
+          category?: { name?: string };
+          type?: { label?: string };
+          tags?: string[];
+          rating?: number;
+          review_count?: number;
+          variants?: Array<{
+            calculated_price?: { calculated_amount?: number };
+            inventory_quantity?: number;
+          }>;
+          in_stock?: boolean;
+        };
+        
         // Try to get price from different sources
         let price = 0;
         
         // Check calculated_price first (most common)
-        if (product.variants?.[0]?.calculated_price?.calculated_amount) {
-          price = product.variants[0].calculated_price.calculated_amount;
+        if (p.variants?.[0]?.calculated_price?.calculated_amount) {
+          price = p.variants[0].calculated_price.calculated_amount;
         }
         // Fallback to direct price
-        else if (product.price) {
-          price = product.price;
+        else if (p.price) {
+          price = p.price;
         }
         
         
         return {
-          id: product.id,
-          name: product.title,
-          description: product.description || '',
+          id: p.id,
+          name: p.title,
+          description: p.description || '',
           price: price,
-          originalPrice: product.original_price,
-          image: product.thumbnail || product.images?.[0]?.url || '',
-          images: product.images?.map((img: any) => img.url).filter(Boolean) || [],
-          category: product.category?.name || product.type?.label || '',
-          tags: product.tags || [],
-          rating: product.rating,
-          reviewCount: product.review_count,
-          inStock: product.variants?.[0]?.inventory_quantity > 0 || product.in_stock !== false
+          originalPrice: p.original_price,
+          image: p.thumbnail || p.images?.[0]?.url || '',
+          images: p.images?.map((img: unknown) => (img as { url?: string }).url).filter((url): url is string => Boolean(url)) || [],
+          category: p.category?.name || p.type?.label || '',
+          tags: p.tags || [],
+          rating: p.rating,
+          reviewCount: p.review_count,
+          inStock: (p.variants?.[0]?.inventory_quantity ?? 0) > 0 || p.in_stock !== false
         };
       });
 
@@ -139,13 +150,18 @@ export default function ProductCategoryPage() {
         ...prev,
         productCount: formattedProducts.length
       } : null);
-    } catch (err) {
-      console.error('Error fetching category data:', err);
+    } catch {
       setError('Failed to load category data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (id) {
+      fetchCategoryAndProducts();
+    }
+  }, [id, fetchCategoryAndProducts]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -168,7 +184,6 @@ export default function ProductCategoryPage() {
       
       // Find the product
       const product = products.find(p => p.id === productId);
-      console.log(`product: `, product);
       
       if (!product) {
         showToast('Product not found', 'error');
@@ -183,16 +198,15 @@ export default function ProductCategoryPage() {
 
       // Get the first variant ID (most products have only one variant)
       // We need to fetch the product details to get the variant ID
-      const productResponse = await sdk.client.fetch<{ product: any }>(
+      const productResponse = await sdk.client.fetch<{ product: unknown }>(
         `/store/products/${productId}`,
         {
           next: { tags: ['products'] },
         }
       );
 
-      const variantId = productResponse.product?.variants?.[0]?.id;
+      const variantId = (productResponse.product as { variants?: Array<{ id?: string }> })?.variants?.[0]?.id;
       if (!variantId) {
-        console.error('No variant found for product:', productId);
         showToast('Product variant not found', 'error');
         return;
       }
@@ -206,8 +220,7 @@ export default function ProductCategoryPage() {
 
       showToast(`${product.name} added to cart`, 'success');
 
-    } catch (error) {
-      console.error('Error adding to cart:', error);
+    } catch {
       showToast('Failed to add product to cart', 'error');
     } finally {
       setAddingToCart(null);
@@ -227,11 +240,11 @@ export default function ProductCategoryPage() {
       let favorites = savedFavorites ? JSON.parse(savedFavorites) : [];
 
       // Check if already in favorites
-      const isAlreadyFavorite = favorites.some((fav: any) => fav.id === productId);
+      const isAlreadyFavorite = favorites.some((fav: unknown) => (fav as { id: string }).id === productId);
       
       if (isAlreadyFavorite) {
         // Remove from favorites
-        favorites = favorites.filter((fav: any) => fav.id !== productId);
+        favorites = favorites.filter((fav: unknown) => (fav as { id: string }).id !== productId);
         showToast(`${product.name} removed from favorites`, 'success');
       } else {
         // Add to favorites
@@ -248,8 +261,7 @@ export default function ProductCategoryPage() {
       // Save favorites
       localStorage.setItem('favorites', JSON.stringify(favorites));
 
-    } catch (error) {
-      console.error('Error managing favorites:', error);
+    } catch {
       showToast('Failed to update favorites', 'error');
     }
   };

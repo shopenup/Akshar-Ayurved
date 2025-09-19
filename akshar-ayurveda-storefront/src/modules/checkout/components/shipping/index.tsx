@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter, useSearchParams, usePathname } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { twJoin } from "tailwind-merge"
 import { convertToLocale } from "@lib/util/money"
 import ErrorMessage from "@modules/checkout/components/error-message"
@@ -17,25 +17,13 @@ import { StoreCart } from "@shopenup/types"
 
 const Shipping = ({ cart }: { cart: StoreCart }) => {
   const [error, setError] = useState<string | null>(null)
-  console.log("cart", cart)
   const searchParams = useSearchParams()
   const router = useRouter()
-  const pathname = usePathname()
 
   const isOpen = searchParams.get("step") === "shipping"
 
   const { data: availableShippingMethods } = useCartShippingMethods(cart.id)
-  console.log("availableShippingMethods", availableShippingMethods)
-  console.log("🔍 Cart shipping details:", {
-    cartId: cart.id,
-    selectedShippingMethod: cart.shipping_methods?.[0],
-    availableMethods: availableShippingMethods?.map(m => ({
-      id: m.id,
-      name: m.name,
-      amount: m.amount,
-      provider_id: m.provider_id
-    }))
-  })
+
 
   const { mutate, isPending } = useSetShippingMethod({ cartId: cart.id })
   const selectedShippingMethod = availableShippingMethods?.find(

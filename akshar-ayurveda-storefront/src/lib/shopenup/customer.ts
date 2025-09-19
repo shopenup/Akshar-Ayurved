@@ -6,9 +6,7 @@ import { sdk } from "@lib/config"
 import {
   getAuthHeaders,
   setAuthToken,
-  removeAuthToken,
   getCartId,
-  removeCartId,
   clearAuthDataOnly,
 } from "@lib/shopenup/cookies"
 import {
@@ -19,11 +17,11 @@ import {
 } from "hooks/customer"
 
 // Client-side compatible revalidation function
-const revalidateTag = (tag: string) => {
+const revalidateTag = (_tag: string) => {
   // In client-side context, we'll trigger a page refresh or use other methods
   if (typeof window !== 'undefined') {
     // Optionally trigger a page refresh or use other client-side cache invalidation
-    console.log(`Revalidating tag: ${tag}`)
+    console.log(`Revalidating tag: ${_tag}`)
   }
 }
 
@@ -157,6 +155,13 @@ export async function signout(countryCode: string) {
   await sdk.auth.logout()
   await clearAuthDataOnly()
   revalidateTag("customer")
+  // try {
+  //   const { clearCartEmail } = await import("./cart")
+  //   await clearCartEmail()
+  //   console.log('🧹 Cart email cleared on signout')
+  // } catch (error) {
+  //   console.warn('⚠️ Failed to clear cart email on signout:', error)
+  // }
   // Don't revalidate cart - keep cart data
   // revalidateTag("cart")
   return countryCode

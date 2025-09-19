@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { Button, Badge, useToast } from '../components/ui';
+import { Button, useToast } from '../components/ui';
 import ProductCard from '../components/ui/ProductCard';
 import { sdk } from '@lib/config';
 import { HttpTypes } from '@shopenup/types';
@@ -9,20 +9,33 @@ import { getCategoriesList } from '@lib/shopenup/categories';
 import { useAddLineItem } from '../hooks/cart';
 import { useAppContext } from '../context/AppContext';
 
+interface ProductVariant {
+  id: string;
+  title?: string;
+  price?: number;
+  sku?: string;
+  inventory_quantity?: number;
+}
+
+interface ProductImage {
+  id: string;
+  url: string;
+}
+
 interface Product {
   id: string;
   title: string;
   description?: string;
   price: number;
   original_price?: number;
-  images: any[] | null;
+  images: ProductImage[] | null;
   thumbnail?: string | null;
   status: string;
   created_at: string | null;
   updated_at: string | null;
-  variants?: any[];
+  variants?: ProductVariant[];
   tags?: string[];
-  categories?: any[];
+  categories?: unknown[];
   type?: {
     value: string;
     label: string;
@@ -44,10 +57,37 @@ interface FilterState {
   searchQuery: string;
 }
 
+interface WishlistProduct {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  thumbnail?: string;
+  images?: { url: string }[];
+  categories?: { id: string; name: string }[];
+}
+
+interface WishlistProductVariant {
+  id: string;
+  title?: string;
+  prices?: { amount: number }[];
+  product: WishlistProduct;
+}
+
+interface WishlistItem {
+  id: string;
+  product_variant: WishlistProductVariant;
+}
+
+interface Wishlist {
+  id: string;
+  items: WishlistItem[];
+}
+
+
 export default function ProductsPage() {
   const router = useRouter();
-  const { updateCartCount } = useAppContext();
-  const { mutateAsync: addLineItem, isPending: isAddingToCart } = useAddLineItem();
+  const { mutateAsync: addLineItem } = useAddLineItem();
   const { showToast } = useToast();
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -56,6 +96,9 @@ export default function ProductsPage() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [wishlist, setWishlist] = useState<Wishlist | null>(null);
+  const [wishlistLoading, setWishlistLoading] = useState(true); 
+  const { updateFavouriteCount } = useAppContext();
   
   // Filter states
   const [filters, setFilters] = useState<FilterState>({
@@ -66,17 +109,40 @@ export default function ProductsPage() {
     searchQuery: ''
   });
 
+
+// Fetch wishlist
+useEffect(() => {
+  const fetchWishlist = async () => {
+    try {
+      setWishlistLoading(true);
+      const response = await sdk.client.fetch<{ wishlist: Wishlist }>(
+        '/store/customers/me/wishlists',
+        {
+          next: { tags: ['wishlist'] },
+        }
+      );
+
+      setWishlist(response.wishlist || null);
+    } catch (err: any) {
+      console.error('Error fetching wishlist:', err);
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  fetchWishlist();
+}, [updateFavouriteCount]);
+
+
   // Fetch categories
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setCategoriesLoading(true);
         const cats = await getCategoriesList();
-        //console.log('Categories fetched:', cats);
         setCategories(cats.product_categories || []);
-      } catch (err: any) {
-        console.error('Error fetching categories:', err);
-        setError(err.message);
+      } catch (err: unknown) {
+        setError((err as Error).message);
       } finally {
         setCategoriesLoading(false);
       }
@@ -89,7 +155,7 @@ export default function ProductsPage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const query: any = {
+        const query: Record<string, unknown> = {
           limit: 100,
           offset: 0,
           fields: '*variants.calculated_price,*categories',
@@ -105,8 +171,6 @@ export default function ProductsPage() {
           query.q = filters.searchQuery;
         }
         
-        //console.log('Fetching products with query:', query);
-        
         const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
           '/store/products',
           {
@@ -115,11 +179,10 @@ export default function ProductsPage() {
             // fields:{'*categories'}
           }
         );
+
+        
         
         const sdkProducts = response.products || [];
-        console.log('sdkProducts', sdkProducts);
-        //console.log('Products fetched:', sdkProducts.length);
-        //console.log('Raw products:', sdkProducts.map(p => ({ id: p.id, title: p.title, status: p.status, price: p.variants?.[0]?.calculated_price })));
 
         // Map StoreProduct[] to Product[] by ensuring 'price' is present
         const mappedProducts = sdkProducts.map((p) => {
@@ -135,43 +198,45 @@ export default function ProductsPage() {
             price = p.variants[0].calculated_price;
           }
           // Method 3: Try variants[0].price
-          else if (p.variants && p.variants[0] && typeof (p.variants[0] as any).price === 'number') {
-            price = (p.variants[0] as any).price;
+          else if (p.variants && p.variants[0] && typeof (p.variants[0] as { price?: number }).price === 'number') {
+            price = (p.variants[0] as { price?: number }).price!;
           }
           // Method 4: Try direct price property
-          else if (typeof (p as any).price === 'number') {
-            price = (p as any).price;
+          else if (typeof (p as { price?: number }).price === 'number') {
+            price = (p as { price?: number }).price!;
           }
           // Method 5: Try original_price
-          else if (typeof (p as any).original_price === 'number') {
-            price = (p as any).original_price;
+          else if (typeof (p as { original_price?: number }).original_price === 'number') {
+            price = (p as { original_price?: number }).original_price!;
           }
           
-          console.log(`Product ${p.title} - Price extracted:`, price, 'from variants:', p.variants);
           
           return {
             id: p.id,
             title: p.title,
             description: p.description || undefined,
             price: price,
-            original_price: (p as any).original_price || undefined,
-            images: p.images || [],
+            original_price: (p as { original_price?: number }).original_price || undefined,
+            images: (p.images || []).map((img: unknown, index: number) => 
+              typeof img === 'string' ? { id: `img-${index}`, url: img } : 
+              img && typeof img === 'object' && 'url' in img ? 
+                { id: `img-${index}`, url: (img as { url: string }).url } : 
+                { id: `img-${index}`, url: '' }
+            ),
             thumbnail: p.thumbnail || undefined,
             status: p.status,
             created_at: p.created_at || '',
             updated_at: p.updated_at || '',
-            variants: p.variants || [],
+            variants: (p.variants || []) as ProductVariant[],
             tags: p.tags,
             type: p.type,
             categories: p.categories || [], // <-- ensure categories is mapped
           };
         });
 
-        //console.log('Mapped products:', mappedProducts.map(p => ({ id: p.id, title: p.title, status: p.status, price: p.price })));
         setProducts(mappedProducts as Product[]);
-      } catch (err: any) {
-        console.error('Error fetching products:', err);
-        setError(err.message);
+      } catch (err: unknown) {
+        setError((err as Error).message);
       } finally {
         setLoading(false);
       }
@@ -181,30 +246,25 @@ export default function ProductsPage() {
 
   // Filter and sort products
   const filteredAndSortedProducts = React.useMemo(() => {
-    //console.log('Filtering products:', products.length, 'products');
-    //console.log('Filter settings:', filters);
     
-    let filtered = products.filter(product => {
+    const filtered = products.filter(() => {
       // Temporarily disable all filters for debugging
       return true;
       
       // Stock filter
       // if (filters.inStock && product.status !== 'published') {
-      //   //console.log('Filtered out by stock:', product.title, 'status:', product.status);
       //   return false;
       // }
       
       // Price range filter
       // const price = product.price || 0;
       // if (price < filters.priceRange[0] || price > filters.priceRange[1]) {
-      //   //console.log('Filtered out by price:', product.title, 'price:', price, 'range:', filters.priceRange);
       //   return false;
       // }
       
       // return true;
     });
 
-    //console.log('After filtering:', filtered.length, 'products remain');
 
     // Sort products
     filtered.sort((a, b) => {
@@ -242,13 +302,12 @@ export default function ProductsPage() {
     
     try {
       // Get the first variant ID (most products have only one variant)
-      const variantId = product?.variants?.[0]?.id;
+      const variantId = (product?.variants?.[0] as { id?: string })?.id;
       if (!variantId) {
-        console.error('No variant found for product:', productId);
         return;
       }
 
-      //console.log('Adding to cart:', { productId, variantId, quantity: 1 });
+     
       
       await addLineItem({
         variantId,
@@ -256,7 +315,7 @@ export default function ProductsPage() {
         countryCode: 'in' // Default to India
       });
 
-      //console.log('✅ Product added to cart successfully');
+    
     } catch (error) {
       console.error('Error adding to cart:', error);
       showToast('Failed to add item to cart. Please try again.', 'error');
@@ -264,7 +323,7 @@ export default function ProductsPage() {
     
   };
 
-  const handleFilterChange = (key: keyof FilterState, value: any) => {
+  const handleFilterChange = (key: keyof FilterState, value: unknown) => {
     setFilters(prev => ({
       ...prev,
       [key]: value
@@ -540,13 +599,21 @@ export default function ProductsPage() {
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
                       {filteredAndSortedProducts.map((product) => (
-                        console.log(product),
                         <ProductCard
                           key={product.id}
-                          product={product}
+                          product={{
+                            ...product,
+                            // Ensure categories is correctly typed as { id: string; name: string; }[] | undefined
+                            categories: product.categories as { id: string; name: string; }[] | undefined,
+                            variants: product.variants?.map(variant => ({
+                              ...variant,
+                              title: variant.title ?? ""
+                            }))
+                          }}
                           onProductClick={handleProductClick}
                           onAddToCart={handleAddToCart}
                           showAddToCart={true}
+                          wishlist={wishlist}
                         />
                       ))}
                     </div>
@@ -560,3 +627,5 @@ export default function ProductsPage() {
     </>
   );
 }
+
+         

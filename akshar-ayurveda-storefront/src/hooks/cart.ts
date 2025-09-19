@@ -94,11 +94,18 @@ export const useCartShippingMethods = (cartId: string) => {
 
 export const useCartPaymentMethods = (regionId: string) => {
   return useQuery({
-    queryKey: [regionId],
+    queryKey: ['payment-methods', regionId],
     queryFn: async () => {
       const res = await listCartPaymentMethods(regionId)
       return res
     },
+    retry: (failureCount, error) => {
+      console.error('🔄 Payment methods query retry:', failureCount, error)
+      return failureCount < 2
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
   })
 }
 
@@ -251,14 +258,14 @@ export const addressesFormSchema = z
     shipping_address: z.object({
       first_name: z.string().min(1),
       last_name: z.string().min(1),
-      company: z.string().optional(),
+      company: z.string().optional().nullable(),
       address_1: z.string().min(1),
-      address_2: z.string().optional(),
+      address_2: z.string().optional().nullable(),
       city: z.string().min(1),
       postal_code: z.string().min(1),
-      province: z.string().optional(),
+      province: z.string().optional().nullable(),
       country_code: z.string().min(2),
-      phone: z.string().optional(),
+      phone: z.string().optional().nullable(),
     }),
   })
   .and(
@@ -271,14 +278,14 @@ export const addressesFormSchema = z
         billing_address: z.object({
           first_name: z.string().min(1),
           last_name: z.string().min(1),
-          company: z.string().optional(),
+          company: z.string().optional().nullable(),
           address_1: z.string().min(1),
-          address_2: z.string().optional(),
+          address_2: z.string().optional().nullable(),
           city: z.string().min(1),
           postal_code: z.string().min(1),
-          province: z.string().optional(),
+          province: z.string().optional().nullable(),
           country_code: z.string().min(2),
-          phone: z.string().optional(),
+          phone: z.string().optional().nullable(),
         }),
       }),
     ])
@@ -460,7 +467,12 @@ export const usePlaceOrder = (
         updateCartCount(0)
       }
 
-      await options?.onSuccess?.(...args)
+      if (options?.onSuccess) {
+        try {
+          await options.onSuccess(...args)
+        } catch {
+        }
+      }
     },
   })
 }

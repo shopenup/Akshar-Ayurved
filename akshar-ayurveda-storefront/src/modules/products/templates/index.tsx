@@ -157,7 +157,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({
                     <p className="text-base md:text-md">
                       <LocalizedLink
                         href={`/collections/${product.collection.handle}`}
-                        variant="underline"
+                        className="underline"
                       >
                         {collectionDetails.data.product_page_cta_link}
                       </LocalizedLink>
