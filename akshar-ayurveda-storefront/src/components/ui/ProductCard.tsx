@@ -211,11 +211,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <div
-      className={`bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow cursor-pointer ${className}`}
+      className={`bg-white rounded-lg shadow-sm border hover:shadow-xl hover:scale-105 transition-all duration-300 ease-in-out cursor-pointer group ${className}`}
       onClick={handleProductClick}
     >
       {/* Product Image */}
-      <div className="relative">
+      <div className="relative overflow-hidden group">
         <Image
           src={
             product.thumbnail
@@ -231,12 +231,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
           alt={product.title}
           width={300}
           height={192}
-          className="w-full h-48 object-contain rounded-t-lg"
+          className="w-full h-48 object-cover rounded-t-lg transition-transform duration-500 ease-in-out group-hover:scale-125"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder-product.jpg';
           }}
         />
+        
+        {/* Hover Overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 ease-in-out rounded-t-lg"></div>
 
         {/* Favorite Icon - Top Left */}
         <button

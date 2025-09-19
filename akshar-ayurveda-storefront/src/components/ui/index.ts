@@ -36,6 +36,9 @@ export { default as BackToTop } from './BackToTop';
 export { default as Map } from './Map';
 export { default as Product360View } from './Product360View';
 export { default as ProductCard } from './ProductCard';
+export { default as ImageZoom } from './ImageZoom';
+export { default as ProductImageZoom } from './ProductImageZoom';
+export { default as SimpleImageZoom } from './SimpleImageZoom';
 
 // Toast Components
 export { Toast, ToastProvider, useToast } from './Toast';

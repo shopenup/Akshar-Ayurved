@@ -56,19 +56,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Card 
-      className={`overflow-hidden cursor-pointer ${className}`}
+      className={`overflow-hidden cursor-pointer group hover:scale-105 hover:shadow-xl transition-all duration-300 ease-in-out ${className}`}
       hover={true}
       onClick={handleCardClick}
     >
           {/* Product Image */}
-          <div className="relative w-full h-48">
+          <div className="relative w-full h-48 overflow-hidden group">
             <Image
               src={product.image}
               alt={product.name}
               fill
-              className="object-cover"
+              className="object-cover transition-transform duration-500 ease-in-out group-hover:scale-125"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             />
+            
+            {/* Hover Overlay */}
+            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 ease-in-out"></div>
+            
             {/* Discount Badge */}
             {discountPercentage > 0 && (
               <Badge 

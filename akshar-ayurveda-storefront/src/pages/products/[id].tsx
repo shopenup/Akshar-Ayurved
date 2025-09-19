@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Badge, Product360View, useToast } from '@components/ui';
+import SimpleImageZoom from '@components/ui/SimpleImageZoom';
 import { sdk } from '@lib/config';
 import { HttpTypes } from '@shopenup/types';
 import ProductVariantSelector from '@components/products/ProductVariantSelector';
@@ -552,7 +553,7 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
             </div>
 
             {/* Main Image or Gallery View */}
-            <div className="relative w-full h-96 rounded-lg overflow-hidden mb-4 bg-white flex items-center justify-center border border-gray-200 shadow-md">
+            <div className="relative w-full rounded-lg overflow-hidden mb-4 bg-white border border-gray-200 shadow-md">
               {is360ViewActive && product.images && product.images.length > 1 ? (
                 (() => {
                   // Extract valid image URLs
@@ -577,17 +578,16 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
                     <Product360View
                       images={validImages}
                       productName={product.title}
-                      className="w-full h-full"
+                      className="w-full h-96"
                       autoRotate={true}
                       autoRotateSpeed={1500}
                     />
                   );
                 })()
               ) : (
-                <>
+                <div className="relative">
                   {(() => {
                     // Ensure images is an array and extract URLs from objects or strings
-                    // Fix type error by allowing for possible image object shape
                     const validImages = Array.isArray(product.images)
                       ? product.images
                           .map((img: unknown) =>
@@ -610,21 +610,20 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
                     
                     if (imageSrc && typeof imageSrc === 'string') {
                       return (
-                        <Image
+                        <SimpleImageZoom
                           src={imageSrc}
                           alt={product.title}
-                          fill
-                          className="object-contain"
-                          sizes="(max-width: 1024px) 100vw, 50vw"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                          unoptimized={typeof imageSrc === 'string' && imageSrc.startsWith('http://localhost')} // Disable optimization for localhost
+                          width={600}
+                          height={400}
+                          zoomLevel={2.5}
+                          className="w-full h-96"
+                          containerClassName="relative"
+                          responsive={true}
                         />
                       );
                     } else {
                       return (
-                        <div className="w-full h-full flex items-center justify-center">
+                        <div className="w-full h-96 flex items-center justify-center">
                           <div className="text-center">
                             <svg className="w-16 h-16 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -647,21 +646,23 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
                       );
                     }
                   })()}
+                  
+                  {/* Badges positioned absolutely over the zoom component */}
                   {discountPercentage > 0 && (
-                    <Badge variant="danger" size="lg" className="absolute top-4 left-4">
+                    <Badge variant="danger" size="lg" className="absolute top-4 left-4 z-20">
                       -{discountPercentage}%
                     </Badge>
                   )}
-                  {certifications && certifications.length > 0 && (
-                    <div className="absolute top-4 right-4 flex flex-col space-y-2">
+                  {/* {certifications && certifications.length > 0 && (
+                    <div className="absolute top-4 right-4 flex flex-col space-y-2 z-20">
                       {certifications.slice(0, 2).map((cert, index) => (
                         <Badge key={index} variant="success" size="sm">
                           {cert}
                         </Badge>
                       ))}
                     </div>
-                  )}
-                </>
+                  )} */}
+                </div>
               )}
             </div>
             

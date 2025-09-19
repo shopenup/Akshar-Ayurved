@@ -102,12 +102,12 @@ const ProductCarousel: React.FC<ProductCarouselProps> = ({
                         onClick={() => onProductClick?.(product.id)}
                       >
                         {/* Product Image */}
-                        <div className="relative h-48">
+                        <div className="relative h-48 overflow-hidden">
                           <Image
                             src={product.image}
                             alt={product.name}
                             fill
-                            className="object-cover"
+                            className="object-cover transition-transform duration-300 ease-in-out hover:scale-110"
                             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                           />
                           
