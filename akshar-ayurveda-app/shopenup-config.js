@@ -21,6 +21,15 @@ module.exports = defineConfig({
     },
   },
   // plugins: ["medusa-plugin-razorpay-v2"],
+
+  plugins: [
+    {
+      resolve: "@shopenup/shopenup-plugin-wishlist",
+      options: {
+      },
+    },
+  ],
+
   modules: [
     {
       resolve: '@shopenup/shopenup/cart',

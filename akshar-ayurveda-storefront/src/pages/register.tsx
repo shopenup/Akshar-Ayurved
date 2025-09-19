@@ -4,6 +4,85 @@ import { useRouter } from 'next/router';
 import { Button, Input, Card } from '../components/ui';
 import { useSignup } from '../hooks/customer';
 import { useAppContext } from '../context/AppContext';
+import { sdk } from "@lib/config";
+
+const getCookie = (name: string) => {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+    return null;
+  };
+
+
+    const ensureWishlist = async (customerToken: string) => {
+    let wishlist;
+  
+    try {
+      const wishlistRes: { wishlist?: any } = await sdk.client.fetch(
+        "/store/customers/me/wishlists",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+            "Authorization": `Bearer ${customerToken}`,
+          },
+        }
+      );
+  
+      wishlist = wishlistRes?.wishlist;
+    } catch (err) {
+      console.error("Error fetching wishlist:", err);
+    }
+  
+    // Create if missing
+    if (!wishlist) {
+      try {
+        const createRes: { wishlist?: any } = await sdk.client.fetch(
+          "/store/customers/me/wishlists",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+              "Authorization": `Bearer ${customerToken}`,
+            },
+          }
+        );
+        wishlist = createRes?.wishlist;
+      } catch (err) {
+        console.error("Error creating wishlist:", err);
+      }
+    }
+  
+    return wishlist;
+  };
+    
+    const syncGuestWishlist = async (token: string) => {
+    const guestWishlist = JSON.parse(localStorage.getItem("guest_wishlist") || "[]")
+    if (!guestWishlist.length) return
+  
+    try {
+      await Promise.all(
+        guestWishlist.map((variantId: string) =>
+          sdk.client.fetch("/store/customers/me/wishlists/items", {
+            method: "POST",
+            body: { variant_id: variantId }, 
+            headers: {
+              "Content-Type": "application/json",
+              "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+              "Authorization": `Bearer ${token}`,
+            },
+          })
+        )
+      )
+    } catch (err) {
+      console.error("Wishlist sync failed:", err)
+    }
+  
+    localStorage.removeItem("guest_wishlist")
+  }
 
 export default function Register() {
   const [formData, setFormData] = useState({
@@ -47,9 +126,17 @@ export default function Register() {
       last_name: formData.lastName,
       password: formData.password,
     }, {
-      onSuccess: (result) => {
+      onSuccess:async (result) => {
         if (result.success) {
           setLoggedIn(true);
+           // Get token from cookie
+          const customerToken = getCookie("_shopenup_jwt");
+
+          if (customerToken) {
+            await ensureWishlist(customerToken);
+            await syncGuestWishlist(customerToken);
+          }
+
           router.push('/?message=Registration successful! Welcome to AKSHAR AYURVED.');
         } else {
           setError(result.error || 'Registration failed. Please try again.');

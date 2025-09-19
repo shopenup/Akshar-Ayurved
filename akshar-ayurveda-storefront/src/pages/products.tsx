@@ -7,6 +7,7 @@ import { sdk } from '@lib/config';
 import { HttpTypes } from '@shopenup/types';
 import { getCategoriesList } from '@lib/shopenup/categories';
 import { useAddLineItem } from '../hooks/cart';
+import { useAppContext } from '../context/AppContext';
 
 interface ProductVariant {
   id: string;
@@ -56,6 +57,34 @@ interface FilterState {
   searchQuery: string;
 }
 
+interface WishlistProduct {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  thumbnail?: string;
+  images?: { url: string }[];
+  categories?: { id: string; name: string }[];
+}
+
+interface WishlistProductVariant {
+  id: string;
+  title?: string;
+  prices?: { amount: number }[];
+  product: WishlistProduct;
+}
+
+interface WishlistItem {
+  id: string;
+  product_variant: WishlistProductVariant;
+}
+
+interface Wishlist {
+  id: string;
+  items: WishlistItem[];
+}
+
+
 export default function ProductsPage() {
   const router = useRouter();
   const { mutateAsync: addLineItem } = useAddLineItem();
@@ -67,6 +96,9 @@ export default function ProductsPage() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
+  const [wishlist, setWishlist] = useState<Wishlist | null>(null);
+  const [wishlistLoading, setWishlistLoading] = useState(true); 
+  const { updateFavouriteCount } = useAppContext();
   
   // Filter states
   const [filters, setFilters] = useState<FilterState>({
@@ -76,6 +108,31 @@ export default function ProductsPage() {
     sortBy: 'created_at',
     searchQuery: ''
   });
+
+
+// Fetch wishlist
+useEffect(() => {
+  const fetchWishlist = async () => {
+    try {
+      setWishlistLoading(true);
+      const response = await sdk.client.fetch<{ wishlist: Wishlist }>(
+        '/store/customers/me/wishlists',
+        {
+          next: { tags: ['wishlist'] },
+        }
+      );
+
+      setWishlist(response.wishlist || null);
+    } catch (err: any) {
+      console.error('Error fetching wishlist:', err);
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  fetchWishlist();
+}, [updateFavouriteCount]);
+
 
   // Fetch categories
   useEffect(() => {
@@ -114,7 +171,6 @@ export default function ProductsPage() {
           query.q = filters.searchQuery;
         }
         
-        
         const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
           '/store/products',
           {
@@ -123,6 +179,8 @@ export default function ProductsPage() {
             // fields:{'*categories'}
           }
         );
+
+        
         
         const sdkProducts = response.products || [];
 
@@ -249,6 +307,7 @@ export default function ProductsPage() {
         return;
       }
 
+     
       
       await addLineItem({
         variantId,
@@ -256,7 +315,9 @@ export default function ProductsPage() {
         countryCode: 'in' // Default to India
       });
 
-    } catch {
+    
+    } catch (error) {
+      console.error('Error adding to cart:', error);
       showToast('Failed to add item to cart. Please try again.', 'error');
     }
     
@@ -552,6 +613,7 @@ export default function ProductsPage() {
                           onProductClick={handleProductClick}
                           onAddToCart={handleAddToCart}
                           showAddToCart={true}
+                          wishlist={wishlist}
                         />
                       ))}
                     </div>

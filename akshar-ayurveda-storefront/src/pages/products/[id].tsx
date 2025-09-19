@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState ,useEffect} from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button, Badge, Product360View, useToast } from '@components/ui';
 import { sdk } from '@lib/config';
 import { HttpTypes } from '@shopenup/types';
-import { useAddLineItem } from '@hooks/cart';
-import { useCountryCode } from '@hooks/country-code';
 import ProductVariantSelector from '@components/products/ProductVariantSelector';
+import { useAddLineItem, useCartWithSync } from '@hooks/cart';
+import { useCountryCode } from '@hooks/country-code';
+import { useAppContext } from '../../context/AppContext';
 
 // Product interface based on Shopenup API response
 interface Product {
@@ -72,6 +73,35 @@ interface Product {
   categories?: { id: string; name: string; value: string }[];
 }
 
+interface WishlistProduct {
+  id: string;
+  title: string;
+  description?: string;
+  status: string;
+  thumbnail?: string;
+  images?: { url: string }[];
+  categories?: { id: string; name: string }[];
+}
+
+interface WishlistProductVariant {
+  id: string;
+  title?: string;
+  prices?: { amount: number }[];
+  product: WishlistProduct;
+}
+
+interface WishlistItem {
+  id: string;
+  product_variant_id?: string;
+  product_variant: WishlistProductVariant;
+}
+
+interface Wishlist {
+  id: string;
+  items: WishlistItem[];
+}
+
+
 export default function ProductPage() {
   const router = useRouter();
   const { id } = router.query;
@@ -89,6 +119,13 @@ export default function ProductPage() {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [relatedLoading, setRelatedLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [wishlist, setWishlist] = useState<Wishlist | null>(null);
+  const [wishlistLoading, setWishlistLoading] = useState(true);
+  const [isInFav, setIsInWishlist] = useState(false);
+
+  const { updateFavouriteCount } = useAppContext();
+
+
 
 
 
@@ -153,6 +190,7 @@ export default function ProductPage() {
         });
 
         const productData = response.products[0];
+      
         
         if (productData) {
           // Use type assertion to bypass complex type mismatches
@@ -191,6 +229,147 @@ export default function ProductPage() {
     fetchRelated();
   }, [product]);
 
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        setWishlistLoading(true);
+        const response = await sdk.client.fetch<{ wishlist: Wishlist }>(
+          '/store/customers/me/wishlists',
+          {
+            next: { tags: ['wishlist'] },
+          }
+        );
+  
+        setWishlist(response.wishlist || null);
+      } catch (err) {
+        console.error('Error fetching wishlist:', err);
+      } finally {
+        setWishlistLoading(false);
+      }
+    };
+  
+    fetchWishlist();
+  }, [updateFavouriteCount]);
+
+  
+const getCookie = (name: string) => {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
+
+const customerToken = getCookie('_shopenup_jwt');
+
+const addToFavourites = async (product: Product, selectedVariant?: any) => {
+  try {
+    // 1. Get correct variantId
+    let variantId: string | null = null;
+
+    if (selectedVariant && selectedVariant.id) {
+      variantId = selectedVariant.id;
+    } else if (product.variants && product.variants.length > 0) {
+      // fallback: use first variant
+      variantId = product.variants[0].id;
+    }
+
+    if (!variantId) {
+      showToast("No variant available for this product", "error");
+      return;
+    }
+
+    // 2. Handle guest wishlist
+    if (!customerToken) {
+      const guestWishlist = JSON.parse(localStorage.getItem("guest_wishlist") || "[]");
+      if (!guestWishlist.includes(variantId)) {
+        guestWishlist.push(variantId);
+        localStorage.setItem("guest_wishlist", JSON.stringify(guestWishlist));
+      }
+      showToast("Item added! Login to keep it in your wishlist.", "info");
+      router.push("/login");
+      return;
+    }
+
+    // 3. Fetch or create wishlist
+    let wishlist;
+    try {
+      const wishlistRes: { wishlist?: any } = await sdk.client.fetch(
+        "/store/customers/me/wishlists",
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+            "Authorization": `Bearer ${customerToken}`,
+          },
+        }
+      );
+      wishlist = wishlistRes?.wishlist;
+    } catch {}
+
+    if (!wishlist) {
+      const createRes: { wishlist?: any } = await sdk.client.fetch(
+        "/store/customers/me/wishlists",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+            "Authorization": `Bearer ${customerToken}`,
+          },
+        }
+      );
+      wishlist = createRes?.wishlist;
+    }
+
+    if (!wishlist) {
+      showToast("Could not create wishlist", "error");
+      return;
+    }
+
+    // 4. Add correct variant to wishlist
+    try {
+      await sdk.client.fetch("/store/customers/me/wishlists/items", {
+        method: "POST",
+        body: {
+          variant_id: variantId,
+        },
+        headers: {
+          "Content-Type": "application/json",
+          "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+          "Authorization": `Bearer ${customerToken}`,
+        },
+      });
+
+      const variantInfo = selectedVariant
+        ? ` (${selectedVariant.options?.map((opt: any) => opt.value).join(", ")})`
+        : "";
+
+      showToast(`${product.title}${variantInfo} Added to favorites!`, "success");
+      setIsInWishlist(true);
+      updateFavouriteCount((wishlist?.items?.length || 0) + 1);
+    } catch (err: any) {
+      if (
+        err?.message?.includes("Variant is already in wishlist") ||
+        err?.type === "invalid_data"
+      ) {
+        showToast("Product already in favorites", "info");
+      } else {
+        console.error("Error adding to wishlist:", err);
+        showToast("Failed to add to favorites", "error");
+      }
+    }
+  } catch (error) {
+    console.error("Error adding to wishlist:", error);
+    showToast("Failed to add to favorites", "error");
+  }
+};
+
+  const isInWishlist = wishlist?.items?.some(
+  (item) => item?.product_variant_id === selectedVariant?.id
+);
+
   // Handle case when ID is not available yet
   if (!id) {
     return (
@@ -206,14 +385,15 @@ export default function ProductPage() {
     );
   }
 
-  // Debug logging
-  
+
   // Log the complete product structure for debugging
   if (product) {
+    // console.log('🔍 Complete product structure:', JSON.stringify(product, null, 2));
   }
   
   // Success log
   if (product) {
+    // console.log('✅ Product page rendered successfully');
   }
 
   // Handle loading state
@@ -765,15 +945,30 @@ export default function ProductPage() {
                     : 'Add to Cart'
                 }
               </Button>
+              
+              {/* add to favourites button */}
               <Button
                 variant="secondary"
                 size="lg"
-                onClick={() => showToast('Added to favorites!', 'success')}
+                onClick={() => addToFavourites(product,selectedVariant)}
+                className="bg-transparent p-0 border-none outline-none cursor-pointer hover:bg-transparent focus:bg-transparent"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                <svg
+                  className={`w-6 h-6 transition-colors ${isInWishlist ? "text-red-600 fill-red-600" : "text-black fill-none"
+                    }`}
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  />
                 </svg>
               </Button>
+
+
             </div>
             
             {/* Trust Indicators */}

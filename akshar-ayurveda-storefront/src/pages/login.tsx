@@ -5,6 +5,7 @@ import { useAppContext } from '../context/AppContext'
 import { useLogin } from '../hooks/customer'
 import { EyeIcon, EyeOffIcon } from '../utils/icons'
 import Link from 'next/link';
+import { sdk } from '@lib/config';
 
 interface LoginFormData {
   email: string;
@@ -23,13 +24,103 @@ export default function LoginForm({ className, redirectUrl, handleCheckout }: Lo
   const { setLoggedIn } = useAppContext()
   const [showPassword, setShowPassword] = useState(false)
 
+
+  const getCookie = (name: string) => {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+    return null;
+  };
+
+  const ensureWishlist = async (customerToken: string) => {
+  let wishlist;
+
+  try {
+    const wishlistRes: { wishlist?: any } = await sdk.client.fetch(
+      "/store/customers/me/wishlists",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+          "Authorization": `Bearer ${customerToken}`,
+        },
+      }
+    );
+
+    wishlist = wishlistRes?.wishlist;
+  } catch (err) {
+    console.error("Error fetching wishlist:", err);
+  }
+
+  // Create if missing
+  if (!wishlist) {
+    try {
+      const createRes: { wishlist?: any } = await sdk.client.fetch(
+        "/store/customers/me/wishlists",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+            "Authorization": `Bearer ${customerToken}`,
+          },
+        }
+      );
+      wishlist = createRes?.wishlist;
+    } catch (err) {
+      console.error("Error creating wishlist:", err);
+    }
+  }
+
+  return wishlist;
+};
+  
+  const syncGuestWishlist = async (token: string) => {
+  const guestWishlist = JSON.parse(localStorage.getItem("guest_wishlist") || "[]")
+  if (!guestWishlist.length) return
+
+  try {
+    await Promise.all(
+      guestWishlist.map((variantId: string) =>
+        sdk.client.fetch("/store/customers/me/wishlists/items", {
+          method: "POST",
+          body: { variant_id: variantId }, 
+          headers: {
+            "Content-Type": "application/json",
+            "x-publishable-api-key": process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || "",
+            "Authorization": `Bearer ${token}`,
+          },
+        })
+      )
+    )
+  } catch (err) {
+    console.error("Wishlist sync failed:", err)
+  }
+
+  localStorage.removeItem("guest_wishlist")
+}
+
+
+  // const onSubmit = (values: z.infer<typeof loginFormSchema>) => {
   const onSubmit = (values: LoginFormData) => {
     mutate(
       { ...values, redirect_url: redirectUrl },
       {
-        onSuccess: (res) => {
+        onSuccess:async (res) => {
           if (res.success) {
             setLoggedIn(true)
+
+            //get Cookie from local storage
+            const customerToken = getCookie('_shopenup_jwt');
+           
+             // Sync guest wishlist if token exists
+            if (customerToken) {
+              await ensureWishlist(customerToken);
+              await syncGuestWishlist(customerToken)
+            }
+
             if (handleCheckout) {
               handleCheckout({ email: values.email })
             } else {
