@@ -728,7 +728,7 @@ export default function HomePage() {
       </section> */}
 
       {/* Blog Section */}
-      <BlogSection posts={homepageData.blogPosts} />
+      <BlogSection />
 
       {/* Trust & Testimonials Section */}
       <TrustSection

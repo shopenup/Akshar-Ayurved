@@ -28,8 +28,12 @@ module.exports = defineConfig({
       options: {
       },
     },
+    {
+      resolve: "@shopenup/shopenup-plugin-blog",
+      options: {
+      }, // Add any options your plugin requires
+    }
   ],
-
   modules: [
     {
       resolve: '@shopenup/shopenup/cart',
