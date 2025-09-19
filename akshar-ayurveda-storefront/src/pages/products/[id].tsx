@@ -2,6 +2,7 @@ import React, { useState ,useEffect} from 'react';
 import { useRouter } from 'next/router';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useQuery } from '@tanstack/react-query';
 import { Button, Badge, Product360View, useToast } from '@components/ui';
 import SimpleImageZoom from '@components/ui/SimpleImageZoom';
 import { sdk } from '@lib/config';
@@ -109,126 +110,122 @@ export default function ProductPage() {
   const { showToast } = useToast();
   const countryCode = useCountryCode();
   const addLineItemMutation = useAddLineItem();
-  const [product, setProduct] = useState<Product | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('description');
   const [is360ViewActive, setIs360ViewActive] = useState(false);
-  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
-  const [relatedLoading, setRelatedLoading] = useState(true);
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
   const [wishlist, setWishlist] = useState<Wishlist | null>(null);
   const [wishlistLoading, setWishlistLoading] = useState(true);
   const [isInFav, setIsInWishlist] = useState(false);
-
   const { updateFavouriteCount } = useAppContext();
 
 
 
-
-
-  // Fetch product data when component mounts
-  React.useEffect(() => {
-    const fetchProduct = async () => {
-      if (!id) return;
+  // Use React Query for product data to avoid duplicate API calls
+  const {
+    data: productData,
+    isLoading: productLoading,
+    error: productError,
+  } = useQuery({
+    queryKey: ['product', id],
+    queryFn: async () => {
+      if (!id) throw new Error('Product ID is required');
       
-      try {
-        setLoading(true);
-        
-        // Resolve a valid region_id (UUID) by looking up regions once and caching
-        const cookieMatch = document.cookie.match(/(?:^|; )country-code=([^;]+)/)
-        const countryCode = cookieMatch ? decodeURIComponent(cookieMatch[1]) : undefined
-        let region_id = localStorage.getItem('region_id') || undefined
+      // Resolve a valid region_id (UUID) by looking up regions once and caching
+      const cookieMatch = document.cookie.match(/(?:^|; )country-code=([^;]+)/)
+      const countryCode = cookieMatch ? decodeURIComponent(cookieMatch[1]) : undefined
+      let region_id = localStorage.getItem('region_id') || undefined
 
-        if (!region_id) {
-          try {
-            const { regions } = await sdk.client.fetch<{ regions: HttpTypes.StoreRegion[] }>(`/store/regions`, {
-              headers: {
-                'x-publishable-api-key': process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || ''
-              }
-            })
-
-            let matchedRegion: HttpTypes.StoreRegion | undefined
-            if (Array.isArray(regions) && regions.length) {
-              if (countryCode) {
-                matchedRegion = regions.find(r => (r.countries || []).some(c => c.iso_2 === countryCode))
-              }
-              if (!matchedRegion) {
-                // fallback to first region
-                matchedRegion = regions[0]
-              }
+      if (!region_id) {
+        try {
+          const { regions } = await sdk.client.fetch<{ regions: HttpTypes.StoreRegion[] }>(`/store/regions`, {
+            headers: {
+              'x-publishable-api-key': process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || ''
             }
+          })
 
-            if (matchedRegion?.id) {
-              region_id = matchedRegion.id as unknown as string
-              localStorage.setItem('region_id', region_id)
-              if (countryCode) {
-                localStorage.setItem('country_code', countryCode)
-              }
+          let matchedRegion: HttpTypes.StoreRegion | undefined
+          if (Array.isArray(regions) && regions.length) {
+            if (countryCode) {
+              matchedRegion = regions.find(r => (r.countries || []).some(c => c.iso_2 === countryCode))
             }
-          } catch {
+            if (!matchedRegion) {
+              // fallback to first region
+              matchedRegion = regions[0]
+            }
           }
-        }
-        
-        const query: Record<string, unknown> = {
-          id: id,
-          fields: "*variants.calculated_price,*categories"
-        }
-        if (region_id) {
-          query.region_id = region_id
-        }
 
-        const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
-          query,
-          headers: {
-            'x-publishable-api-key': process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || '',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache'
-          },
-        });
-
-        const productData = response.products[0];
+          if (matchedRegion?.id) {
+            region_id = matchedRegion.id as unknown as string
+            localStorage.setItem('region_id', region_id)
+            if (countryCode) {
+              localStorage.setItem('country_code', countryCode)
+            }
+          }
+        } catch {
+          // ignore region fetch errors
+        }
+      }
       
-        
-        if (productData) {
-          // Use type assertion to bypass complex type mismatches
-          setProduct(productData as unknown as Product); 
-        } else {
-          setError('Product not found');
-        }
-      } finally {
-        setLoading(false);
+      const query: Record<string, unknown> = {
+        id: id,
+        fields: "*variants.calculated_price,*categories"
       }
-    };
-
-    fetchProduct();
-  }, [id]);
-
-  // After product is loaded, fetch related products
-  React.useEffect(() => {
-    const fetchRelated = async () => {
-      // Fix: Check for product and at least one category with an id
-      if (!product || !product.categories || !product.categories[0] || !product.categories[0].id) return;
-      setRelatedLoading(true);
-      try {
-        // const _products = await productService.getProducts({
-        //   category: product.categories[0].id,
-        //   limit: 8,
-        // });
-        // Fix: Ensure type compatibility by mapping to the expected Product type
-        // setRelatedProducts(
-        //   (products as any[]).filter((p: any) => p.id !== product.id) as any
-        // );
-      } catch {
-        setRelatedProducts([]);
+      if (region_id) {
+        query.region_id = region_id
       }
-      setRelatedLoading(false);
-    };
-    fetchRelated();
-  }, [product]);
+
+      const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
+        query,
+        headers: {
+          'x-publishable-api-key': process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || '',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
+      });
+
+      const product = response.products[0];
+      if (!product) {
+        throw new Error('Product not found');
+      }
+      
+      return product as unknown as Product;
+    },
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+
+  const product = productData;
+  const loading = productLoading;
+  const error = productError?.message || null;
+
+  // Use React Query for related products
+  const {
+    data: relatedProductsData,
+    isLoading: relatedLoading,
+  } = useQuery({
+    queryKey: ['related-products', product?.categories?.[0]?.id],
+    queryFn: async () => {
+      if (!product || !product.categories || !product.categories[0] || !product.categories[0].id) {
+        return [];
+      }
+      
+      // For now, return empty array as related products logic is commented out
+      // This can be implemented later when needed
+      return [];
+    },
+    enabled: !!product && !!product.categories?.[0]?.id,
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+  });
+
+  const relatedProducts: Product[] = relatedProductsData || [];
 
   useEffect(() => {
     const fetchWishlist = async () => {
@@ -430,7 +427,7 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
   }
 
   const handleAddToCart = async () => {
-    if (!product) return;
+    if (!product || isLoading) return; // Prevent multiple rapid clicks
     
     setIsLoading(true);
     try {
@@ -1146,7 +1143,7 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
                           </svg>
                           <span className="text-gray-700">{ingredient}</span>
                         </li>
-                      ))}
+                      ))}              
                     </ul>
                   </div>
                   

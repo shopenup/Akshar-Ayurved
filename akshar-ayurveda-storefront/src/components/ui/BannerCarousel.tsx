@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
 import { Button } from './index';
+import { useRouter } from 'next/router';
 
 interface Banner {
   id: string;
@@ -34,6 +35,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
   className = '',
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const router = useRouter();
 
 
   const nextSlide = useCallback(() => {
@@ -148,15 +150,16 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({
                   )}
 
                   {banner.buttonText && banner.buttonLink && (
-                    <a href={banner.buttonLink}>
+                   
                       <Button
                         variant="custom"
-                        size="lg"
+                        onClick={() => router.push(banner.buttonLink || '/')}
+                        size="lg" 
                         className="bg-green-800 text-white hover:bg-green-700 border border-green-800 focus:ring-green-800 focus:ring-offset-2"
                       >
                         {banner.buttonText}
                       </Button>
-                    </a>
+                    
                   )}
                 </div>
               </div>

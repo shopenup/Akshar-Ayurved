@@ -132,12 +132,6 @@ export const useUpdateLineItem = (
         exact: false,
         queryKey: ["cart"],
       })
-      
-      // Force refetch of cart data to ensure immediate updates
-      await queryClient.refetchQueries({
-        exact: false,
-        queryKey: ["cart"],
-      })
 
       await options?.onSuccess?.(...args)
     },
@@ -159,12 +153,6 @@ export const useDeleteLineItem = (
     },
     onSuccess: async function (...args) {
       await queryClient.invalidateQueries({
-        exact: false,
-        queryKey: ["cart"],
-      })
-      
-      // Force refetch of cart data to ensure immediate updates
-      await queryClient.refetchQueries({
         exact: false,
         queryKey: ["cart"],
       })
@@ -197,24 +185,10 @@ export const useAddLineItem = (
       return response
     },
     onSuccess: async function (...args) {
-      // Invalidate all cart-related queries immediately
-      await queryClient.invalidateQueries({
-        exact: false,
-        queryKey: ["cart"],
-      })
+      // Use debounced invalidation to prevent rapid API calls
+      // This prevents multiple cart API calls when adding items
+      debouncedCartInvalidation(queryClient)
       
-      // Also invalidate cart quantity
-      await queryClient.invalidateQueries({
-        exact: false,
-        queryKey: ["cart-quantity"],
-      })
-
-      // Force refetch of cart data to ensure immediate updates
-      await queryClient.refetchQueries({
-        exact: false,
-        queryKey: ["cart"],
-      })
-
       await options?.onSuccess?.(...args)
     },
     ...options,
@@ -242,11 +216,9 @@ export const useSetShippingMethod = (
       return response
     },
     onSuccess: async function (...args) {
-      await queryClient.invalidateQueries({
-        exact: false,
-        queryKey: ["cart"],
-      })
-
+      // Use debounced invalidation to prevent rapid API calls
+      debouncedCartInvalidation(queryClient)
+      
       await options?.onSuccess?.(...args)
     },
     ...options,
@@ -308,15 +280,27 @@ export const useSetShippingAddress = (
       return response
     },
     onSuccess: async function (...args) {
-      await queryClient.invalidateQueries({
-        exact: false,
-        queryKey: ["cart"],
-      })
-
+      // Use debounced invalidation to prevent rapid API calls
+      debouncedCartInvalidation(queryClient)
+      
       await options?.onSuccess?.(...args)
     },
     ...options,
   })
+}
+
+// Debounced cart invalidation to prevent rapid API calls during step navigation
+let cartInvalidationTimeout: NodeJS.Timeout | null = null
+const debouncedCartInvalidation = (queryClient: any) => {
+  if (cartInvalidationTimeout) {
+    clearTimeout(cartInvalidationTimeout)
+  }
+  cartInvalidationTimeout = setTimeout(() => {
+    queryClient.invalidateQueries({
+      exact: false,
+      queryKey: ["cart"],
+    })
+  }, 500) // 500ms delay to batch multiple step changes
 }
 
 export const useSetEmail = (
@@ -336,11 +320,9 @@ export const useSetEmail = (
       return response
     },
     onSuccess: async function (...args) {
-      await queryClient.invalidateQueries({
-        exact: false,
-        queryKey: ["cart"],
-      })
-
+      // Use debounced invalidation to prevent rapid API calls
+      debouncedCartInvalidation(queryClient)
+      
       await options?.onSuccess?.(...args)
     },
     ...options,
@@ -450,14 +432,8 @@ export const usePlaceOrder = (
     },
     ...options,
     onSuccess: async function (...args) {
-      // Invalidate and refetch cart queries
+      // Invalidate cart queries to trigger refetch
       await queryClient.invalidateQueries({
-        exact: false,
-        queryKey: ["cart"],
-      })
-      
-      // Force refetch to get updated cart data
-      await queryClient.refetchQueries({
         exact: false,
         queryKey: ["cart"],
       })

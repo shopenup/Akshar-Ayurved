@@ -14,7 +14,7 @@ class RazorpayService {
   static identifier = "razorpay";
   
   // Required by ShopenUp framework
-  static displayName = "Razorpay";
+  // static displayName = "Razorpay";
   static defaultOptions = {};
   private razorpay: Razorpay;
   private options: RazorpayOptions;

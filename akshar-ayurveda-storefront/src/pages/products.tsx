@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useQuery } from '@tanstack/react-query';
 import { Button, useToast } from '../components/ui';
 import ProductCard from '../components/ui/ProductCard';
 import { sdk } from '@lib/config';
@@ -90,11 +91,6 @@ export default function ProductsPage() {
   const { mutateAsync: addLineItem } = useAddLineItem();
   const { showToast } = useToast();
   
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState(false);
   const [wishlist, setWishlist] = useState<Wishlist | null>(null);
   const [wishlistLoading, setWishlistLoading] = useState(true); 
@@ -134,115 +130,121 @@ useEffect(() => {
 }, [updateFavouriteCount]);
 
 
-  // Fetch categories
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        setCategoriesLoading(true);
-        const cats = await getCategoriesList();
-        setCategories(cats.product_categories || []);
-      } catch (err: unknown) {
-        setError((err as Error).message);
-      } finally {
-        setCategoriesLoading(false);
+  // Use React Query for categories to avoid duplicate API calls
+  const {
+    data: categoriesData,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useQuery({
+    queryKey: ['product-categories', { limit: 100, offset: 0 }],
+    queryFn: async () => getCategoriesList(),
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+
+  const categories: Category[] = React.useMemo(() => {
+    return (categoriesData as any)?.product_categories || [];
+  }, [categoriesData]);
+
+  // Use React Query for products to avoid duplicate API calls
+  const {
+    data: productsData,
+    isLoading: productsLoading,
+    error: productsError,
+  } = useQuery({
+    queryKey: ['products', { 
+      limit: 100, 
+      offset: 0, 
+      fields: '*variants.calculated_price,*categories',
+      category_id: filters.category,
+      q: filters.searchQuery 
+    }],
+    queryFn: async () => {
+      const query: Record<string, unknown> = {
+        limit: 100,
+        offset: 0,
+        fields: '*variants.calculated_price,*categories',
+      };
+      
+      // Add category filter
+      if (filters.category) {
+        query.category_id = filters.category;
       }
-    };
-    fetchCategories();
-  }, []);
-
-  // Fetch products
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        const query: Record<string, unknown> = {
-          limit: 100,
-          offset: 0,
-          fields: '*variants.calculated_price,*categories',
-        };
-        
-        // Add category filter
-        if (filters.category) {
-          query.category_id = filters.category;
-        }
-        
-        // Add search query
-        if (filters.searchQuery) {
-          query.q = filters.searchQuery;
-        }
-        
-        const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
-          '/store/products',
-          {
-            query,
-            next: { tags: ['products'] },
-            // fields:{'*categories'}
-          }
-        );
-
-        
-        
-        const sdkProducts = response.products || [];
-
-        // Map StoreProduct[] to Product[] by ensuring 'price' is present
-        const mappedProducts = sdkProducts.map((p) => {
-          // Try different ways to get the price
-          let price = 0;
-          
-          // Method 1: Try variants[0].calculated_price.calculated_amount
-          if (p.variants && p.variants[0] && p.variants[0].calculated_price && typeof p.variants[0].calculated_price.calculated_amount === 'number') {
-            price = p.variants[0].calculated_price.calculated_amount;
-          }
-          // Method 2: Try variants[0].calculated_price (direct number)
-          else if (p.variants && p.variants[0] && typeof p.variants[0].calculated_price === 'number') {
-            price = p.variants[0].calculated_price;
-          }
-          // Method 3: Try variants[0].price
-          else if (p.variants && p.variants[0] && typeof (p.variants[0] as { price?: number }).price === 'number') {
-            price = (p.variants[0] as { price?: number }).price!;
-          }
-          // Method 4: Try direct price property
-          else if (typeof (p as { price?: number }).price === 'number') {
-            price = (p as { price?: number }).price!;
-          }
-          // Method 5: Try original_price
-          else if (typeof (p as { original_price?: number }).original_price === 'number') {
-            price = (p as { original_price?: number }).original_price!;
-          }
-          
-          
-          return {
-            id: p.id,
-            title: p.title,
-            description: p.description || undefined,
-            price: price,
-            original_price: (p as { original_price?: number }).original_price || undefined,
-            images: (p.images || []).map((img: unknown, index: number) => 
-              typeof img === 'string' ? { id: `img-${index}`, url: img } : 
-              img && typeof img === 'object' && 'url' in img ? 
-                { id: `img-${index}`, url: (img as { url: string }).url } : 
-                { id: `img-${index}`, url: '' }
-            ),
-            thumbnail: p.thumbnail || undefined,
-            status: p.status,
-            created_at: p.created_at || '',
-            updated_at: p.updated_at || '',
-            variants: (p.variants || []) as ProductVariant[],
-            tags: p.tags,
-            type: p.type,
-            categories: p.categories || [], // <-- ensure categories is mapped
-          };
-        });
-
-        setProducts(mappedProducts as Product[]);
-      } catch (err: unknown) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
+      
+      // Add search query
+      if (filters.searchQuery) {
+        query.q = filters.searchQuery;
       }
-    };
-    fetchProducts();
-  }, [filters.category, filters.searchQuery]);
+      
+      const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
+        '/store/products',
+        {
+          query,
+          next: { tags: ['products'] },
+        }
+      );
+      
+      return response;
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
+
+  const products: Product[] = React.useMemo(() => {
+    if (!productsData?.products) return [];
+    
+    return productsData.products.map((p) => {
+      // Try different ways to get the price
+      let price = 0;
+      
+      // Method 1: Try variants[0].calculated_price.calculated_amount
+      if (p.variants && p.variants[0] && p.variants[0].calculated_price && typeof p.variants[0].calculated_price.calculated_amount === 'number') {
+        price = p.variants[0].calculated_price.calculated_amount;
+      }
+      // Method 2: Try variants[0].calculated_price (direct number)
+      else if (p.variants && p.variants[0] && typeof p.variants[0].calculated_price === 'number') {
+        price = p.variants[0].calculated_price;
+      }
+      // Method 3: Try variants[0].price
+      else if (p.variants && p.variants[0] && typeof (p.variants[0] as { price?: number }).price === 'number') {
+        price = (p.variants[0] as { price?: number }).price!;
+      }
+      // Method 4: Try direct price property
+      else if (typeof (p as { price?: number }).price === 'number') {
+        price = (p as { price?: number }).price!;
+      }
+      // Method 5: Try original_price
+      else if (typeof (p as { original_price?: number }).original_price === 'number') {
+        price = (p as { original_price?: number }).original_price!;
+      }
+      
+      return {
+        id: p.id,
+        title: p.title,
+        description: p.description || undefined,
+        price: price,
+        original_price: (p as { original_price?: number }).original_price || undefined,
+        images: (p.images || []).map((img: unknown, index: number) => 
+          typeof img === 'string' ? { id: `img-${index}`, url: img } : 
+          img && typeof img === 'object' && 'url' in img ? 
+            { id: `img-${index}`, url: (img as { url: string }).url } : 
+            { id: `img-${index}`, url: '' }
+        ),
+        thumbnail: p.thumbnail || undefined,
+        status: p.status,
+        created_at: p.created_at || '',
+        updated_at: p.updated_at || '',
+        variants: (p.variants || []) as ProductVariant[],
+        tags: p.tags,
+        type: p.type,
+        categories: p.categories || [],
+      };
+    }) as Product[];
+  }, [productsData]);
 
   // Filter and sort products
   const filteredAndSortedProducts = React.useMemo(() => {
@@ -421,6 +423,8 @@ useEffect(() => {
                           <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
                         ))}
                       </div>
+                    ) : categoriesError ? (
+                      <div className="text-sm text-red-600">Error loading categories</div>
                     ) : (
                       <div className="space-y-2">
                         <label className="flex items-center">
@@ -544,7 +548,7 @@ useEffect(() => {
               </div>
 
               {/* Loading State */}
-              {loading && (
+              {productsLoading && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {[...Array(8)].map((_, i) => (
                     <div key={i} className="bg-white rounded-lg shadow-sm border p-4 animate-pulse">
@@ -558,7 +562,7 @@ useEffect(() => {
               )}
 
               {/* Error State */}
-              {error && !loading && (
+              {productsError && !productsLoading && (
                 <div className="text-center py-12">
                   <div className="text-red-500 mb-4">
                     <svg className="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -566,7 +570,7 @@ useEffect(() => {
                     </svg>
                   </div>
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Products</h3>
-                  <p className="text-gray-600 mb-4">{error}</p>
+                  <p className="text-gray-600 mb-4">{productsError?.message || 'An error occurred'}</p>
                   <Button onClick={() => window.location.reload()}>
                     Try Again
                   </Button>
@@ -574,7 +578,7 @@ useEffect(() => {
               )}
 
               {/* Products Grid */}
-              {!loading && !error && (
+              {!productsLoading && !productsError && (
                 <>
                   {filteredAndSortedProducts.length === 0 ? (
                     <div className="text-center py-12">

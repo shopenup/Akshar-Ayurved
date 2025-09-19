@@ -1,35 +1,50 @@
 "use client"
 import { withReactQueryProvider } from "@lib/util/react-query"
-import React from "react"
+import React, { Suspense } from "react"
 import { useRouter } from "next/navigation"
 
 import Wrapper from "@modules/checkout/components/payment-wrapper"
-import Email from "@modules/checkout/components/email"
-import Addresses from "@modules/checkout/components/addresses"
-import Shipping from "@modules/checkout/components/shipping"
-import Payment from "@modules/checkout/components/payment"
-import Review from "@modules/checkout/components/review"
 import { useCart } from "hooks/cart"
 import { getCheckoutStep } from "@modules/cart/utils/getCheckoutStep"
+
+// Lazy load checkout components
+const Email = React.lazy(() => import("@modules/checkout/components/email"))
+const Addresses = React.lazy(() => import("@modules/checkout/components/addresses"))
+const Shipping = React.lazy(() => import("@modules/checkout/components/shipping"))
+const Payment = React.lazy(() => import("@modules/checkout/components/payment"))
+const Review = React.lazy(() => import("@modules/checkout/components/review"))
+
+// Loading component for lazy-loaded components
+const CheckoutComponentLoader = () => (
+  <div className="flex items-center justify-center py-8">
+    <div className="text-center">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
+      <p className="text-gray-600 text-sm">Loading...</p>
+    </div>
+  </div>
+)
 
 export const CheckoutForm = withReactQueryProvider<{
   countryCode: string
   step: string | undefined
-}>(({ countryCode, step }) => {
-  const { data: cart, isPending } = useCart({ enabled: true })
+  cart?: any
+}>(({ countryCode, step, cart: cartProp }) => {
+  // Only fetch cart if not provided as prop
+  const { data: cart, isPending } = useCart({ enabled: !cartProp })
   const router = useRouter()
   
-
+  // Use provided cart or fetched cart - memoize to prevent unnecessary re-renders
+  const finalCart = React.useMemo(() => cartProp || cart, [cartProp, cart])
 
   React.useEffect(() => {
-    if (!step && cart) {
-      const checkoutStep = getCheckoutStep(cart)
+    if (!step && finalCart) {
+      const checkoutStep = getCheckoutStep(finalCart)
       router.push(`/checkout?step=${checkoutStep}`)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, countryCode, cart])
+  }, [step, countryCode, finalCart])
   
-  if (isPending) {
+  if (isPending && !cartProp) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
@@ -40,7 +55,7 @@ export const CheckoutForm = withReactQueryProvider<{
     )
   }
 
-  if (!cart) {
+  if (!finalCart) {
     return (
       <div className="text-center py-12">
         <p className="text-gray-600">No cart data available</p>
@@ -49,13 +64,23 @@ export const CheckoutForm = withReactQueryProvider<{
   }
 
   return (
-    <Wrapper cart={cart}>
+    <Wrapper cart={finalCart}>
       <div className="space-y-8">
-        <Email countryCode={countryCode} cart={cart} />
-        <Addresses cart={cart} />
-        <Shipping cart={cart} />
-        <Payment cart={cart} />
-        <Review cart={cart} />
+        <Suspense fallback={<CheckoutComponentLoader />}>
+          <Email countryCode={countryCode} cart={finalCart} />
+        </Suspense>
+        <Suspense fallback={<CheckoutComponentLoader />}>
+          <Addresses cart={finalCart} />
+        </Suspense>
+        <Suspense fallback={<CheckoutComponentLoader />}>
+          <Shipping cart={finalCart} />
+        </Suspense>
+        <Suspense fallback={<CheckoutComponentLoader />}>
+          <Payment cart={finalCart} />
+        </Suspense>
+        <Suspense fallback={<CheckoutComponentLoader />}>
+          <Review cart={finalCart} />
+        </Suspense>
       </div>
     </Wrapper>
   )

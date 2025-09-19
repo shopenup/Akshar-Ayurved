@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import { useQuery } from '@tanstack/react-query';
 import { sdk } from '@lib/config';
 import { getCategoriesList } from '@lib/shopenup/categories';
 import { ProductGrid } from '@components/products';
@@ -42,39 +43,37 @@ export default function ProductCategoryPage() {
   const countryCode = useCountryCode() || 'in';
   const { mutateAsync: addLineItem } = useAddLineItem();
   
-  const [category, setCategory] = useState<Category | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
 
-  const fetchCategoryAndProducts = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Fetch categories
-      const categoriesResponse = await getCategoriesList();   
-      const categoryData = categoriesResponse.product_categories.find((cat: unknown) => (cat as { id: string }).id === id);
-      
-      if (!categoryData) {
-        setError('Category not found');
-        setLoading(false);
-        return;
-      }
+  // Use React Query for categories to avoid duplicate API calls
+  const {
+    data: categoriesData,
+    isLoading: categoriesLoading,
+    error: categoriesError,
+  } = useQuery({
+    queryKey: ['product-categories', { limit: 100, offset: 0 }],
+    queryFn: async () => {
+      const response = await getCategoriesList(0, 100);
+      return response;
+    },
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
 
-      // Set category info first
-      setCategory({
-        id: categoryData.id,
-        name: categoryData.name,
-        description: categoryData.description || '',
-        image: (categoryData as { thumbnail?: string }).thumbnail || '',
-        productCount: 0, // Will be updated after fetching products
-        isActive: (categoryData as { is_active?: boolean }).is_active ?? true
-      });
-
-      // Fetch products for this category from API
+  // Use React Query for products
+  const {
+    data: productsData,
+    isLoading: productsLoading,
+    error: productsError,
+  } = useQuery({
+    queryKey: ['products', { category_id: id, limit: 100, offset: 0 }],
+    queryFn: async () => {
+      if (!id) return { products: [], count: 0 };
+      
       const query: Record<string, unknown> = {
         limit: 100,
         offset: 0,
@@ -82,8 +81,7 @@ export default function ProductCategoryPage() {
         category_id: id as string
       };
       
-      
-      const productsResponse = await sdk.client.fetch<{ products: unknown[]; count: number }>(
+      const response = await sdk.client.fetch<{ products: unknown[]; count: number }>(
         '/store/products',
         {
           query,
@@ -91,77 +89,79 @@ export default function ProductCategoryPage() {
         }
       );
       
+      return response;
+    },
+    enabled: !!id,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnWindowFocus: false,
+    retry: 1,
+  });
 
-      const formattedProducts: Product[] = (productsResponse.products || []).map((product: unknown) => {
-        const p = product as {
-          id: string;
-          title: string;
-          description?: string;
-          price?: number;
-          original_price?: number;
-          thumbnail?: string;
-          images?: Array<{ url?: string }>;
-          category?: { name?: string };
-          type?: { label?: string };
-          tags?: string[];
-          rating?: number;
-          review_count?: number;
-          variants?: Array<{
-            calculated_price?: { calculated_amount?: number };
-            inventory_quantity?: number;
-          }>;
-          in_stock?: boolean;
-        };
-        
-        // Try to get price from different sources
-        let price = 0;
-        
-        // Check calculated_price first (most common)
-        if (p.variants?.[0]?.calculated_price?.calculated_amount) {
-          price = p.variants[0].calculated_price.calculated_amount;
-        }
-        // Fallback to direct price
-        else if (p.price) {
-          price = p.price;
-        }
-        
-        
-        return {
-          id: p.id,
-          name: p.title,
-          description: p.description || '',
-          price: price,
-          originalPrice: p.original_price,
-          image: p.thumbnail || p.images?.[0]?.url || '',
-          images: p.images?.map((img: unknown) => (img as { url?: string }).url).filter((url): url is string => Boolean(url)) || [],
-          category: p.category?.name || p.type?.label || '',
-          tags: p.tags || [],
-          rating: p.rating,
-          reviewCount: p.review_count,
-          inStock: (p.variants?.[0]?.inventory_quantity ?? 0) > 0 || p.in_stock !== false
-        };
-      });
+  // Find the current category
+  const category = categoriesData?.product_categories?.find((cat: unknown) => (cat as { id: string }).id === id);
 
-      setProducts(formattedProducts);
-      setFilteredProducts(formattedProducts);
+  // Format products
+  const products: Product[] = React.useMemo(() => {
+    if (!productsData?.products) return [];
+    
+    return (productsData.products || []).map((product: unknown) => {
+      const p = product as {
+        id: string;
+        title: string;
+        description?: string;
+        price?: number;
+        original_price?: number;
+        thumbnail?: string;
+        images?: Array<{ url?: string }>;
+        category?: { name?: string };
+        type?: { label?: string };
+        tags?: string[];
+        rating?: number;
+        review_count?: number;
+        variants?: Array<{
+          calculated_price?: { calculated_amount?: number };
+          inventory_quantity?: number;
+        }>;
+        in_stock?: boolean;
+      };
       
-      // Update category with actual product count
-      setCategory(prev => prev ? {
-        ...prev,
-        productCount: formattedProducts.length
-      } : null);
-    } catch {
-      setError('Failed to load category data');
-    } finally {
-      setLoading(false);
-    }
-  }, [id]);
+      // Try to get price from different sources
+      let price = 0;
+      
+      // Check calculated_price first (most common)
+      if (p.variants?.[0]?.calculated_price?.calculated_amount) {
+        price = p.variants[0].calculated_price.calculated_amount;
+      }
+      // Fallback to direct price
+      else if (p.price) {
+        price = p.price;
+      }
+      
+      return {
+        id: p.id,
+        name: p.title,
+        description: p.description || '',
+        price: price,
+        originalPrice: p.original_price,
+        image: p.thumbnail || p.images?.[0]?.url || '',
+        images: p.images?.map((img: unknown) => (img as { url?: string }).url).filter((url): url is string => Boolean(url)) || [],
+        category: p.category?.name || p.type?.label || '',
+        tags: p.tags || [],
+        rating: p.rating,
+        reviewCount: p.review_count,
+        inStock: (p.variants?.[0]?.inventory_quantity ?? 0) > 0 || p.in_stock !== false
+      };
+    });
+  }, [productsData]);
 
-  useEffect(() => {
-    if (id) {
-      fetchCategoryAndProducts();
-    }
-  }, [id, fetchCategoryAndProducts]);
+  // Update filtered products when products change
+  React.useEffect(() => {
+    setFilteredProducts(products);
+  }, [products]);
+
+  const loading = categoriesLoading || productsLoading;
+  const error = categoriesError || productsError;
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);

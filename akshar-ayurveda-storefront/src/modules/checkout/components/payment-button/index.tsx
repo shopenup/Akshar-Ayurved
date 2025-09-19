@@ -2,8 +2,7 @@
 
 import { OnApproveActions, OnApproveData } from "@paypal/paypal-js"
 import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js"
-import { useStripe } from "@stripe/react-stripe-js"
-import React, { useState } from "react"
+import React, { useState, useContext } from "react"
 import { HttpTypes } from "@shopenup/types"
 import { useRouter } from "next/navigation"
 import { RazorpayPaymentButton } from "./razorpay-payment-button"
@@ -15,6 +14,7 @@ import ErrorMessage from "@modules/checkout/components/error-message"
 import { usePlaceOrder } from "hooks/cart"
 import { withReactQueryProvider } from "@lib/util/react-query"
 import { triggerOrderPlacedEvent } from "@lib/services/sms-service"
+import { StripeContext } from "@modules/checkout/components/payment-wrapper"
 
 type PaymentButtonProps = {
   cart: HttpTypes.StoreCart
@@ -90,6 +90,7 @@ const StripePaymentButton = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const placeOrder = usePlaceOrder()
   const router = useRouter()
+  const stripeReady = useContext(StripeContext)
 
   const onPaymentCompleted = () => {
     placeOrder.mutate(null, {
@@ -133,7 +134,21 @@ const StripePaymentButton = ({
     })
   }
 
-  const stripe = useStripe()
+  // Use Stripe context to check if Stripe is ready
+  const [stripe, setStripe] = useState<any>(null)
+
+  React.useEffect(() => {
+    if (stripeReady) {
+      // Dynamically import and use Stripe hook
+      import("@stripe/react-stripe-js").then(({ useStripe }) => {
+        // Since we can't call hooks conditionally, we'll handle this in the payment wrapper
+        // The StripePaymentButton should only render when Stripe is ready
+        setStripe({ ready: true })
+      }).catch(() => {
+        setStripe(null)
+      })
+    }
+  }, [stripeReady])
 
   const session = cart.payment_collection?.payment_sessions?.find(
     (s) => s.status === "pending"
@@ -177,6 +192,20 @@ const StripePaymentButton = ({
 
         return
       })
+  }
+
+  if (!stripeReady || !stripe) {
+    return (
+      <Button
+        variant="solid"
+        size="md"
+        disabled={true}
+        className="w-full"
+      >
+        <Spinner name="loader" />
+        Loading payment...
+      </Button>
+    )
   }
 
   return (

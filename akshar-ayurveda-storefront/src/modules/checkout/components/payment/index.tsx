@@ -27,8 +27,8 @@ import { StoreCart, StorePaymentSession } from "@shopenup/types"
 // Payment info map for available methods - only include what's actually configured
 const paymentInfoMap: Record<string, { title: string; icon: React.ReactNode }> = {
   // pp_stripe_stripe: { title: "Credit Card", icon: "💳" },
-  pp_razorpay_razorpay: { title: "Razorpay", icon: "💳" },
-  pp_system_default: { title: "Manual Payment", icon: "📝" },
+  // pp_razorpay_razorpay: { title: "Razorpay", icon: "💳" },
+  // pp_system_default: { title: "Manual Payment", icon: "📝" },
 }
 
 const Payment = ({ cart }: { cart: StoreCart }) => {
@@ -82,51 +82,73 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
 
   const setPaymentMethod = useSetPaymentMethod()
 
-  const activeSession = cart?.payment_collection?.payment_sessions?.find(
-    (paymentSession: StorePaymentSession) => paymentSession.status === "pending"
-  )
-  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(
-    activeSession?.provider_id ?? ""
-  )
+  const activeSession = undefined
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("")
   const { data: availablePaymentMethods } = useCartPaymentMethods(
     cart?.region?.id ?? ""
   )
   
+  // Only allow providers enabled in admin for this region
+  const allowedProviderIds = useMemo(
+    () => (availablePaymentMethods ?? []).map((m) => m.id),
+    [availablePaymentMethods]
+  )
+
+  // Reset selection if it isn't allowed anymore (prevents stale defaults like pp_razorpay)
+  useEffect(() => {
+    if (
+      selectedPaymentMethod &&
+      !allowedProviderIds.includes(selectedPaymentMethod)
+    ) {
+      setSelectedPaymentMethod(allowedProviderIds[0] ?? "")
+    }
+  }, [allowedProviderIds, selectedPaymentMethod])
+
+  // Whether user has a valid, admin-enabled selection
+  const hasValidSelection =
+    !!selectedPaymentMethod && allowedProviderIds.includes(selectedPaymentMethod)
+  
   // Debug: Log available payment methods
   
   // Filter to only show Stripe and Manual Payment
-  const supportedPaymentMethods = availablePaymentMethods?.filter(method => 
-    method.type === 'pp_stripe_stripe' || 
-    method.type === 'pp_razorpay_razorpay' || 
-    method.type === 'pp_system_default'
-  ) || []
+  // const supportedPaymentMethods = availablePaymentMethods?.filter(method => 
+  //   method.type === 'pp_stripe_stripe' || 
+  //   method.type === 'pp_razorpay_razorpay' || 
+  //   method.type === 'pp_system_default'
+  // ) || []
   
-  // Add Manual Payment if not already present (for testing purposes)
-  const finalPaymentMethods = supportedPaymentMethods.length > 0 ? supportedPaymentMethods : [
-    { type: 'pp_system_default', id: 'manual' }
-  ]
+  // // Add Manual Payment if not already present (for testing purposes)
+  // const finalPaymentMethods = supportedPaymentMethods.length > 0 ? supportedPaymentMethods : [
+  //   { type: 'pp_system_default', id: 'manual' }
+  // ]
   
   // Debug: Log filtered payment methods
 
-  const isStripe = isStripeFunc(activeSession?.provider_id)
+  const isStripe = isStripeFunc(selectedPaymentMethod)
   const stripeReady = useContext(StripeContext)
 
-  const paymentMethodId = activeSession?.data?.payment_method_id as string
+  const currentSession = cart?.payment_collection?.payment_sessions?.find(
+    (s: StorePaymentSession) =>
+      s.provider_id === selectedPaymentMethod && s.status === "pending"
+  )
+  const paymentMethodId = currentSession?.data?.payment_method_id as
+    | string
+    | undefined
   const { data: paymentMethod } = useGetPaymentMethod(paymentMethodId)
 
   const paymentReady =
-    activeSession &&
+    currentSession &&
     cart?.shipping_methods &&
     cart?.shipping_methods.length !== 0
 
   const handleRemoveCard = useCallback(() => {
-    if (!activeSession?.id) {
+    if (!currentSession?.id) {
       return
     }
 
     try {
       setPaymentMethod.mutate(
-        { sessionId: activeSession.id, token: null },
+        { sessionId: currentSession.id, token: null },
 
         {
           onSuccess: () => {
@@ -140,7 +162,7 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
     } catch (err) {
       setError("Failed to remove card")
     }
-  }, [activeSession?.id, setPaymentMethod])
+  }, [currentSession?.id, setPaymentMethod])
 
   useEffect(() => {
     if (paymentMethod) {
@@ -172,14 +194,14 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
         )}
       </div>
       <div className={isOpen ? "block" : "hidden"}>
-        {finalPaymentMethods?.length && (
+        {(availablePaymentMethods?.length ?? 0) > 0 && (
           <>
             <UiRadioGroup
               value={selectedPaymentMethod}
               onChange={setSelectedPaymentMethod}
               aria-label="Payment methods"
             >
-              {finalPaymentMethods
+              {availablePaymentMethods?.filter(method => allowedProviderIds.includes(method.id))
                 .sort((a, b) => {
                   return a.id > b.id ? 1 : -1
                 })
@@ -188,9 +210,9 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
                                       return (
                       <PaymentContainer
                         paymentInfoMap={paymentInfoMap}
-                        paymentProviderId={paymentMethod.type}
-                        key={paymentMethod.type}
-                        isSelected={selectedPaymentMethod === paymentMethod.type}
+                        paymentProviderId={paymentMethod.id}
+                        key={paymentMethod.id}
+                        isSelected={selectedPaymentMethod === paymentMethod.id}
                         onSelect={setSelectedPaymentMethod}
                       />
                     )
@@ -244,19 +266,21 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
             Change card
           </Button>
         )}
-        <PaymentCardButton
-          setError={setError}
-          isLoading={isLoading}
-          setIsLoading={setIsLoading}
-          selectedPaymentMethod={selectedPaymentMethod}
-          createQueryString={createQueryString}
-          cart={cart}
-          cardComplete={cardComplete}
-        />
+        {hasValidSelection && (
+          <PaymentCardButton
+            setError={setError}
+            isLoading={isLoading}
+            setIsLoading={setIsLoading}
+            selectedPaymentMethod={selectedPaymentMethod}
+            createQueryString={createQueryString}
+            cart={cart}
+            cardComplete={cardComplete}
+          />
+        )}
       </div>
 
       <div className={isOpen ? "hidden" : "block"}>
-        {cart && paymentReady && activeSession ? (
+        {cart && paymentReady && currentSession ? (
           <div className="flex flex-col gap-4">
             <div className="flex max-sm:flex-col flex-wrap gap-y-2 gap-x-12">
               <div className="text-grayscale-500">Payment method</div>

@@ -1,7 +1,6 @@
 import { HttpTypes } from "@shopenup/types"
 import { z } from "zod"
 import { PaymentMethod } from "@stripe/stripe-js"
-
 import { sdk } from "@lib/config"
 import shopenupError from "@lib/util/shopenup-error"
 import { enrichLineItems } from "@lib/util/enrich-line-items"
@@ -22,7 +21,7 @@ const revalidateTag = (_tag: string) => {
   // In client-side context, we'll trigger a page refresh or use other methods
   if (typeof window !== 'undefined') {
     // Optionally trigger a page refresh or use other client-side cache invalidation
-    console.log(`Revalidating tag: ${_tag}`)
+    ////console.log(`Revalidating tag: ${_tag}`)
   }
 }
 
@@ -282,19 +281,8 @@ export async function addToCart({
     
     revalidateTag("cart")
     
-    // Verify the item was added by fetching the cart again
-    const updatedCart = await sdk.client
-      .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${cart.id}`, {
-        headers: { ...(await getCompleteHeaders()) },
-        cache: "no-store",
-      })
-      .then(({ cart }) => cart)
-      .catch(() => {
-        return null
-      })
-    
-    if (updatedCart) {
-    }
+    // No need to verify by fetching cart again - the createLineItem call is sufficient
+    // This prevents unnecessary API calls that were causing duplicate cart fetches
     
   } catch (error) {
     shopenupError(error)
@@ -654,7 +642,7 @@ export async function placeOrder() {
 
     if (cartRes?.type === "order") {
       await clearAllCartData()
-      console.log('✅ Cart data cleared after successful order placement')
+      //console.log('✅ Cart data cleared after successful order placement')
       return cartRes
     } else if (cartRes?.type === "cart") {
       if (cartRes.cart.payment_collection?.payment_sessions) {
@@ -662,14 +650,14 @@ export async function placeOrder() {
           (session: any) => session.status === 'error' || !session.data || Object.keys(session.data).length === 0
         )
         if (failedSessions.length > 0) {
-          console.log('❌ Found failed payment sessions:', failedSessions)
+          //console.log('❌ Found failed payment sessions:', failedSessions)
           throw new Error('Payment sessions failed. Please try again with a different payment method.')
         }
       }
       
       throw new Error('Order completion failed. Cart was not converted to order. Please check payment status.')
     } else {
-      console.log('❌ Unexpected response type:', cartRes)  
+      //console.log('❌ Unexpected response type:', cartRes)  
       throw new Error('Unexpected response from order completion')
     }
 

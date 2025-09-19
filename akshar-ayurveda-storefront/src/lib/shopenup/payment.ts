@@ -460,22 +460,22 @@ export class ShopenupPaymentService {
       //   icon: "credit-card",
       //   enabled: true,
       // },
-      {
-        id: "pp_razorpay_razorpay",
-        type: "pp_razorpay_razorpay",
-        name: "Razorpay",
-        description: "Pay using Razorpay payment gateway",
-        icon: "credit-card",
-        enabled: true,
-      },
-      {
-        id: "pp_system_default",
-        type: "pp_system_default",
-        name: "Manual Payment",
-        description: "Manual payment for testing purposes",
-        icon: "manual",
-        enabled: true,
-      }
+      // {
+      //   id: "pp_razorpay_razorpay",
+      //   type: "pp_razorpay_razorpay",
+      //   name: "Razorpay",
+      //   description: "Pay using Razorpay payment gateway",
+      //   icon: "credit-card",
+      //   enabled: true,
+      // },
+      // {
+      //   id: "pp_system_default",
+      //   type: "pp_system_default",
+      //   name: "Manual Payment",
+      //   description: "Manual payment for testing purposes",
+      //   icon: "manual",
+      //   enabled: true,
+      // }
     ];
   }
 }
@@ -488,10 +488,21 @@ export const paymentService = new ShopenupPaymentService();
 // Export individual functions for backward compatibility
 export const listCartPaymentMethods = async (regionId: string) => {
   try {
-    const methods = await paymentService.getSupportedPaymentMethods(regionId);
-    return methods;
+    const res = await (await import("@lib/config")).sdk.client
+      .fetch<import("@shopenup/types").HttpTypes.StorePaymentProviderListResponse>(
+        `/store/payment-providers`,
+        {
+          query: { region_id: regionId },
+          next: { tags: ["payment_providers"] },
+          cache: "no-cache",
+        }
+      )
+      .then(({ payment_providers }) => payment_providers)
+      .catch(() => [])
+
+    return res
   } catch (error) {
-    console.error('Failed to get cart payment methods:', error);
-    return [];
+    console.error('Failed to get cart payment methods:', error)
+    return []
   }
 };

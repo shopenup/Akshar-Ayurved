@@ -25,6 +25,9 @@ export default function Cart() {
 
   const updateQuantity = async (lineId: string, newQuantity: number) => {
     if (newQuantity < 1) return;
+    
+    // Prevent multiple rapid clicks
+    if (updateLineItemMutation.isPending) return;
 
     try {
       await updateLineItemMutation.mutateAsync({ lineId, quantity: newQuantity });

@@ -17,7 +17,15 @@ type WrapperProps = {
 export const StripeContext = createContext(false)
 
 const stripeKey = process.env.NEXT_PUBLIC_STRIPE_KEY 
-const stripePromise = stripeKey ? loadStripe(stripeKey) : null
+
+// Lazy load Stripe only when needed to avoid unnecessary API calls on every page
+let stripePromise: Promise<any> | null = null
+const getStripePromise = () => {
+  if (!stripePromise && stripeKey) {
+    stripePromise = loadStripe(stripeKey)
+  }
+  return stripePromise
+}
 
 const paypalClientId = process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID
 
@@ -29,8 +37,9 @@ const Wrapper: React.FC<WrapperProps> = ({ children, cart }) => {
   if (
     isStripe(paymentSession?.provider_id) &&
     paymentSession &&
-    stripePromise
+    stripeKey
   ) {
+    const stripePromise = getStripePromise()
     return (
       <StripeContext.Provider value={true}>
         <StripeWrapper

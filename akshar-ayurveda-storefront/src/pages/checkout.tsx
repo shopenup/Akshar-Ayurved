@@ -103,35 +103,6 @@ function CheckoutPage() {
     );
   }
 
-  // Show empty cart message
-  // if (!cart || !cart.items || cart.items.length === 0) {
-  //   return (
-  //     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
-  //       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-  //         <div className="text-center">
-  //           <div className="mb-8">
-  //             <div className="mx-auto h-24 w-24 text-gray-400">
-  //               <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-  //                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-  //               </svg>
-  //             </div>
-  //           </div>
-  //           <h2 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
-  //           <p className="text-gray-600 mb-8">You need to add items to your cart before proceeding to checkout.</p>
-  //           <div className="space-x-4">
-  //             <Button variant="primary" onClick={() => router.push('/')}>
-  //               Continue Shopping
-  //             </Button>
-  //             <Button variant="outline" onClick={() => router.push('/cart')}>
-  //               View Cart
-  //             </Button>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
-
   return (
     <>
       <Head>
@@ -151,9 +122,6 @@ function CheckoutPage() {
             {/* Main Checkout Form */}
             <div className="lg:col-span-2">
               <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8">
-                {/* Step Navigation */}
-                {/* <StepNavigation currentStep={currentStep} onStepClick={handleStepClick} /> */}
-
                 {/* Enhanced Step Progress Indicator */}
                 <div className="mb-8">
                   <div className="flex items-center justify-between">
@@ -207,18 +175,19 @@ function CheckoutPage() {
                   </p>
                 </div>
 
-                {/* Checkout Form */}
+                {/* Checkout Form - Pass cart data to avoid duplicate fetching */}
                 <CheckoutForm 
                   countryCode={countryCode ?? ""}
                   step={router.query.step ? String(router.query.step) : ""}
+                  cart={cart}
                 />
               </div>
             </div>
 
-            {/* Checkout Summary */}
+            {/* Checkout Summary - Pass cart data to avoid duplicate fetching */}
             <div className="lg:col-span-1">
               <div className="sticky top-8 bg-white rounded-xl shadow-lg border border-gray-200 p-6 md:p-8">
-                <CheckoutSummaryWrapper />
+                <CheckoutSummaryWrapper cart={cart} />
               </div>
             </div>
           </div>
