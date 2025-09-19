@@ -425,8 +425,8 @@ export default function HomePage() {
                   originalPrice: product.originalPrice,
                   image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : product.images?.[0]?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
                   category: typeof product.category === 'string' ? product.category : product.category?.name || 'General',
-                  rating: product.rating || 0,
-                  reviewCount: product.reviewCount || product.review_count || 0,
+                  rating: product.rating || 0, // Fallback rating, ProductCarousel will use dynamic ratings
+                  reviewCount: product.reviewCount || product.review_count || 0, // Fallback review count
                   inStock: product.inStock || product.in_stock !== false
                 };
               })}
@@ -574,8 +574,8 @@ export default function HomePage() {
                   originalPrice: product.originalPrice,
                   image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as { url: string })?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
                   category: typeof product.category === 'string' ? product.category : (product.category as { name: string })?.name || 'General',
-                  rating: product.rating || 0,
-                  reviewCount: product.reviewCount || product.review_count || 0,
+                  rating: product.rating || 0, // Fallback rating, ProductCarousel will use dynamic ratings
+                  reviewCount: product.reviewCount || product.review_count || 0, // Fallback review count
                   inStock: ((product.variants?.[0]?.inventoryQuantity ?? 0) > 0 || (product.variants?.[0]?.inventory_quantity ?? 0) > 0) || product.inStock || product.in_stock !== false
                 };
               })}
@@ -631,8 +631,8 @@ export default function HomePage() {
                   originalPrice: product.originalPrice,
                   image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as { url: string })?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
                   category: typeof product.category === 'string' ? product.category : (product.category as { name: string })?.name || 'General',
-                  rating: product.rating || 0,
-                  reviewCount: product.reviewCount || product.review_count || 0,
+                  rating: product.rating || 0, // Fallback rating, ProductCarousel will use dynamic ratings
+                  reviewCount: product.reviewCount || product.review_count || 0, // Fallback review count
                   inStock: ((product.variants?.[0]?.inventoryQuantity ?? 0) > 0 || (product.variants?.[0]?.inventory_quantity ?? 0) > 0) || product.inStock || product.in_stock !== false
                 };
               })}
@@ -688,8 +688,8 @@ export default function HomePage() {
                   originalPrice: product.originalPrice,
                   image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as { url: string })?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
                   category: typeof product.category === 'string' ? product.category : (product.category as { name: string })?.name || 'General',
-                  rating: product.rating || 0,
-                  reviewCount: product.reviewCount || product.review_count || 0,
+                  rating: product.rating || 0, // Fallback rating, ProductCarousel will use dynamic ratings
+                  reviewCount: product.reviewCount || product.review_count || 0, // Fallback review count
                   inStock: ((product.variants?.[0]?.inventoryQuantity ?? 0) > 0 || (product.variants?.[0]?.inventory_quantity ?? 0) > 0) || product.inStock || product.in_stock !== false
                 };
               })}

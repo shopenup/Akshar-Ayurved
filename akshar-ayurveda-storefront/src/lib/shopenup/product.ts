@@ -1,5 +1,7 @@
 import { getProductModule, getInventoryModule } from './init';
+import { StoreProductReview } from "../../types/global"
 import { sdk } from '@lib/config';
+import { getAuthHeaders } from './cookies';
 
 // Minimal API shapes used below to avoid `any`
 type ApiImage = { url?: string } | string;
@@ -592,6 +594,74 @@ export class ShopenupProductService {
     } catch (error) {
       console.error('Error fetching products by ID:', error);
       return [];
+    }
+  }
+
+  // Get product reviews by ID
+  async getProductReviewsById(params: { productId: string; limit?: number; offset?: number }): Promise<{
+    reviews: StoreProductReview[]
+    average_rating: number
+    limit: number
+    offset: number
+    count: number
+  }> {
+    try {
+      const { productId, limit = 10, offset = 0 } = params;
+  
+      if (!productId) {
+        return { reviews: [], average_rating: 0, limit, offset, count: 0 };
+      }
+  
+      const response = await sdk.client.fetch<{
+        reviews: StoreProductReview[]
+        average_rating: number
+        limit: number
+        offset: number
+        count: number
+      }>(`/store/products/${productId}/reviews`, {
+        headers: {
+          ...(await getAuthHeaders()),
+        },
+        query: {
+          limit,
+          offset,
+          order: "-created_at",
+        },
+        next: { tags: ['product-reviews'] },
+        // cache: 'force-cache',
+      });
+  
+      return response;
+    } catch (error) {
+      console.error('Failed to get product reviews:', error);
+      return { reviews: [], average_rating: 0, limit: params.limit || 10, offset: params.offset || 0, count: 0 };
+    }
+  }
+  
+  // Add a product review
+  async addProductReview(input: {
+    title?: string
+    content: string
+    first_name: string
+    last_name: string
+    rating: number
+    product_id: string
+  }): Promise<StoreProductReview | null> {
+    try {
+      const response = await sdk.client.fetch<StoreProductReview>(`/store/reviews`, {
+        method: "POST",
+        headers: {
+          ...(await getAuthHeaders()),
+        },
+        body: input,
+        next: { tags: ['product-reviews'] },
+        cache: "no-store",
+      });
+  
+      return response;
+    } catch (error) {
+      console.error('Failed to add product review:', error);
+      return null;
     }
   }
 }

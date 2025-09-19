@@ -11,6 +11,9 @@ import ProductVariantSelector from '@components/products/ProductVariantSelector'
 import { useAddLineItem, useCartWithSync } from '@hooks/cart';
 import { useCountryCode } from '@hooks/country-code';
 import { useAppContext } from '../../context/AppContext';
+import ProductReviews from "../../components/products/product-reviews"
+import { useProductRating } from '../../hooks/useProductRating';
+
 
 // Product interface based on Shopenup API response
 interface Product {
@@ -120,6 +123,9 @@ export default function ProductPage() {
   const [wishlistLoading, setWishlistLoading] = useState(true);
   const [isInFav, setIsInWishlist] = useState(false);
   const { updateFavouriteCount } = useAppContext();
+
+  // Get dynamic rating data
+  const { rating: dynamicRating, reviewCount: dynamicReviewCount, loading: ratingLoading } = useProductRating(id as string);
 
 
 
@@ -486,8 +492,9 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
   const shelfLife = metadata.shelf_life || '24 months';
   const storage = metadata.storage || 'Store in cool, dry place';
   const origin = metadata.origin || 'India';
-  const rating = metadata.rating || 4.5;
-  const reviewCount = metadata.review_count || 0;
+  // Use dynamic rating if available, otherwise fallback to metadata
+  const rating = dynamicRating || metadata.rating || 4.5;
+  const reviewCount = dynamicReviewCount || metadata.review_count || 0;
 
   if (!product) {
     return (
@@ -765,7 +772,7 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
                   <svg
                     key={i}
                     className={`w-5 h-5 ${
-                      i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'
+                      i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'
                     }`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
@@ -775,7 +782,11 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
                 ))}
               </div>
               <span className="text-sm text-gray-600 ml-2">
-                {rating} ({reviewCount} reviews)
+                {ratingLoading ? (
+                  <span className="text-gray-400">Loading rating...</span>
+                ) : (
+                  `${rating} (${reviewCount} reviews)`
+                )}
               </span>
             </div>
 
@@ -1203,107 +1214,7 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
 
             {/* Reviews Tab */}
             {activeTab === 'reviews' && (
-              <div className="max-w-4xl">
-                <h3 className="text-2xl font-bold text-gray-900 mb-6">Customer Reviews</h3>
-                
-                <div className="grid md:grid-cols-3 gap-8 mb-8">
-                  <div className="md:col-span-1">
-                    <div className="bg-gray-50 rounded-lg p-6 text-center">
-                      <div className="text-4xl font-bold text-gray-900 mb-2">{rating}</div>
-                      <div className="flex justify-center mb-2">
-                        {[...Array(5)].map((_, i) => (
-                          <svg
-                            key={i}
-                            className={`w-5 h-5 ${
-                              i < Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'
-                            }`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                      <p className="text-gray-600">Based on {reviewCount} reviews</p>
-                    </div>
-                  </div>
-                  
-                  <div className="md:col-span-2">
-                    <div className="space-y-4">
-                      {[5, 4, 3, 2, 1].map((stars) => (
-                        <div key={stars} className="flex items-center space-x-4">
-                          <span className="text-sm font-medium text-gray-700 w-12">{stars} star</span>
-                          <div className="flex-1 bg-gray-200 rounded-full h-2">
-                            <div
-                              className="bg-yellow-400 h-2 rounded-full"
-                              style={{
-                                width: `${stars === 5 ? 65 : stars === 4 ? 25 : stars === 3 ? 8 : stars === 2 ? 2 : 0}%`
-                              }}
-                            />
-                          </div>
-                          <span className="text-sm text-gray-500 w-12">
-                            {stars === 5 ? '65%' : stars === 4 ? '25%' : stars === 3 ? '8%' : stars === 2 ? '2%' : '0%'}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sample Reviews */}
-                <div className="space-y-6">
-                  {[
-                    {
-                      name: 'Priya Sharma',
-                      rating: 5,
-                      date: '2 weeks ago',
-                      title: 'Excellent quality and results',
-                      comment: 'I have been using this product for 3 months now and I can see significant improvement in my energy levels and stress management. The quality is excellent and it&apos;s completely natural. Highly recommended!'
-                    },
-                    {
-                      name: 'Rajesh Kumar',
-                      rating: 4,
-                      date: '1 month ago',
-                      title: 'Good product, authentic taste',
-                      comment: 'The product quality is good and taste is authentic. I&apos;ve noticed some improvements in my overall health. The packaging is also very good and delivery was fast.'
-                    },
-                    {
-                      name: 'Anita Mehta',
-                      rating: 5,
-                      date: '3 weeks ago',
-                      title: 'Amazing results for stress relief',
-                      comment: 'This has helped me a lot with my daily stress and anxiety. I feel more calm and focused throughout the day. Will definitely order again!'
-                    }
-                  ].map((review, index) => (
-                    <div key={index} className="border-b border-gray-200 pb-6">
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h4 className="font-medium text-gray-900">{review.name}</h4>
-                          <div className="flex items-center space-x-2 mt-1">
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <svg
-                                  key={i}
-                                  className={`w-4 h-4 ${
-                                    i < review.rating ? 'text-yellow-400' : 'text-gray-300'
-                                  }`}
-                                  fill="currentColor"
-                                  viewBox="0 0 20 20"
-                                >
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
-                            </div>
-                            <span className="text-sm text-gray-500">{review.date}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <h5 className="font-medium text-gray-900 mb-2">{review.title}</h5>
-                      <p className="text-gray-700">{review.comment}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ProductReviews productId={product.id} />
             )}
           </div>
         </div>

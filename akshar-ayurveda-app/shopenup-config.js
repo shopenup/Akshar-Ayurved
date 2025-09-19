@@ -37,6 +37,11 @@ module.exports = defineConfig({
       resolve: "@shopenup/shopenup-store-analytics",
       options: {
       },
+    },
+    {
+      resolve: "@shopenup/product-reviews",
+      options: {
+      }, // Add any options your plugin requires
     }
   ],
   modules: [
