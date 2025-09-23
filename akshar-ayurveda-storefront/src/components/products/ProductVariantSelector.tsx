@@ -243,10 +243,11 @@ const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
                       size="sm"
                       onClick={() => handleOptionChange(option.id, value)}
                       disabled={isDisabled}
-                      className={`min-w-[60px] h-10 px-3 text-sm font-medium transition-all ${
+                      
+                      className={`min-w-[60px] h-10 px-3 text-sm font-medium transition-all  ${
                         isSelected
-                          ? "bg-green-600 text-white border-green-600"
-                          : "bg-white text-gray-700 border-gray-300 hover:border-green-300"
+                          ? "bg-green-600 text-white border-green-600 border-gray-500"
+                          : "border !border-gray-500 bg-white  !text-gray-700 hover:!bg-transparent"
                       }`}
                     >
                       {value}

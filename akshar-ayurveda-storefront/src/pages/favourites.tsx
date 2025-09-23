@@ -251,7 +251,7 @@ console.log("favourites :",favourites)
                   <div className="mt-1 mb-2 text-sm text-gray-600 flex flex-wrap gap-2">
                     {product.variantOptions.map((opt, idx) => (
                       <span key={idx} className="px-2 py-1 rounded-md bg-gray-100">
-                        {opt.option}: {opt.value}
+                      {opt.value}
                       </span>
                     ))}
                   </div>
