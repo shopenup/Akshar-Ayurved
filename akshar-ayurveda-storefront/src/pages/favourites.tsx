@@ -14,6 +14,7 @@ import { useCountryCode } from '@hooks/country-code';
 interface FavouriteProduct {
   id: string;
   title: string;
+  variantTitle?: string;
   price: number;
   original_price?: number;
   image?: string;
@@ -23,6 +24,7 @@ interface FavouriteProduct {
   productId: string; // Added to navigate to product details
   description?: string; // added description
   variantId: string;
+  variantOptions?: { option: string; value: string }[];
 }
 
 interface WishlistProduct {
@@ -44,6 +46,10 @@ interface WishlistVariant {
 interface WishlistItem {
   id: string; // wishlist item ID
   product_variant: WishlistVariant;
+  options: {
+    option: { title: string };
+    value: string;
+  }[];
 }
 
 interface Wishlist {
@@ -67,9 +73,10 @@ export default function Favourites() {
   const { showToast } = useToast();
   const router = useRouter();
 
-  const handleProductClick = (productId: string) => {
-    router.push(`/products/${productId}`);
-  };
+  const handleProductClick = (productId: string, variantId: string) => {
+  router.push(`/products/${productId}?variant=${variantId}`);
+};
+
 
 
 const handleAddToCart = async (product: FavouriteProduct) => {
@@ -116,11 +123,23 @@ useEffect(() => {
       const items: FavouriteProduct[] = response.wishlist.items.map((item) => {
         const variant = item.product_variant;
         const product = variant.product;
+       
+       
+        // Map selected options from variant
+        // const variantOptionsText = (variant as any).options
+        //   ?.map((opt: any) => `${opt.option.title}: ${opt.value}`)
+        //   .join(" | ") || "";
+
+        const variantOptions = (variant as any).options?.map((opt: any) => ({
+          option: opt.option.title,
+          value: opt.value,
+        })) || [];
 
         return {
           id: item.id, // wishlist item ID (for removal)
           productId: product.id, // product ID (for navigation)
           title: product.title || variant.title || "",
+          variantOptions: variantOptions, // this will show "Color: Red, Size: L"
           price: variant.prices?.[0]?.amount || 0,
           image: product.thumbnail || product.images?.[0]?.url,
           description: product.description,
@@ -138,9 +157,10 @@ useEffect(() => {
       setLoading(false);
     }
   };
-
   fetchFavourites();
 }, [updateFavouriteCount]);
+
+console.log("favourites :",favourites)
 
 
   const removeFromFavourites = async (wishlistItemId: string) => {
@@ -196,7 +216,7 @@ useEffect(() => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" >
           {favourites.map((product) => (
-            <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow" onClick={() => handleProductClick(product.productId)}>
+            <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow" onClick={() => handleProductClick(product.productId, product.variantId)}>
               <div className="relative w-full h-48">
                 {product.image && (
                   <Image
@@ -225,8 +245,18 @@ useEffect(() => {
                   {product.category || 'Uncategorized'}
                 </Badge> */}
                 <h3 className="font-semibold text-lg text-gray-900 mb-2 line-clamp-2">
-                  {product.title}
+                  {product.title} 
                 </h3>
+                {product.variantOptions && product.variantOptions.length > 0 && (
+                  <div className="mt-1 mb-2 text-sm text-gray-600 flex flex-wrap gap-2">
+                    {product.variantOptions.map((opt, idx) => (
+                      <span key={idx} className="px-2 py-1 rounded-md bg-gray-100">
+                      {opt.value}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                
                 {product.description && (
                   <p className="text-gray-600 text-sm mb-2 line-clamp-3">
                     {product.description}

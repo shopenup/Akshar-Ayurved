@@ -93,12 +93,18 @@ interface WishlistProductVariant {
   title?: string;
   prices?: { amount: number }[];
   product: WishlistProduct;
+  options?: Array<{
+  option_id: string;
+  value: string;
+}>;
+
 }
 
 interface WishlistItem {
   id: string;
   product_variant_id?: string;
   product_variant: WishlistProductVariant;
+  options?: { option_id: string; value: string }[];
 }
 
 interface Wishlist {
@@ -110,6 +116,7 @@ interface Wishlist {
 export default function ProductPage() {
   const router = useRouter();
   const { id } = router.query;
+  const { variant: variantId } = router.query;
   const { showToast } = useToast();
   const countryCode = useCountryCode();
   const addLineItemMutation = useAddLineItem();
@@ -122,6 +129,8 @@ export default function ProductPage() {
   const [wishlist, setWishlist] = useState<Wishlist | null>(null);
   const [wishlistLoading, setWishlistLoading] = useState(true);
   const [isInFav, setIsInWishlist] = useState(false);
+const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
+
   const { updateFavouriteCount } = useAppContext();
 
   // Get dynamic rating data
@@ -370,9 +379,37 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
   }
 };
 
+useEffect(() => {
+  if (!product || !product.variants || !variantId || !wishlist) return;
+
+  const preselectedVariant = product.variants.find(v => v.id === variantId);
+
+  if (preselectedVariant) {
+    setSelectedVariant(preselectedVariant);
+
+    // Preselect options using value strings
+    const optionSelections: Record<string, string> = {};
+    preselectedVariant.options?.forEach(opt => {
+      optionSelections[opt.option_id] = opt.value; // value string
+    });
+    setSelectedOptions(optionSelections);
+
+    // Heart icon logic
+    const isInFav = wishlist.items.some(
+      item => item.product_variant_id === preselectedVariant.id
+    );
+    setIsInWishlist(isInFav);
+
+    setActiveImageIndex(0);
+  }
+}, [product, variantId, wishlist]);
+
+
   const isInWishlist = wishlist?.items?.some(
   (item) => item?.product_variant_id === selectedVariant?.id
-);
+ );
+
+
 
   // Handle case when ID is not available yet
   if (!id) {
