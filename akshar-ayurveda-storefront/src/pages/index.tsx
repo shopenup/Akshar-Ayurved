@@ -24,6 +24,7 @@ import { getCategoriesList } from '../lib/shopenup/categories';
 import { sdk } from '../lib/config';
 import { useCountryCode } from '@hooks/country-code';
 import { useAddLineItem } from '@hooks/cart';
+import { useProductRatingsBulk } from '../hooks/useProductRatingsBulk';
 
 interface Category {
   id: string;
@@ -41,6 +42,7 @@ interface Product {
   thumbnail?: string;
   images?: Array<{ url: string }>;
   variants?: Array<{ id: string }>;
+  categories?: Array<{ id: string }>;
 }
 
 interface ProductResponse {
@@ -62,27 +64,83 @@ export default function HomePage() {
   const [categoriesError, setCategoriesError] = React.useState<string | null>(null);
   
 
-  // Function to get product count and thumbnail for a category
-  const getCategoryData = async (categoryId: string) => {
+  // Function to get product count and thumbnail for multiple categories in one API call
+  const getBulkCategoryData = async (categoryIds: string[]): Promise<Record<string, { productCount: number; productThumbnail: string | null }>> => {
     try {
-      const response = await sdk.client.fetch<ProductResponse>('/store/products', {
-        query: {
-          category_id: categoryId,
-          limit: 1,
-          offset: 0,
-          fields: 'thumbnail,images',
-        },
-        next: { tags: ['products'] },
+      if (!categoryIds || categoryIds.length === 0) {
+        return {};
+      }
+
+      
+      // Initialize result map
+      const result: Record<string, { productCount: number; productThumbnail: string | null }> = {};
+      for (const id of categoryIds) {
+        result[id] = { productCount: 0, productThumbnail: null };
+      }
+
+      // Paginate through products that match ANY of the categoryIds
+      let offset = 0;
+      let total = 0;
+      let done = false;
+      const pageSize = 100;
+
+      while (!done) {
+        const response = await sdk.client.fetch<ProductResponse>('/store/products', {
+          query: {
+            category_id: categoryIds, // Multiple IDs in one request
+            limit: pageSize,
+            offset,
+            fields: 'id,thumbnail,images,categories.id', // Request fields needed for grouping
+          },
+          next: { tags: ['products'] },
+        });
+
+        const products = response.products || [];
+        total = response.count || 0;
+
+
+        // Group per category locally
+        for (const product of products) {
+          const productThumbnail = product.thumbnail || product.images?.[0]?.url || null;
+          
+          // Get category IDs for this product
+          const productCategoryIds = product.categories?.map(c => c.id) ?? [];
+          
+          // If product has categories, use them; otherwise distribute to all categories
+          // This handles cases where the API doesn't return category info in the product
+          const relevantCategoryIds = productCategoryIds.length > 0 
+            ? productCategoryIds.filter(id => categoryIds.includes(id))
+            : categoryIds; // Fallback: distribute to all queried categories
+
+          for (const categoryId of relevantCategoryIds) {
+            if (categoryId in result) {
+              result[categoryId].productCount += 1;
+              // Set thumbnail for this category if one isn't set yet
+              if (!result[categoryId].productThumbnail && productThumbnail) {
+                result[categoryId].productThumbnail = productThumbnail;
+              }
+            }
+          }
+        }
+
+        offset += products.length;
+        done = offset >= total || products.length === 0;
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Failed to fetch bulk category data:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        categoryIds,
+        categoryCount: categoryIds.length
       });
-      
-      const productCount = response.count || 0;
-      const productThumbnail = response.products?.[0]?.thumbnail || 
-                              response.products?.[0]?.images?.[0]?.url || 
-                              null;
-      
-      return { productCount, productThumbnail };
-    } catch {
-      return { productCount: 0, productThumbnail: null };
+      // Return empty result for all categories
+      const result: Record<string, { productCount: number; productThumbnail: string | null }> = {};
+      for (const id of categoryIds) {
+        result[id] = { productCount: 0, productThumbnail: null };
+      }
+      return result;
     }
   };
 
@@ -90,21 +148,34 @@ export default function HomePage() {
     const fetchCategoriesWithCounts = async () => {
       try {
         const res = await getCategoriesList();
+        const categoryList = res.product_categories || [];
         
-        const categoriesWithCounts = await Promise.all(
-          (res.product_categories || []).map(async (category: Category) => {
-            const { productCount, productThumbnail } = await getCategoryData(category.id);
-            return {
-              ...category,
-              product_count: productCount,
-              product_thumbnail: productThumbnail || undefined
-            };
-          })
-        );
+        if (categoryList.length === 0) {
+          setCategories([]);
+          setCategoriesLoading(false);
+          return;
+        }
+
+        // Extract all category IDs
+        const categoryIds = categoryList.map((category: Category) => category.id);
+        
+        // Fetch all category data in one API call
+        const bulkCategoryData = await getBulkCategoryData(categoryIds);
+        
+        // Map the bulk data back to categories
+        const categoriesWithCounts = categoryList.map((category: Category) => {
+          const categoryData = bulkCategoryData[category.id] || { productCount: 0, productThumbnail: null };
+          return {
+            ...category,
+            product_count: categoryData.productCount,
+            product_thumbnail: categoryData.productThumbnail || undefined
+          };
+        });
         
         setCategories(categoriesWithCounts as Category[]);
         setCategoriesLoading(false);
       } catch (err: unknown) {
+        console.error('Error fetching categories with counts:', err);
         setCategoriesError(err instanceof Error ? err.message : 'Failed to fetch categories');
         setCategoriesLoading(false);
       }
@@ -188,6 +259,31 @@ export default function HomePage() {
   const handleNewsletterSubmit = async () => {
     // Add your newsletter subscription logic here
   };
+
+  // Collect all product IDs from all carousels for bulk rating and review count fetch
+  const allProductIds = React.useMemo(() => {
+    if (!newArrivals || newArrivals.length === 0) return [];
+    
+    // Get all unique product IDs from all carousels
+    const productIds = new Set<string>();
+    
+    // New Arrivals (8 products)
+    newArrivals.slice(0, 8).forEach(product => productIds.add(product.id));
+    
+    // Ayurvedic Medicines (8 products)
+    newArrivals.slice(4, 12).forEach(product => productIds.add(product.id));
+    
+    // Fever, Malaria, Dengue Wellness (8 products)
+    newArrivals.slice(0, 8).forEach(product => productIds.add(product.id));
+    
+    // Health & Wellness (8 products)
+    newArrivals.slice(0, 8).forEach(product => productIds.add(product.id));
+    
+    return Array.from(productIds);
+  }, [newArrivals]);
+
+  // Fetch all ratings and review counts in one API call
+  const { ratings: allRatings, loading: ratingsLoading } = useProductRatingsBulk(allProductIds);
 
   return (
     <>
@@ -425,8 +521,8 @@ export default function HomePage() {
                   originalPrice: product.originalPrice,
                   image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : product.images?.[0]?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
                   category: typeof product.category === 'string' ? product.category : product.category?.name || 'General',
-                  rating: product.rating || 0, // Fallback rating, ProductCarousel will use dynamic ratings
-                  reviewCount: product.reviewCount || product.review_count || 0, // Fallback review count
+                  rating: allRatings[product.id]?.rating || product.rating || 0, // Use bulk ratings with fallback
+                  reviewCount: allRatings[product.id]?.reviewCount || product.reviewCount || product.review_count || 0, // Use bulk review counts with fallback
                   inStock: product.inStock || product.in_stock !== false
                 };
               })}
@@ -436,6 +532,8 @@ export default function HomePage() {
               showDots={true}
               onProductClick={handleProductClick}
               onAddToCart={handleAddToCart}
+              ratings={allRatings}
+              ratingsLoading={ratingsLoading}
             />
           )}
         </div>
@@ -574,8 +672,8 @@ export default function HomePage() {
                   originalPrice: product.originalPrice,
                   image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as { url: string })?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
                   category: typeof product.category === 'string' ? product.category : (product.category as { name: string })?.name || 'General',
-                  rating: product.rating || 0, // Fallback rating, ProductCarousel will use dynamic ratings
-                  reviewCount: product.reviewCount || product.review_count || 0, // Fallback review count
+                  rating: allRatings[product.id]?.rating || product.rating || 0, // Use bulk ratings with fallback
+                  reviewCount: allRatings[product.id]?.reviewCount || product.reviewCount || product.review_count || 0, // Use bulk review counts with fallback
                   inStock: ((product.variants?.[0]?.inventoryQuantity ?? 0) > 0 || (product.variants?.[0]?.inventory_quantity ?? 0) > 0) || product.inStock || product.in_stock !== false
                 };
               })}
@@ -585,6 +683,8 @@ export default function HomePage() {
               showDots={true}
               onProductClick={handleProductClick}
               onAddToCart={handleAddToCart}
+              ratings={allRatings}
+              ratingsLoading={ratingsLoading}
             />
           )}
         </div>
@@ -631,8 +731,8 @@ export default function HomePage() {
                   originalPrice: product.originalPrice,
                   image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as { url: string })?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
                   category: typeof product.category === 'string' ? product.category : (product.category as { name: string })?.name || 'General',
-                  rating: product.rating || 0, // Fallback rating, ProductCarousel will use dynamic ratings
-                  reviewCount: product.reviewCount || product.review_count || 0, // Fallback review count
+                  rating: allRatings[product.id]?.rating || product.rating || 0, // Use bulk ratings with fallback
+                  reviewCount: allRatings[product.id]?.reviewCount || product.reviewCount || product.review_count || 0, // Use bulk review counts with fallback
                   inStock: ((product.variants?.[0]?.inventoryQuantity ?? 0) > 0 || (product.variants?.[0]?.inventory_quantity ?? 0) > 0) || product.inStock || product.in_stock !== false
                 };
               })}
@@ -642,6 +742,8 @@ export default function HomePage() {
               showDots={true}
               onProductClick={handleProductClick}
               onAddToCart={handleAddToCart}
+              ratings={allRatings}
+              ratingsLoading={ratingsLoading}
             />
           )}
         </div>
@@ -688,8 +790,8 @@ export default function HomePage() {
                   originalPrice: product.originalPrice,
                   image: product.thumbnail || (typeof product.images?.[0] === 'string' ? product.images[0] : (product.images?.[0] as { url: string })?.url) || `https://dummyimage.com/300x300/4ade80/ffffff?text=${encodeURIComponent(product.title)}`,
                   category: typeof product.category === 'string' ? product.category : (product.category as { name: string })?.name || 'General',
-                  rating: product.rating || 0, // Fallback rating, ProductCarousel will use dynamic ratings
-                  reviewCount: product.reviewCount || product.review_count || 0, // Fallback review count
+                  rating: allRatings[product.id]?.rating || product.rating || 0, // Use bulk ratings with fallback
+                  reviewCount: allRatings[product.id]?.reviewCount || product.reviewCount || product.review_count || 0, // Use bulk review counts with fallback
                   inStock: ((product.variants?.[0]?.inventoryQuantity ?? 0) > 0 || (product.variants?.[0]?.inventory_quantity ?? 0) > 0) || product.inStock || product.in_stock !== false
                 };
               })}
@@ -699,6 +801,8 @@ export default function HomePage() {
               showDots={true}
               onProductClick={handleProductClick}
               onAddToCart={handleAddToCart}
+              ratings={allRatings}
+              ratingsLoading={ratingsLoading}
             />
           )}
         </div>

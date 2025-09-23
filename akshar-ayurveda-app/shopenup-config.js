@@ -39,7 +39,7 @@ module.exports = defineConfig({
       },
     },
     {
-      resolve: "@shopenup/product-reviews",
+      resolve: "@shopenup/shopenup-product-reviews",
       options: {
       }, // Add any options your plugin requires
     }

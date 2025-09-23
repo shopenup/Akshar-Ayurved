@@ -8,6 +8,7 @@ import { formatDate } from '@lib/util/date';
 import { sdk } from '@lib/config';
 import { getAuthHeaders, getCompleteHeaders } from '@lib/shopenup/cookies';
 import { HttpTypes } from '@shopenup/types';
+import OrderProductReview from '@components/orders/OrderProductReview';
 // Custom icon components with smaller default sizes
 const MapMarkerIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   <svg className={className} fill="currentColor" viewBox="0 0 20 20">
@@ -88,6 +89,7 @@ export default function OrderDetailsPage() {
   const [order, setOrder] = useState<HttpTypes.StoreOrder | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reviewRefreshTrigger, setReviewRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -104,12 +106,13 @@ export default function OrderDetailsPage() {
         }
         const completeHeaders = await getCompleteHeaders();
         const response = await sdk.client.fetch<{ order: HttpTypes.StoreOrder }>(
-          `/store/orders/${id}`,
+          `/store/orders/${id}?fields=+customer_id`,
           {
             headers: completeHeaders,
             cache: 'no-store',
           }
         );
+        console.log('response', response);
         if (response.order) {
           setOrder(response.order);
         } else {
@@ -137,6 +140,18 @@ export default function OrderDetailsPage() {
       default:
         return 'secondary';
     }
+  };
+
+  // Helper function to determine if reviews should be available
+  const canReviewProducts = (fulfillmentStatus: string | null | undefined) => {
+    if (!fulfillmentStatus) return false;
+    const reviewableStatuses = ['delivered', 'fulfilled', 'completed'];
+    return reviewableStatuses.includes(fulfillmentStatus.toLowerCase());
+  };
+
+  // Handle review submission
+  const handleReviewSubmitted = () => {
+    setReviewRefreshTrigger(prev => prev + 1);
   };
 
 
@@ -353,35 +368,78 @@ export default function OrderDetailsPage() {
           {order && order.items && order.items.length > 0 && (
             <div className="bg-white rounded-lg shadow p-6 mb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h2>
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {order.items.map((item, idx) => (
-                  <div key={idx} className="flex flex-col md:flex-row md:items-center md:justify-between p-4 border rounded-lg">
-              <div className="flex items-center space-x-4 flex-1">
-                {((item.thumbnail || item.variant?.product?.thumbnail) ?? undefined) && (
-                        <Image 
-                          src={(item.thumbnail || item.variant?.product?.thumbnail) ?? ''} 
-                          alt={item.title} 
-                          width={80}
-                          height={80}
-                          className="w-20 h-20 object-cover rounded-lg border" 
-                        />
-                      )}
-                      <div className="flex-1">
-                  <div className="text-lg font-semibold text-gray-900">{item.title}</div>
-                        {item.variant_title && (
-                          <div className="text-sm text-gray-600 mt-1">Variant: {item.variant_title}</div>
+                  <div key={idx} className="border rounded-lg p-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                      <div className="flex items-center space-x-4 flex-1">
+                        {((item.thumbnail || item.variant?.product?.thumbnail) ?? undefined) && (
+                          <Image 
+                            src={(item.thumbnail || item.variant?.product?.thumbnail) ?? ''} 
+                            alt={item.title} 
+                            width={80}
+                            height={80}
+                            className="w-20 h-20 object-cover rounded-lg border" 
+                          />
                         )}
-                        <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                          <span>Quantity: {item.quantity}</span>
-                          <span>Unit Price: ₹{item.unit_price?.toFixed(2)}</span>
+                        <div className="flex-1">
+                          <div className="text-lg font-semibold text-gray-900">{item.title}</div>
+                          {item.variant_title && (
+                            <div className="text-sm text-gray-600 mt-1">Variant: {item.variant_title}</div>
+                          )}
+                          <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
+                            <span>Quantity: {item.quantity}</span>
+                            <span>Unit Price: ₹{item.unit_price?.toFixed(2)}</span>
+                          </div>
                         </div>
-                </div>
-              </div>
-              <div className="text-right mt-4 md:mt-0">
-                      <div className="text-xl font-bold text-gray-900">
-                        ₹{item.total?.toFixed(2) ?? (item.unit_price * item.quantity).toFixed(2)}
+                      </div>
+                      <div className="text-right mt-4 md:mt-0">
+                        <div className="text-xl font-bold text-gray-900">
+                          ₹{item.total?.toFixed(2) ?? (item.unit_price * item.quantity).toFixed(2)}
+                        </div>
                       </div>
                     </div>
+                    
+                    {/* Review Section */}
+                    {item.variant?.product?.id && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        {canReviewProducts(order.fulfillment_status) ? (
+                          <OrderProductReview
+                            productId={item.variant.product.id}
+                            productTitle={item.title}
+                            // productThumbnail={item.thumbnail || item.variant?.product?.thumbnail}
+                            orderId={order.id}
+                            customerName={{
+                              firstName: order.shipping_address?.first_name || order.billing_address?.first_name || 'Customer',
+                              lastName: order.shipping_address?.last_name || order.billing_address?.last_name || 'User'
+                            }}
+                            customerId={order?.customer_id || ''}
+                            onReviewSubmitted={handleReviewSubmitted}
+                            refreshTrigger={reviewRefreshTrigger}
+                          />
+                        ) : (
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-center space-x-2">
+                              <svg className="w-5 h-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                              </svg>
+                              <div className="text-sm text-gray-600">
+                                <span className="font-medium">Reviews available after delivery</span>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  You&apos;ll be able to review this product once your order is delivered
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Current status: {order.fulfillment_status || 'Unknown'}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">
+                                  Reviews will be available when status is: delivered, fulfilled, or completed
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -581,13 +639,6 @@ export default function OrderDetailsPage() {
                 ← Back to Orders
               </Button>
             </Link>
-            {order && order.status === 'delivered' && (
-              <Link href={`/review/${order.id}`}>
-                <Button variant="outline" className="flex items-center">
-                  Write Review
-                </Button>
-              </Link>
-            )}
             {order && order.status === 'processing' && (
               <Button variant="outline" className="flex items-center" disabled>
                 Order Processing
