@@ -637,6 +637,60 @@ export class ShopenupProductService {
       return { reviews: [], average_rating: 0, limit: params.limit || 10, offset: params.offset || 0, count: 0 };
     }
   }
+
+  /**
+   * Get bulk product ratings and review counts for multiple products
+   */
+  async getProductRatingsBulk(productIds: string[]): Promise<Record<string, { rating: number; reviewCount: number }>> {
+    try {
+      if (!productIds || productIds.length === 0) {
+        return {};
+      }
+
+      // Limit to 50 products as per API specification
+      const limitedProductIds = productIds.slice(0, 50);
+      
+      console.log('Fetching bulk ratings for products:', limitedProductIds);
+      
+      const response = await sdk.client.fetch<{
+        ratings: Array<{
+          product_id: string;
+          average_rating: number;
+          total_reviews: number;
+        }>
+      }>(`/store/reviews`, {
+        query: {
+          product_ids: limitedProductIds.join(',')
+        },
+        next: { tags: ['product-ratings'] },
+        cache: "no-store",
+      });
+
+      console.log('Bulk ratings response:', response);
+
+      // Transform response to match expected format
+      const ratingsMap: Record<string, { rating: number; reviewCount: number }> = {};
+      
+      if (response.ratings) {
+        response.ratings.forEach(rating => {
+          ratingsMap[rating.product_id] = {
+            rating: rating.average_rating || 0,
+            reviewCount: rating.total_reviews || 0 // Now using the actual review count from API
+          };
+        });
+      }
+
+      return ratingsMap;
+    } catch (error) {
+      console.error('Failed to fetch bulk product ratings:', error);
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        status: (error as any)?.status,
+        statusText: (error as any)?.statusText
+      });
+      return {};
+    }
+  }
   
   // Add a product review
   async addProductReview(input: {
@@ -661,6 +715,32 @@ export class ShopenupProductService {
       return response;
     } catch (error) {
       console.error('Failed to add product review:', error);
+      return null;
+    }
+  }
+
+  async updateProductReview(input: {
+    id: string
+    title?: string
+    content?: string
+    first_name?: string
+    last_name?: string
+    rating?: number
+  }): Promise<StoreProductReview | null> {
+    try {
+      const response = await sdk.client.fetch<StoreProductReview>(`/store/reviews`, {
+        method: "PUT",
+        headers: {
+          ...(await getAuthHeaders()),
+        },
+        body: input,
+        next: { tags: ['product-reviews'] },
+        cache: "no-store",
+      });
+  
+      return response;
+    } catch (error) {
+      console.error('Failed to update product review:', error);
       return null;
     }
   }

@@ -138,59 +138,59 @@ export default function ProductPage() {
     queryKey: ['product', id],
     queryFn: async () => {
       if (!id) throw new Error('Product ID is required');
-      
-      // Resolve a valid region_id (UUID) by looking up regions once and caching
-      const cookieMatch = document.cookie.match(/(?:^|; )country-code=([^;]+)/)
-      const countryCode = cookieMatch ? decodeURIComponent(cookieMatch[1]) : undefined
-      let region_id = localStorage.getItem('region_id') || undefined
+        
+        // Resolve a valid region_id (UUID) by looking up regions once and caching
+        const cookieMatch = document.cookie.match(/(?:^|; )country-code=([^;]+)/)
+        const countryCode = cookieMatch ? decodeURIComponent(cookieMatch[1]) : undefined
+        let region_id = localStorage.getItem('region_id') || undefined
 
-      if (!region_id) {
-        try {
-          const { regions } = await sdk.client.fetch<{ regions: HttpTypes.StoreRegion[] }>(`/store/regions`, {
-            headers: {
-              'x-publishable-api-key': process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || ''
-            }
-          })
+        if (!region_id) {
+          try {
+            const { regions } = await sdk.client.fetch<{ regions: HttpTypes.StoreRegion[] }>(`/store/regions`, {
+              headers: {
+                'x-publishable-api-key': process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || ''
+              }
+            })
 
-          let matchedRegion: HttpTypes.StoreRegion | undefined
-          if (Array.isArray(regions) && regions.length) {
-            if (countryCode) {
-              matchedRegion = regions.find(r => (r.countries || []).some(c => c.iso_2 === countryCode))
+            let matchedRegion: HttpTypes.StoreRegion | undefined
+            if (Array.isArray(regions) && regions.length) {
+              if (countryCode) {
+                matchedRegion = regions.find(r => (r.countries || []).some(c => c.iso_2 === countryCode))
+              }
+              if (!matchedRegion) {
+                // fallback to first region
+                matchedRegion = regions[0]
+              }
             }
-            if (!matchedRegion) {
-              // fallback to first region
-              matchedRegion = regions[0]
-            }
-          }
 
-          if (matchedRegion?.id) {
-            region_id = matchedRegion.id as unknown as string
-            localStorage.setItem('region_id', region_id)
-            if (countryCode) {
-              localStorage.setItem('country_code', countryCode)
+            if (matchedRegion?.id) {
+              region_id = matchedRegion.id as unknown as string
+              localStorage.setItem('region_id', region_id)
+              if (countryCode) {
+                localStorage.setItem('country_code', countryCode)
+              }
             }
-          }
-        } catch {
+          } catch {
           // ignore region fetch errors
+          }
         }
-      }
-      
-      const query: Record<string, unknown> = {
-        id: id,
-        fields: "*variants.calculated_price,*categories"
-      }
-      if (region_id) {
-        query.region_id = region_id
-      }
+        
+        const query: Record<string, unknown> = {
+          id: id,
+          fields: "*variants.calculated_price,*categories"
+        }
+        if (region_id) {
+          query.region_id = region_id
+        }
 
-      const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
-        query,
-        headers: {
-          'x-publishable-api-key': process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || '',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache'
-        },
-      });
+        const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[] }>(`/store/products`, {
+          query,
+          headers: {
+            'x-publishable-api-key': process.env.NEXT_PUBLIC_SHOPENUP_PUBLISHABLE_KEY || '',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          },
+        });
 
       const product = response.products[0];
       if (!product) {
@@ -666,7 +666,7 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
                       ))}
                     </div>
                   )} */}
-                </div>
+                    </div>
               )}
             </div>
             
@@ -785,7 +785,7 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
                 {ratingLoading ? (
                   <span className="text-gray-400">Loading rating...</span>
                 ) : (
-                  `${rating} (${reviewCount} reviews)`
+                  `${rating.toFixed(1)} (${reviewCount} reviews)`
                 )}
               </span>
             </div>
@@ -1154,7 +1154,7 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
                           </svg>
                           <span className="text-gray-700">{ingredient}</span>
                         </li>
-                      ))}              
+                      ))}
                     </ul>
                   </div>
                   

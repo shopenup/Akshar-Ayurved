@@ -4,7 +4,6 @@ import { productService } from "../../../lib/shopenup/product"
 import { StoreProductReview } from "../../../types/global"
 import { Button } from "../../ui"
 import { useState, useEffect } from "react"
-import ProductReviewsForm from "./form"
 type ProductReviewsProps = {
   productId: string
 }
@@ -32,47 +31,104 @@ export default function ProductReviews({
         return [...prev, ...newReviews]
       })
       setRating(average_rating)
-      console.log(count, limit, page, count > limit * page)
       setHasMoreReviews(count > limit * page)
       setCount(count)
     })
   }, [page])
 
-  // TODO add return statement
+  // Calculate rating distribution from actual review data
+  const calculateRatingDistribution = () => {
+    const distribution = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    
+    // Only calculate if we have reviews
+    if (reviews.length === 0) {
+      return [5, 4, 3, 2, 1].map(stars => ({ stars, count: 0, percentage: 0 }));
+    }
+    
+    reviews.forEach(review => {
+      // Ensure rating is a valid number
+      const rating = typeof review.rating === 'number' ? review.rating : 0;
+      const roundedRating = Math.round(rating);
+      if (roundedRating >= 1 && roundedRating <= 5) {
+        distribution[roundedRating as keyof typeof distribution]++;
+      }
+    });
+
+    return [5, 4, 3, 2, 1].map(stars => {
+      const count = distribution[stars as keyof typeof distribution];
+      const percentage = count > 0 ? Math.round((count / reviews.length) * 100) : 0;
+      return { stars, count, percentage };
+    });
+  };
+
+  const ratingDistribution = calculateRatingDistribution();
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       {/* Reviews Header */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8">
-        <div className="text-center">
-          <h3 className="text-2xl font-bold text-gray-900 mb-4">Customer Reviews</h3>
-          <p className="text-gray-600 mb-6">
-            See what our customers are saying about this product
-          </p>
-          
-          {/* Rating Summary */}
-          <div className="flex items-center justify-center space-x-4 mb-6">
-            <div className="flex items-center space-x-2">
-              <div className="flex items-center">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <svg
-                    key={index}
-                    className={`w-6 h-6 ${
-                      index < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'
-                    }`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Left Side - Overall Rating */}
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">Customer Reviews</h3>
+            
+            {/* Overall Rating Display */}
+            <div className="flex items-center space-x-4 mb-6">
+              <div className="text-5xl font-bold text-gray-900">{rating.toFixed(1)}</div>
+              <div>
+                <div className="flex items-center mb-2">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <svg
+                      key={index}
+                      className={`w-6 h-6 ${
+                        index < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'
+                      }`}
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <div className="text-gray-600">
+                  <span className="text-lg font-medium">{count}</span>
+                  <span className="text-sm ml-1">reviews</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Side - Rating Distribution */}
+          <div>
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">Rating Breakdown</h4>
+            {reviews.length > 0 ? (
+              <div className="space-y-3">
+                {ratingDistribution.map((item) => (
+                  <div key={item.stars} className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-1 w-16">
+                      <span className="text-sm font-medium text-gray-700">{item.stars}</span>
+                      <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 bg-gray-200 rounded-full h-2">
+                      <div
+                        className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${item.percentage}%` }}
+                      />
+                    </div>
+                    <div className="w-12 text-right">
+                      <span className="text-sm text-gray-600">{item.percentage}%</span>
+                    </div>
+                  </div>
                 ))}
               </div>
-              <span className="text-2xl font-bold text-gray-900">{rating}</span>
-            </div>
-            <div className="text-gray-500">
-              <span className="text-lg font-medium">{count}</span>
-              <span className="text-sm ml-1">reviews</span>
-            </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No rating data available</p>
+                <p className="text-sm text-gray-400 mt-1">Reviews will appear here once customers start rating</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -109,56 +165,52 @@ export default function ProductReviews({
         </div>
       )}
 
-      {/* Review Form */}
-      <ProductReviewsForm productId={productId} />
     </div>
   )
 }
 
 function Review({ review }: { review: StoreProductReview }) {
+    // Generate a random time ago for demo purposes
+    const timeAgo = ['2 weeks ago', '1 month ago', '3 weeks ago', '1 week ago', '2 months ago'][Math.floor(Math.random() * 5)];
+    
     return (
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         {/* Review Header */}
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
-            {review.title && (
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">{review.title}</h4>
-            )}
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center">
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <svg
-                    key={index}
-                    className={`w-4 h-4 ${
-                      index < Math.round(review.rating) ? 'text-yellow-400' : 'text-gray-300'
-                    }`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                ))}
-              </div>
-              <span className="text-sm text-gray-500">
+            <div className="flex items-center space-x-3 mb-2">
+              <span className="font-semibold text-gray-900">
                 {review.first_name} {review.last_name}
               </span>
+              <span className="text-sm text-gray-500">{timeAgo}</span>
             </div>
+            
+            {/* Rating Stars */}
+            <div className="flex items-center mb-3">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <svg
+                  key={index}
+                  className={`w-4 h-4 ${
+                    index < Math.round(review.rating) ? 'text-yellow-400' : 'text-gray-300'
+                  }`}
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              ))}
+            </div>
+
+            {/* Review Title */}
+            {review.title && (
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">{review.title}</h4>
+            )}
           </div>
         </div>
 
         {/* Review Content */}
-        <div className="text-gray-700 leading-relaxed mb-4">
+        <div className="text-gray-700 leading-relaxed">
           {review.content}
-        </div>
-
-        {/* Review Footer */}
-        <div className="flex items-center justify-between text-sm text-gray-500">
-          <div className="flex items-center space-x-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
-            <span>Verified Purchase</span>
-          </div>
         </div>
       </div>
     )
