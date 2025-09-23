@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import Button from '@components/ui/Button';
-import Badge from '@components/ui/Badge';
+import React, { useState, useEffect, useMemo } from "react";
+import Button from "@components/ui/Button";
+import Badge from "@components/ui/Badge";
 
 interface ProductVariant {
   id: string;
@@ -13,10 +13,6 @@ interface ProductVariant {
   options?: Array<{
     option_id: string;
     value: string;
-  }>;
-  prices?: Array<{
-    amount?: number;
-    original_amount?: number;
   }>;
 }
 
@@ -43,61 +39,65 @@ const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
   selectedVariant,
   onVariantChange,
   onImageChange,
-  className = ''
+  className = "",
 }) => {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
 
-  // Initialize selected options when component mounts or variants change
+  // Initialize selectedOptions based on selectedVariant or defaults
   useEffect(() => {
-    if (variants.length > 0 && options.length > 0) {
-      const initialOptions: Record<string, string> = {};
-      
-      // If there's only one variant, preselect its options
-      if (variants.length === 1) {
-        const variant = variants[0];
-        if (variant.options) {
-          variant.options.forEach(option => {
-            if (option.option_id && option.value) {
-              initialOptions[option.option_id] = option.value;
-            }
-          });
-        }
-      } else {
-        // For multiple variants, try to find single-value options
-        options.forEach(option => {
-          if (option.values && option.values.length === 1) {
-            initialOptions[option.id] = option.values[0].value;
-          }
-        });
-      }
-      
-      setSelectedOptions(initialOptions);
-    }
-  }, [variants, options]);
+    if (!variants.length || !options.length) return;
 
-  // Find the variant that matches the selected options
-  const matchingVariant = useMemo(() => {
-    if (!variants.length || !Object.keys(selectedOptions).length) {
-      return null;
-    }
+    const initialOptions: Record<string, string> = {};
 
-    return variants.find(variant => {
-      if (!variant.options) return false;
-      
-      const variantOptionsMap = variant.options.reduce((acc, opt) => {
+    if (selectedVariant && selectedVariant.options) {
+      selectedVariant.options.forEach((opt) => {
         if (opt.option_id && opt.value) {
-          acc[opt.option_id] = opt.value;
+          initialOptions[opt.option_id] = opt.value;
         }
-        return acc;
-      }, {} as Record<string, string>);
+      });
+    } else if (variants.length === 1 && variants[0].options) {
+      variants[0].options.forEach((opt) => {
+        if (opt.option_id && opt.value) {
+          initialOptions[opt.option_id] = opt.value;
+        }
+      });
+    } else {
+      // Pick the first value of each option as default
+      options.forEach((opt) => {
+        if (opt.values && opt.values.length > 0) {
+          initialOptions[opt.id] = opt.values[0].value;
+        }
+      });
+    }
 
-      return Object.keys(selectedOptions).every(optionId => 
-        variantOptionsMap[optionId] === selectedOptions[optionId]
+    setSelectedOptions(initialOptions);
+  }, [variants, options, selectedVariant]);
+
+  // Find matching variant based on selectedOptions
+  const matchingVariant = useMemo(() => {
+    if (!variants.length || !Object.keys(selectedOptions).length) return null;
+
+    return variants.find((variant) => {
+      if (!variant.options) return false;
+      const map = variant.options.reduce<Record<string, string>>((acc, opt) => {
+        if (opt.option_id && opt.value) acc[opt.option_id] = opt.value;
+        return acc;
+      }, {});
+      return Object.keys(selectedOptions).every(
+        (key) => map[key] === selectedOptions[key]
       );
     }) || null;
   }, [variants, selectedOptions]);
 
-  // Update parent component when variant changes
+  // Notify parent when variant changes
+  // useEffect(() => {
+  //   onVariantChange(matchingVariant);
+
+  //   if (matchingVariant && onImageChange) {
+  //     onImageChange(0); // Reset to first image for variant
+  //   }
+  // }, [matchingVariant, onVariantChange, onImageChange]);
+    // Update parent component when variant changes
   useEffect(() => {
     onVariantChange(matchingVariant);
     
@@ -109,26 +109,19 @@ const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
     }
   }, [matchingVariant, onVariantChange, onImageChange]);
 
-  // Handle option selection
   const handleOptionChange = (optionId: string, value: string) => {
-    setSelectedOptions(prev => ({
-      ...prev,
-      [optionId]: value
-    }));
+    setSelectedOptions((prev) => ({ ...prev, [optionId]: value }));
   };
 
-  // Check if an option is a color option
-  const isColorOption = (optionTitle: string) => {
-    const colorKeywords = ['color', 'colour', 'shade', 'hue'];
-    return colorKeywords.some(keyword => 
-      optionTitle.toLowerCase().includes(keyword)
+  const isColorOption = (title: string) => {
+    return ["color", "colour", "shade", "hue"].some((k) =>
+      title.toLowerCase().includes(k)
     );
   };
 
-  // Get color code for a color value
-  const getColorCode = (colorValue: string) => {
-    const colorMap: Record<string, string> = {
-      'red': '#ef4444',
+  const getColorCode = (value: string) => {
+    const map: Record<string, string> = {
+       'red': '#ef4444',
       'blue': '#3b82f6',
       'green': '#22c55e',
       'yellow': '#eab308',
@@ -157,52 +150,42 @@ const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
       'neutral': '#737373',
       'stone': '#78716c',
     };
-    
-    return colorMap[colorValue.toLowerCase()] || '#6b7280';
+    return map[value.toLowerCase()] || "#6b7280";
   };
 
-  // Get available values for an option based on current selections
   const getAvailableValues = (optionId: string) => {
     if (!variants.length) return [];
-
-    const availableVariants = variants.filter(variant => {
+    const avail = variants.filter((variant) => {
       if (!variant.options) return false;
-      
-      return Object.keys(selectedOptions).every(selectedOptionId => {
-        if (selectedOptionId === optionId) return true; // Skip the current option being checked
-        
-        const variantOption = variant.options?.find(opt => opt.option_id === selectedOptionId);
-        return variantOption?.value === selectedOptions[selectedOptionId];
+      return Object.keys(selectedOptions).every((key) => {
+        if (key === optionId) return true;
+        const vOpt = variant.options?.find((o) => o.option_id === key);
+        return vOpt?.value === selectedOptions[key];
       });
     });
 
-    const values = new Set<string>();
-    availableVariants.forEach(variant => {
-      const option = variant.options?.find(opt => opt.option_id === optionId);
-      if (option?.value) {
-        values.add(option.value);
-      }
+    const setValues = new Set<string>();
+    avail.forEach((v) => {
+      const o = v.options?.find((o) => o.option_id === optionId);
+      if (o?.value) setValues.add(o.value);
     });
 
-    return Array.from(values);
+    return Array.from(setValues);
   };
 
-  // Don't render if no variants or options
-  if (!variants.length || !options.length) {
-    return null;
-  }
+  if (!variants.length || !options.length) return null;
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {options.map(option => {
+      {options.map((option) => {
         const availableValues = getAvailableValues(option.id);
         const isDisabled = availableValues.length === 0;
-        
+
         return (
           <div key={option.id} className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium text-gray-900">
-                {option.title}
+                {option.title}{" "}
                 {selectedOptions[option.id] && (
                   <span className="text-gray-500 ml-2">
                     ({selectedOptions[option.id]})
@@ -215,77 +198,58 @@ const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
                 </Badge>
               )}
             </div>
-            
+
             <div className="flex flex-wrap gap-2">
-              {availableValues.map(value => {
+              {availableValues.map((value) => {
                 const isSelected = selectedOptions[option.id] === value;
-                const isOutOfStock = false; // You can add stock checking logic here
                 const isColor = isColorOption(option.title);
-                
+
                 if (isColor) {
-                  // Render color boxes for color options
-                  const colorCode = getColorCode(value);
                   return (
                     <button
                       key={value}
                       onClick={() => handleOptionChange(option.id, value)}
-                      disabled={isDisabled || isOutOfStock}
-                      className={`
-                        relative w-12 h-12 rounded-lg border-2 transition-all duration-200
-                        ${isSelected 
-                          ? 'border-green-600 ring-2 ring-green-200' 
-                          : 'border-gray-300 hover:border-green-300'
-                        }
-                        ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-                        ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}
-                      `}
-                      style={{ backgroundColor: colorCode }}
+                      disabled={isDisabled}
+                      className={`relative w-12 h-12 rounded-lg border-2 transition-all duration-200 ${
+                        isSelected
+                          ? "border-green-600 ring-2 ring-green-200"
+                          : "border-gray-300 hover:border-green-300"
+                      } ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+                      style={{ backgroundColor: getColorCode(value) }}
                       title={value}
                     >
                       {isSelected && (
                         <div className="absolute inset-0 flex items-center justify-center">
-                          <svg 
-                            className="w-6 h-6 text-white drop-shadow-lg" 
-                            fill="currentColor" 
+                          <svg
+                            className="w-6 h-6 text-white drop-shadow-lg"
+                            fill="currentColor"
                             viewBox="0 0 20 20"
                           >
-                            <path 
-                              fillRule="evenodd" 
-                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" 
-                              clipRule="evenodd" 
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
                             />
                           </svg>
-                        </div>
-                      )}
-                      {isOutOfStock && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="w-8 h-0.5 bg-red-500 rotate-45"></div>
                         </div>
                       )}
                     </button>
                   );
                 } else {
-                  // Render regular buttons for non-color options
                   return (
                     <Button
                       key={value}
                       variant={isSelected ? "primary" : "secondary"}
                       size="sm"
                       onClick={() => handleOptionChange(option.id, value)}
-                      disabled={isDisabled || isOutOfStock}
-                      className={`
-                        min-w-[60px] h-10 px-3 text-sm font-medium transition-all
-                        ${isSelected 
-                          ? 'bg-green-600 text-white border-green-600' 
-                          : 'bg-white text-gray-700 border-gray-300 hover:border-green-300'
-                        }
-                        ${isOutOfStock ? 'opacity-50 cursor-not-allowed' : ''}
-                      `}
+                      disabled={isDisabled}
+                      className={`min-w-[60px] h-10 px-3 text-sm font-medium transition-all ${
+                        isSelected
+                          ? "bg-green-600 text-white border-green-600"
+                          : "bg-white text-gray-700 border-gray-300 hover:border-green-300"
+                      }`}
                     >
                       {value}
-                      {isOutOfStock && (
-                        <span className="ml-1 text-xs">(Out of Stock)</span>
-                      )}
                     </Button>
                   );
                 }
@@ -294,15 +258,14 @@ const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
           </div>
         );
       })}
-      
-      {/* Selected Variant Info */}
+
       {matchingVariant && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-green-900">Selected Variant</p>
               <p className="text-xs text-green-700">
-                SKU: {matchingVariant.sku || 'N/A'}
+                SKU: {matchingVariant.sku || "N/A"}
               </p>
             </div>
             {matchingVariant.calculated_price && (
@@ -310,12 +273,13 @@ const ProductVariantSelector: React.FC<ProductVariantSelectorProps> = ({
                 <p className="text-lg font-bold text-green-600">
                   ₹{matchingVariant.calculated_price.calculated_amount}
                 </p>
-                {matchingVariant.calculated_price.original_amount && 
-                 matchingVariant.calculated_price.original_amount > matchingVariant.calculated_price.calculated_amount && (
-                  <p className="text-sm text-gray-500 line-through">
-                    ₹{matchingVariant.calculated_price.original_amount}
-                  </p>
-                )}
+                {matchingVariant.calculated_price.original_amount &&
+                  matchingVariant.calculated_price.original_amount >
+                    matchingVariant.calculated_price.calculated_amount && (
+                    <p className="text-sm text-gray-500 line-through">
+                      ₹{matchingVariant.calculated_price.original_amount}
+                    </p>
+                  )}
               </div>
             )}
           </div>
