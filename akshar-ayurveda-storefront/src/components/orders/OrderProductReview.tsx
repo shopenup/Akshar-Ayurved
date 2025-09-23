@@ -50,30 +50,16 @@ export default function OrderProductReview({
           offset: 0
         })
         
-        // Check if current user has already reviewed this product
-        // Use customer_id for reliable and accurate matching
-        console.log('Checking for existing reviews with customer ID:', {
-          productId,
-          customerId,
-          reviewsCount: reviews.length
-        })
         
         const userReview = reviews.find(review => {
           if (review.product_id !== productId) return false
           
           // Match by customer_id only - most reliable method
           const match = customerId && review.customer_id && review.customer_id === customerId
-          console.log('Checking review:', {
-            reviewId: review.id,
-            reviewCustomerId: review.customer_id,
-            currentCustomerId: customerId,
-            match
-          })
           
           return match
         })
         
-        console.log('Found user review:', userReview)
  
         if (userReview) {
           setHasExistingReview(true)
@@ -181,24 +167,14 @@ export default function OrderProductReview({
   }
 
   const handleEdit = () => {
-    console.log('Edit button clicked!')
-    console.log('existingReview:', existingReview)
-    console.log('existingReview.id:', existingReview?.id)
     
     if (existingReview && existingReview.id) {
-      console.log('Setting edit mode with data:', {
-        rating: existingReview.rating,
-        title: existingReview.title,
-        content: existingReview.content
-      })
       setIsEditing(true)
       setShowForm(true)
       setRating(existingReview.rating)
       setTitle(existingReview.title || '')
       setContent(existingReview.content)
-      console.log('Edit mode set, form should now show')
     } else {
-      console.log('No review data available for editing')
       showToast('Review data not available for editing', 'error')
     }
   }

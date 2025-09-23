@@ -492,8 +492,8 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
   const shelfLife = metadata.shelf_life || '24 months';
   const storage = metadata.storage || 'Store in cool, dry place';
   const origin = metadata.origin || 'India';
-  // Use dynamic rating if available, otherwise fallback to metadata
-  const rating = dynamicRating || metadata.rating || 4.5;
+  // Use dynamic rating if available, otherwise fallback to metadata, but don't show default rating if no reviews
+  const rating = dynamicRating || metadata.rating || 0;
   const reviewCount = dynamicReviewCount || metadata.review_count || 0;
 
   if (!product) {
@@ -772,7 +772,7 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
                   <svg
                     key={i}
                     className={`w-5 h-5 ${
-                      i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'
+                      !ratingLoading && reviewCount > 0 && i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'
                     }`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
@@ -783,7 +783,7 @@ const addToFavourites = async (product: Product, selectedVariant?: any) => {
               </div>
               <span className="text-sm text-gray-600 ml-2">
                 {ratingLoading ? (
-                  <span className="text-gray-400">Loading rating...</span>
+                  '0.0 (0 reviews)'
                 ) : (
                   `${rating.toFixed(1)} (${reviewCount} reviews)`
                 )}

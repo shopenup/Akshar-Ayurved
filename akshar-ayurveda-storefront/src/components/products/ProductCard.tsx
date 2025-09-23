@@ -139,7 +139,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   <svg
                     key={i}
                     className={`w-4 h-4 ${
-                      i < Math.round(dynamicRating || product.rating || 0) ? 'text-yellow-400' : 'text-gray-300'
+                      !ratingLoading && (dynamicReviewCount || product.reviewCount || 0) > 0 && i < Math.round(dynamicRating || product.rating || 0) ? 'text-yellow-400' : 'text-gray-300'
                     }`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
@@ -150,9 +150,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </div>
               <span className="text-sm text-gray-500 ml-1">
                 {ratingLoading ? (
-                  <span className="text-gray-400">Loading...</span>
+                  '0.0 (0 reviews)'
                 ) : (
-                  `(${dynamicReviewCount || product.reviewCount || 0})`
+                  `${(dynamicRating || product.rating || 0).toFixed(1)} (${dynamicReviewCount || product.reviewCount || 0} reviews)`
                 )}
               </span>
             </div>
