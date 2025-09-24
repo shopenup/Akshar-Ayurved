@@ -132,7 +132,7 @@ export default function ProductPage() {
 const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
 
 
-  const { updateFavouriteCount } = useAppContext();
+  const { updateFavouriteCount,isLoggedIn } = useAppContext();
 
 
 
@@ -240,6 +240,10 @@ const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({
 
   useEffect(() => {
     const fetchWishlist = async () => {
+      if (!isLoggedIn) { 
+      setLoading(false);
+      return;
+    }
       try {
         setWishlistLoading(true);
         const response = await sdk.client.fetch<{ wishlist: Wishlist }>(

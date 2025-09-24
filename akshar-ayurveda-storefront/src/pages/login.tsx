@@ -117,9 +117,13 @@ export default function LoginForm({ className, redirectUrl, handleCheckout }: Lo
            
              // Sync guest wishlist if token exists
             if (customerToken) {
-              await ensureWishlist(customerToken);
+            try {
+              await ensureWishlist(customerToken)
               await syncGuestWishlist(customerToken)
+            } catch (err) {
+              console.warn("Wishlist skipped:", err)
             }
+          }
 
             if (handleCheckout) {
               handleCheckout({ email: values.email })

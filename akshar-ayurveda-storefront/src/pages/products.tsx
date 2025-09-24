@@ -98,7 +98,8 @@ export default function ProductsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [wishlist, setWishlist] = useState<Wishlist | null>(null);
   const [wishlistLoading, setWishlistLoading] = useState(true); 
-  const { updateFavouriteCount } = useAppContext();
+  const { updateFavouriteCount ,isLoggedIn} = useAppContext();
+
   
   // Filter states
   const [filters, setFilters] = useState<FilterState>({
@@ -113,6 +114,10 @@ export default function ProductsPage() {
 // Fetch wishlist
 useEffect(() => {
   const fetchWishlist = async () => {
+    if (!isLoggedIn) { // reset to empty for guests
+      setLoading(false);
+      return;
+    }
     try {
       setWishlistLoading(true);
       const response = await sdk.client.fetch<{ wishlist: Wishlist }>(
