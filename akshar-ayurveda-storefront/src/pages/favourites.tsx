@@ -64,7 +64,7 @@ interface WishlistResponse {
 export default function Favourites() {
   const [favourites, setFavourites] = useState<FavouriteProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const { updateFavouriteCount } = useAppContext();
+  const { updateFavouriteCount ,isLoggedIn} = useAppContext();
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [addingToCart, setAddingToCart] = useState<string | null>(null);
   const countryCode = useCountryCode() || 'in';
@@ -112,6 +112,11 @@ const handleAddToCart = async (product: FavouriteProduct) => {
 
 useEffect(() => {
   const fetchFavourites = async () => {
+    if (!isLoggedIn) { // reset to empty for guests
+      setFavourites([]);   // clear for guests
+      setLoading(false);
+      return;
+    }
     try {
       //setLoading(true);
 
@@ -144,7 +149,7 @@ useEffect(() => {
           image: product.thumbnail || product.images?.[0]?.url,
           description: product.description,
           inStock: product.status === "published",
-          rating: 4.5,
+          rating: 0,
           variantId: variant.id,
         };
       });
@@ -158,10 +163,7 @@ useEffect(() => {
     }
   };
   fetchFavourites();
-}, [updateFavouriteCount]);
-
-console.log("favourites :",favourites)
-
+}, [isLoggedIn]);
 
   const removeFromFavourites = async (wishlistItemId: string) => {
   try {

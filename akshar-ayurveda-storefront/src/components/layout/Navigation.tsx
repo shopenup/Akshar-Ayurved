@@ -85,31 +85,32 @@ export default function Navigation({
   };
 
   
+useEffect(() => {
+  const fetchWishlist = async () => {
+    if (!isLoggedIn) {
+      setWishlist(null);
+      setWishlistLoading(false);
+      return;
+    }
 
- useEffect(() => {
-    const fetchWishlist = async () => {
-      try {
-        setWishlistLoading(true);
-        const response = await sdk.client.fetch<{ wishlist: Wishlist }>(
-          '/store/customers/me/wishlists',
-          {
-            next: { tags: ['wishlist'] },
-          }
-        );
-  
-        setWishlist(response.wishlist || null);
-      } catch (err) {
-        console.error('Error fetching wishlist:', err);
-      } finally {
-        setWishlistLoading(false);
-      }
-    };
-  
-    fetchWishlist();
-  }, [updateFavouriteCount]);
+    try {
+      setWishlistLoading(true);
+      const response = await sdk.client.fetch<{ wishlist: Wishlist }>(
+        '/store/customers/me/wishlists',
+        { next: { tags: ['wishlist'] } }
+      );
+      setWishlist(response.wishlist || null);
+    } catch (err) {
+      console.error('Error fetching wishlist:', err);
+    } finally {
+      setWishlistLoading(false);
+    }
+  };
+
+  fetchWishlist();
+}, [isLoggedIn, updateFavouriteCount]);
 
 
-  // Fetch categories when component mounts
   useEffect(() => {
     const fetchCategories = async () => {
       try {
