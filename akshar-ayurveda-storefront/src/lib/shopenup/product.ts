@@ -650,7 +650,6 @@ export class ShopenupProductService {
       // Limit to 50 products as per API specification
       const limitedProductIds = productIds.slice(0, 50);
       
-      console.log('Fetching bulk ratings for products:', limitedProductIds);
       
       const response = await sdk.client.fetch<{
         ratings: Array<{
@@ -666,7 +665,6 @@ export class ShopenupProductService {
         cache: "no-store",
       });
 
-      console.log('Bulk ratings response:', response);
 
       // Transform response to match expected format
       const ratingsMap: Record<string, { rating: number; reviewCount: number }> = {};

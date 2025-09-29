@@ -112,7 +112,6 @@ export default function OrderDetailsPage() {
             cache: 'no-store',
           }
         );
-        console.log('response', response);
         if (response.order) {
           setOrder(response.order);
         } else {
