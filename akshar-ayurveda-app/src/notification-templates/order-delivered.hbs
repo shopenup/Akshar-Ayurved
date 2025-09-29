@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Order Delivered</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6; background-color: #f9f9f9; margin: 0; padding: 0;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
+    <tr>
+      <td style="padding: 20px; text-align: center; background: #4caf50; border-radius: 8px 8px 0 0; color: #ffffff;">
+        <h1 style="margin: 0; font-size: 22px;">🎉 Your Order Has Been Delivered</h1>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding: 20px;">
+        <p>Hi <strong>{{first_name}}</strong>,</p>
+        <p>We’re happy to let you know that your order has been successfully <strong>delivered</strong>.</p>
+
+        <table width="100%" cellpadding="6" cellspacing="0" style="margin: 20px 0; background: #f4f4f4; border-radius: 6px;">
+          <tr>
+            <td><strong>Order ID:</strong></td>
+            <td>{{order_id}}</td>
+          </tr>
+          <tr>
+            <td><strong>Tracking ID:</strong></td>
+            <td>{{tracking_id}}</td>
+          </tr>
+          <tr>
+            <td><strong>Delivered To:</strong></td>
+            <td>{{address_1}} {{address_2}}</td>
+          </tr>
+          <tr>
+            <td><strong>Phone:</strong></td>
+            <td>{{phone}}</td>
+          </tr>
+        </table>
+
+        <p>If you have any questions about your order, feel free to reply to this email.</p>
+        <p style="margin-top: 30px;">Thanks for shopping with us!<br/><strong>The Akshar Ayurveda Team</strong></p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

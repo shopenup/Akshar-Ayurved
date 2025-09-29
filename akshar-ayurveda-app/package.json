@@ -35,12 +35,13 @@
     "@shopenup/icons": "^1.0.10",
     "@shopenup/shopenup": "1.0.11",
     "@shopenup/shopenup-plugin-blog": "1.0.10",
-    "@shopenup/shopenup-plugin-razorpay-v2": "1.0.10",
     "@shopenup/shopenup-product-reviews": "1.0.10",
+    "@shopenup/shopenup-store-analytics": "1.0.11",
+    "@shopenup/shopenup-plugin-razorpay-v2": "1.0.10",
+    "@shopenup/shopenup-plugin-smtp": "1.0.10",
+    "@shopenup/shopenup-plugin-wishlist": "1.0.12",
     "@shopenup/types": "1.0.10",
     "@shopenup/ui": "^1.0.10",
-    "@shopenup/shopenup-store-analytics": "1.0.11",
-    "@shopenup/shopenup-plugin-wishlist": "1.0.13",
     "@tanstack/react-query": "5.64.2",
     "@tiptap/extension-color": "^3.4.3",
     "@tiptap/extension-image": "^3.4.3",
@@ -55,8 +56,10 @@
     "ajv": "^8.17.1",
     "ajv-draft-04": "^1.0.0",
     "awilix": "^8.0.1",
+    "handlebars": "^4.7.8",
     "lodash": "^4.17.21",
     "meilisearch": "0.47.0",
+    "nodemailer": "^6.10.1",
     "pg": "^8.13.3",
     "razorpay": "^2.9.6",
     "react-dropzone": "^14.3.8",
@@ -89,7 +92,8 @@
     "react-email": "3.0.7",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.2",
-    "vite": "^5.4.14"
+    "vite": "^5.4.14",
+    "yalc": "^1.0.0-pre.53"
   },
   "engines": {
     "node": ">=20"

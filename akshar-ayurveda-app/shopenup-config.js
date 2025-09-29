@@ -20,7 +20,7 @@ module.exports = defineConfig({
       cookieSecret: process.env.COOKIE_SECRET || 'supersecret',
     },
   },
-  // plugins: ["medusa-plugin-razorpay-v2"],
+  // plugins: ["shopenup-plugin-razorpay-v2"],
 
   plugins: [
     {
@@ -110,59 +110,87 @@ module.exports = defineConfig({
         ],
       },
     },
+    // {
+    //   resolve: '@shopenup/shopenup/notification',
+    //   options: {
+    //     providers: [
+    //       // {
+    //       //   resolve: './src/modules/resend',
+    //       //   id: 'resend',
+    //       //   options: {
+    //       //     channels: ['email'],
+    //       //     api_key: process.env.RESEND_API_KEY,
+    //       //     from: process.env.RESEND_FROM,
+    //       //     siteTitle: 'ShopenUp',
+    //       //     companyName: 'Sofa Society',
+    //       //     footerLinks: [
+    //       //       {
+    //       //         url: 'https://agilo.com',
+    //       //         label: 'Agilo',
+    //       //       },
+    //       //       {
+    //       //         url: 'https://www.instagram.com/agiloltd/',
+    //       //         label: 'Instagram',
+    //       //       },
+    //       //       {
+    //       //         url: 'https://www.linkedin.com/company/agilo/',
+    //       //         label: 'LinkedIn',
+    //       //       },
+    //       //     ],
+    //       //   },
+    //       // },
+    //       {
+    //         resolve: "@shopenup/shopenup/notification-sendgrid",
+    //         id: "sendgrid",
+    //         options: {
+    //           channels: ["email"],
+    //           api_key: process.env.SENDGRID_API_KEY,
+    //           from: process.env.SENDGRID_FROM,
+    //         },
+    //       },
+    //       {
+    //         resolve: "./src/modules/twilio-sms",
+    //         id: "twilio-sms",
+    //         options: {
+    //           channels: ["sms"],
+    //           accountSid: process.env.TWILIO_ACCOUNT_SID,
+    //           authToken: process.env.TWILIO_AUTH_TOKEN,
+    //           from: process.env.TWILIO_PHONE_NUMBER
+    //           ,
+    //         },
+    //       },
+
+    //     ],
+    //   },
+    // },
+
     {
-      resolve: '@shopenup/shopenup/notification',
+      resolve: "@shopenup/shopenup/notification",
       options: {
         providers: [
-          // {
-          //   resolve: './src/modules/resend',
-          //   id: 'resend',
-          //   options: {
-          //     channels: ['email'],
-          //     api_key: process.env.RESEND_API_KEY,
-          //     from: process.env.RESEND_FROM,
-          //     siteTitle: 'ShopenUp',
-          //     companyName: 'Sofa Society',
-          //     footerLinks: [
-          //       {
-          //         url: 'https://agilo.com',
-          //         label: 'Agilo',
-          //       },
-          //       {
-          //         url: 'https://www.instagram.com/agiloltd/',
-          //         label: 'Instagram',
-          //       },
-          //       {
-          //         url: 'https://www.linkedin.com/company/agilo/',
-          //         label: 'LinkedIn',
-          //       },
-          //     ],
-          //   },
-          // },
+          // # SMTP Notification - Only provider for email
           {
-            resolve: "@shopenup/shopenup/notification-sendgrid",
-            id: "sendgrid",
+            resolve: "@shopenup/shopenup-plugin-smtp/providers/smtp",
+            id: "notification-smtp",
             options: {
               channels: ["email"],
-              api_key: process.env.SENDGRID_API_KEY,
-              from: process.env.SENDGRID_FROM,
+              fromEmail: process.env.SMTP_FROM,
+              templatePath: "./src/notification-templates",
+              transport: {
+                host: process.env.SMTP_HOST || "smtp.gmail.com",
+                port: process.env.SMTP_PORT || 465,
+                secure: process.env.SMTP_SECURE || false,
+                auth: {
+                  user: process.env.SMTP_AUTH_USER,
+                  pass: process.env.SMTP_AUTH_PASS,
+                },
+              },
             },
           },
-          {
-            resolve: "./src/modules/twilio-sms",
-            id: "twilio-sms",
-            options: {
-              channels: ["sms"],
-              accountSid: process.env.TWILIO_ACCOUNT_SID,
-              authToken: process.env.TWILIO_AUTH_TOKEN,
-              from: process.env.TWILIO_PHONE_NUMBER
-              ,
-            },
-          },
-
         ],
       },
     },
+
    
   ],
 });

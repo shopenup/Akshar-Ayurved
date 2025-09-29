@@ -1,0 +1,54 @@
+<html>
+  <body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color:#f4f4f4; color:#333;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="center" style="padding: 20px 0;">
+          <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 0 10px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <tr>
+              <td style="background-color:#4CAF50; color:#ffffff; text-align:center; padding:30px; font-size:26px; font-weight:bold;">
+                Your Order Has Shipped! 🚚
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding:30px;">
+                <h2 style="margin:0 0 15px 0; color:#4CAF50;">Hi {{first_name}},</h2>
+                <p style="margin:0 0 15px 0; font-size:16px; line-height:1.6;">
+                  Great news! Your order <strong>#{{order_id}}</strong> has been shipped.
+                </p>
+
+                <p style="margin:0 0 20px 0; font-size:16px; line-height:1.6;">
+                  📦 Tracking Number: <strong>{{tracking_id}}</strong><br/>
+                  📍 Shipping Address: {{address_1}} {{address_2}}
+                </p>
+
+                <hr style="border:none; border-top:1px solid #eee; margin:20px 0;" />
+
+                <p style="margin-top:20px; font-size:16px; line-height:1.6;">
+                  You’ll be notified once your package is out for delivery.  
+                </p>
+
+                <p style="margin-top:30px; font-size:16px; line-height:1.6;">
+                  Cheers, <br />
+                  <strong>The Akshar Ayurveda Team</strong>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="background-color:#f4f4f4; color:#999; text-align:center; padding:15px; font-size:12px;">
+                &copy; 2025 Akshar Ayurveda. All rights reserved. <br />
+                You received this email because you placed an order with us.
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
