@@ -1,4 +1,4 @@
-<html>
+{{!-- <html>
   <body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color:#f4f4f4; color:#333;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
@@ -7,7 +7,7 @@
             
             <!-- Header -->
             <tr>
-              <td style="background-color:#4CAF50; color:#ffffff; text-align:center; padding:30px; font-size:26px; font-weight:bold;">
+              <td style="background-color:#CD8973; color:#ffffff; text-align:center; padding:30px; font-size:26px; font-weight:bold;">
                 Your Order Has Shipped! 🚚
               </td>
             </tr>
@@ -15,7 +15,8 @@
             <!-- Body -->
             <tr>
               <td style="padding:30px;">
-                <h2 style="margin:0 0 15px 0; color:#4CAF50;">Hi {{first_name}},</h2>
+                <h2 style="margin:0 0 15px 0; color:#CD8973;">Hi {{first_name}},</h2>
+         
                 <p style="margin:0 0 15px 0; font-size:16px; line-height:1.6;">
                   Great news! Your order <strong>#{{order_id}}</strong> has been shipped.
                 </p>
@@ -32,7 +33,7 @@
                 </p>
 
                 <p style="margin-top:30px; font-size:16px; line-height:1.6;">
-                  Cheers, <br />
+                  Thank you, <br />
                   <strong>The Akshar Ayurveda Team</strong>
                 </p>
               </td>
@@ -51,4 +52,170 @@
       </tr>
     </table>
   </body>
+</html> --}}
+
+
+{{!-- <html>
+  <body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color:#f4f4f4; color:#333;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="center" style="padding: 20px 0;">
+          <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden; box-shadow:0 0 10px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <tr>
+              <td style="background-color:#CD8973; color:#ffffff; text-align:center; padding:30px; font-size:26px; font-weight:bold;">
+                Your Order Has Shipped! 🚚
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding:30px;">
+                <h2 style="margin:0 0 15px 0; color:#CD8973;">Hi {{first_name}},</h2>
+                <p style="margin:0 0 15px 0; font-size:16px; line-height:1.6;">
+                  Great news! Your order <strong>#{{order_id}}</strong> has been shipped.
+                </p>
+
+                <!-- Shipping Details -->
+                <p style="margin:0 0 15px 0; font-size:16px; line-height:1.6;">
+                  📦 <strong>Tracking Number:</strong> 
+                  {{#if tracking_url}}
+                    <a href="{{tracking_url}}" style="color:#CD8973; text-decoration:none;">{{tracking_id}}</a>
+                  {{else}}
+                    {{tracking_id}}
+                  {{/if}}<br/>
+                  🚚 <strong>Carrier:</strong> {{carrier}}<br/>
+                  📍 <strong>Shipping Address:</strong> {{address_1}} {{address_2}}<br/>
+                  🗓️ <strong>Estimated Delivery:</strong> {{estimated_delivery}}
+                </p>
+
+                <!-- Order Items -->
+                <p style="margin:20px 0 20px 0; font-size:16px; line-height:1.6;">
+                  <strong>Items in your order:</strong><br/>
+                  {{order_items}}
+                </p>
+
+                <hr style="border:none; border-top:1px solid #eee; margin:20px 0;" />
+
+                <p style="margin-top:20px; font-size:16px; line-height:1.6;">
+                  You’ll be notified once your package is out for delivery.  
+                </p>
+
+                <p style="margin-top:30px; font-size:16px; line-height:1.6;">
+                  Thank you, <br />
+                  <strong>The Akshar Ayurveda Team</strong>
+                </p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="background-color:#f4f4f4; color:#999; text-align:center; padding:15px; font-size:12px;">
+                &copy; 2025 Akshar Ayurveda. All rights reserved. <br />
+                You received this email because you placed an order with us.
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html> --}}
+<html>
+  <body style="margin:0; padding:0; font-family: Arial, sans-serif; background-color:#f4f4f4; color:#333;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td align="center" style="padding: 20px 0;">
+          <table width="600" cellpadding="0" cellspacing="0" border="0" style="background-color:#ffffff; border-radius:10px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+            
+            <!-- Header -->
+            <tr>
+              <td style="background-color:#CD8973; color:#ffffff; text-align:center; padding:30px 20px; font-size:26px; font-weight:bold;">
+                Your Order Has Shipped! 🚚
+              </td>
+            </tr>
+            
+            <!-- Greeting -->
+            <tr>
+              <td style="padding:25px 30px;">
+                <p style="font-size:18px; margin:0 0 10px 0;">Hi {{first_name}},</p>
+                <p style="margin:0 0 20px 0;">Good news! Your order <strong>#{{order_id}}</strong> has been shipped.</p>
+
+                <!-- Shipping Details -->
+                <p style="margin:0 0 20px 0; font-size:16px; line-height:1.6;">
+                  📦 <strong>Tracking Number:</strong> 
+                  {{#if tracking_url}}
+                    <a href="{{tracking_url}}" style="color:#CD8973; text-decoration:none;">{{tracking_id}}</a>
+                  {{else}}
+                    {{tracking_id}}
+                  {{/if}}<br/>
+                  🚚 <strong>Carrier:</strong> {{carrier}}<br/>
+                  📍 <strong>Shipping Address:</strong> {{address_1}} {{address_2}}<br/>
+                  🗓️ <strong>Estimated Delivery:</strong> {{estimated_delivery}}
+                </p>
+
+                <!-- Order Items Table -->
+                <h3 style="margin-bottom:10px; color:#CD8973; font-size:20px;">Your Items</h3>
+                <table width="100%" cellpadding="8" cellspacing="0" border="0"
+                  style="border:1px solid #eee; margin-bottom:20px; border-collapse:collapse; font-size:15px;">
+                  <thead>
+                    <tr style="background-color:#f9f9f9; text-align:left;">
+                      <th style="border:1px solid #eee; padding:8px;">Product</th>
+                      <th style="border:1px solid #eee; padding:8px;">Qty</th>
+                      <th style="border:1px solid #eee; padding:8px; text-align:right;">Price</th>
+                      <th style="border:1px solid #eee; padding:8px; text-align:right;">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {{#each items}}
+                    <tr>
+                      <td style="border:1px solid #eee; padding:8px;">{{name}}</td>
+                      <td style="border:1px solid #eee; padding:8px; text-align:center;">{{quantity}}</td>
+                      <td style="border:1px solid #eee; padding:8px; text-align:right;">{{../currency_symbol}}{{unit_price}}</td>
+                      <td style="border:1px solid #eee; padding:8px; text-align:right;">{{../currency_symbol}}{{line_total}}</td>
+                    </tr>
+                    {{/each}}
+                  </tbody>
+                </table>
+
+                <!-- Payment Summary -->
+                <table width="100%" cellpadding="8" cellspacing="0" border="0" style="border-top:2px solid #eee; border-bottom:2px solid #eee; margin-bottom:20px; font-size:15px;">
+                  <tr>
+                    <td>Subtotal:</td>
+                    <td style="text-align:right;">{{currency_symbol}}{{subtotal}}</td>
+                  </tr>
+                  <tr>
+                    <td>Discount:</td>
+                    <td style="text-align:right;">{{currency_symbol}}{{discount_total}}</td>
+                  </tr>
+                  <tr>
+                    <td>Shipping:</td>
+                    <td style="text-align:right;">{{currency_symbol}}{{shipping_amount}}</td>
+                  </tr>
+                  <tr style="font-weight:bold; border-top:2px solid #CD8973;">
+                    <td>Total:</td>
+                    <td style="text-align:right;">{{currency_symbol}}{{total}}</td>
+                  </tr>
+                </table>
+
+                <p style="margin-top:20px; font-size:15px;">We’ll notify you if there are any updates to your shipment. Thank you for shopping with us!</p>
+                <p style="margin-top:15px; font-size:12px; color:#999;">If you have any questions, reply to this email or contact our support team.</p>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="background-color:#f4f4f4; color:#999; text-align:center; padding:15px; font-size:12px;">
+                &copy; 2025 Akshar Ayurveda. All rights reserved.
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
 </html>
+
+

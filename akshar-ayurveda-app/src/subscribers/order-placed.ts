@@ -113,6 +113,15 @@ export default async function orderPlacedEmailHandler({
 
   const currency = await currencyModuleService.retrieveCurrency(order.currency_code)
 
+    // Map items into structured format
+  const items = order.items.map(item => ({
+    name: item.title || item.variant?.product?.title,
+    quantity: item.quantity,
+    unit_price: item.unit_price, // price per unit
+    line_total: item.subtotal, // total for that line
+  }))
+  console.log("items",items)
+
   await notificationModuleService.createNotifications({
     to: order.email || "",
     template: "order-placed", // Must match your template filename (without extension)
@@ -138,6 +147,7 @@ export default async function orderPlacedEmailHandler({
       tax_total: order.tax_total,
       total: order.total,
       item_names: order.items.map(item => item.variant.product.title),
+      items
     }
   })
 }

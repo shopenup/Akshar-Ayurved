@@ -6,7 +6,7 @@
           
           <!-- Header -->
           <tr>
-            <td style="background-color:#4CAF50; color:#ffffff; text-align:center; padding:30px 20px; font-size:26px; font-weight:bold;">
+            <td style="background-color:#CD8973; color:#ffffff; text-align:center; padding:30px 20px; font-size:26px; font-weight:bold;">
               Order Confirmation
             </td>
           </tr>
@@ -19,25 +19,41 @@
 
               <!-- Order ID -->
               <p style="margin:0 0 20px 0;">Order ID: <strong>{{order_id}}</strong></p>
-
+              
               <!-- Order Items -->
-              <h3 style="margin-bottom:10px; color:#4CAF50; font-size:20px;">Your Items</h3>
-              <ul style="padding-left:20px; margin-top:0; margin-bottom:20px;">
-                {{#each item_names}}
-                  <li style="margin-bottom:8px; font-size:16px;">{{this}}</li>
-                {{/each}}
-              </ul>
-
+              <h3 style="margin-bottom:10px; color:#CD8973; font-size:20px;">Your Items</h3>
+              <table width="100%" cellpadding="8" cellspacing="0" border="0"
+                style="border:1px solid #eee; margin-bottom:20px; border-collapse:collapse; font-size:15px;">
+                <thead>
+                  <tr style="background-color:#f9f9f9; text-align:left;">
+                    <th style="border:1px solid #eee; padding:8px;">Product</th>
+                    <th style="border:1px solid #eee; padding:8px;">Qty</th>
+                    <th style="border:1px solid #eee; padding:8px; text-align:right;">Price</th>
+                    <th style="border:1px solid #eee; padding:8px; text-align:right;">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {{#each items}}
+                  <tr>
+                    <td style="border:1px solid #eee; padding:8px;">{{name}}</td>
+                    <td style="border:1px solid #eee; padding:8px; text-align:center;">{{quantity}}</td>
+                    <td style="border:1px solid #eee; padding:8px; text-align:right;">{{../currency_symbol}}{{unit_price}}</td>
+                    <td style="border:1px solid #eee; padding:8px; text-align:right;">{{../currency_symbol}}{{line_total}}</td>
+                  </tr>
+                  {{/each}}
+                </tbody>
+              </table>
+              
               <!-- Shipping & Billing -->
               <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
                 <tr>
                   <td style="vertical-align:top; padding-right:15px;">
-                    <h4 style="margin:0 0 5px 0; color:#4CAF50; font-size:16px;">Shipping Address</h4>
+                    <h4 style="margin:0 0 5px 0; color:#CD8973; font-size:16px;">Shipping Address</h4>
                     <p style="margin:0; font-size:14px;">{{address_1}} {{address_2}}</p>
                     <p style="margin:0; font-size:14px;">Phone: {{phone}}</p>
                   </td>
                   <td style="vertical-align:top; padding-left:15px;">
-                    <h4 style="margin:0 0 5px 0; color:#4CAF50; font-size:16px;">Billing Address</h4>
+                    <h4 style="margin:0 0 5px 0; color:#CD8973; font-size:16px;">Billing Address</h4>
                     <p style="margin:0; font-size:14px;">{{billing_address_1}} {{billing_address_2}}</p>
                     <p style="margin:0; font-size:14px;">Phone: {{billing_phone}}</p>
                   </td>
@@ -62,7 +78,7 @@
                   <td>Tax:</td>
                   <td style="text-align:right;">{{currency_symbol}}{{tax_total}}</td>
                 </tr>
-                <tr style="font-weight:bold; border-top:2px solid #4CAF50;">
+                <tr style="font-weight:bold; border-top:2px solid #CD8973;">
                   <td>Total:</td>
                   <td style="text-align:right;">{{currency_symbol}}{{total}}</td>
                 </tr>
