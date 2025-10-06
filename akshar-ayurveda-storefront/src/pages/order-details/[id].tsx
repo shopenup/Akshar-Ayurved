@@ -9,9 +9,15 @@ import { sdk } from '@lib/config';
 import { getAuthHeaders, getCompleteHeaders } from '@lib/shopenup/cookies';
 import { HttpTypes } from '@shopenup/types';
 import OrderProductReview from '@components/orders/OrderProductReview';
+import { convertToLocale } from "@lib/util/money"
+import { TaxBreakdown } from '@components/ui/tax-display';
+import { ProductTaxBreakdown, OrderTaxSummary } from '@components/ui/product-tax-breakdown';
+import { OrderItemsTaxTable } from '@components/ui/order-items-tax-table';
+// import Breadcrumb from '@components/Breadcrumb/Breadcrumb';
+import Breadcrumb from '@components/about/Breadcrumb';
 // Custom icon components with smaller default sizes
 const MapMarkerIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20" style={{color: '#cd8973'}}>
     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
   </svg>
 );
@@ -67,8 +73,8 @@ const CalendarIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
   </svg>
 );
 
-const ReceiptIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
-  <svg className={className} fill="currentColor" viewBox="0 0 20 20">
+const ReceiptIcon = ({ className = "w-4 h-4" }: { className?: string } ) => (
+  <svg className={className} fill="currentColor" viewBox="0 0 20 20" style={{color: '#cd8973'}}>
     <path fillRule="evenodd" d="M4 4a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2H4zm0 2h12v8H4V6zm2 2a1 1 0 000 2h8a1 1 0 100-2H6zm0 3a1 1 0 000 2h4a1 1 0 100-2H6z" clipRule="evenodd" />
   </svg>
 );
@@ -181,7 +187,7 @@ export default function OrderDetailsPage() {
         </Head>
         <div className="min-h-screen bg-gray-50 flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{borderColor: '#cd8973'}}></div>
             <h2 className="text-xl font-semibold text-gray-900">Loading order details...</h2>
             <p className="text-gray-600 mt-2">Please wait while we fetch your order information</p>
           </div>
@@ -230,8 +236,10 @@ export default function OrderDetailsPage() {
         <title>Order Details - AKSHAR</title>
         <meta name="description" content="View your order details" />
       </Head>
+      <Breadcrumb title="Order Details" crumbs={[{ label: 'Home', href: '/' }, { label: 'Order Details' }]} imageSrc="/assets/images/bredcrumb-bg.jpg" />
+
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-4xl mx-auto px-2 sm:px-6 lg:px-8 space-y-8">
+        <div className="max-w-5xl mx-auto px-2 sm:px-6 lg:px-8 space-y-8">
           {/* Order Header */}
           {order && (
             <div className="bg-white rounded-lg shadow p-6 mb-6">
@@ -292,10 +300,10 @@ export default function OrderDetailsPage() {
                 const current = getCurrentStep(order.payment_status, order.fulfillment_status);
                 return (
                   <div key={step.key} className="flex-1 flex flex-col items-center relative">
-                      <div className={`rounded-full w-8 h-8 flex items-center justify-center mb-2 text-sm z-10 ${idx <= current ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-400'}`}>{step.icon}</div>
-                      <span className={`text-sm font-medium ${idx <= current ? 'text-green-700' : 'text-gray-400'}`}>{step.label}</span>
+                      <div className={`rounded-full w-8 h-8 flex items-center justify-center mb-2 text-sm z-10 ${idx <= current ? 'text-white' : 'bg-gray-200 text-gray-400'}`} style={idx <= current ? {backgroundColor: '#cd8973'} : {}}>{step.icon}</div>
+                      <span className={`text-sm font-medium ${idx <= current ? 'text-gray-700' : 'text-gray-400'}`} style={idx <= current ? {color: '#cd8973'} : {}}>{step.label}</span>
                     {idx < timelineSteps.length - 1 && (
-                        <div className={`absolute top-5 left-1/2 w-full h-1 ${idx < current ? 'bg-green-600' : 'bg-gray-200'}`} style={{zIndex: 0, marginLeft: '20px', marginRight: '-20px'}}></div>
+                        <div className={`absolute top-5 left-1/2 w-full h-1 ${idx < current ? '' : 'bg-gray-200'}`} style={{zIndex: 0, marginLeft: '20px', marginRight: '-20px', backgroundColor: idx < current ? '#cd8973' : ''}}></div>
                     )}
                   </div>
                 );
@@ -310,7 +318,7 @@ export default function OrderDetailsPage() {
               {/* Delivery Address */}
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center mb-4 text-gray-700">
-                  <MapMarkerIcon className="mr-2 text-green-600 w-6 h-6" /> 
+                  <MapMarkerIcon className="mr-2 w-6 h-6"  /> 
                   <span className="font-semibold text-lg">Delivery Address</span>
                 </div>
                 <div className="space-y-2">
@@ -363,50 +371,49 @@ export default function OrderDetailsPage() {
             </div>
           )}
 
-          {/* Order Items Section */}
+          {/* Order Items Section - Table Layout */}
           {order && order.items && order.items.length > 0 && (
             <div className="bg-white rounded-lg shadow p-6 mb-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Items</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Order Items & Tax Breakdown</h2>
+              <OrderItemsTaxTable 
+                order={order}
+                showDetailedBreakdown={true}
+              />
+            </div>
+          )}
+
+          {/* Product Reviews Section */}
+          {order && order.items && order.items.length > 0 && (
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Product Reviews</h2>
               <div className="space-y-6">
                 {order.items.map((item, idx) => (
                   <div key={idx} className="border rounded-lg p-4">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-                      <div className="flex items-center space-x-4 flex-1">
-                        {((item.thumbnail || item.variant?.product?.thumbnail) ?? undefined) && (
-                          <Image 
-                            src={(item.thumbnail || item.variant?.product?.thumbnail) ?? ''} 
-                            alt={item.title} 
-                            width={80}
-                            height={80}
-                            className="w-20 h-20 object-cover rounded-lg border" 
-                          />
+                    <div className="flex items-center space-x-4 mb-4">
+                      {((item.thumbnail || item.variant?.product?.thumbnail) ?? undefined) && (
+                        <Image 
+                          src={(item.thumbnail || item.variant?.product?.thumbnail) ?? ''} 
+                          alt={item.title} 
+                          width={60}
+                          height={60}
+                          className="w-15 h-15 object-cover rounded-lg border" 
+                        />
+                      )}
+                      <div className="flex-1">
+                        <div className="text-lg font-semibold text-gray-900">{item.title}</div>
+                        {item.variant_title && (
+                          <div className="text-sm text-gray-600 mt-1">Variant: {item.variant_title}</div>
                         )}
-                        <div className="flex-1">
-                          <div className="text-lg font-semibold text-gray-900">{item.title}</div>
-                          {item.variant_title && (
-                            <div className="text-sm text-gray-600 mt-1">Variant: {item.variant_title}</div>
-                          )}
-                          <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                            <span>Quantity: {item.quantity}</span>
-                            <span>Unit Price: ₹{item.unit_price?.toFixed(2)}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-right mt-4 md:mt-0">
-                        <div className="text-xl font-bold text-gray-900">
-                          ₹{item.total?.toFixed(2) ?? (item.unit_price * item.quantity).toFixed(2)}
-                        </div>
                       </div>
                     </div>
                     
                     {/* Review Section */}
                     {item.variant?.product?.id && (
-                      <div className="mt-4 pt-4 border-t border-gray-200">
+                      <div>
                         {canReviewProducts(order.fulfillment_status) ? (
                           <OrderProductReview
                             productId={item.variant.product.id}
                             productTitle={item.title}
-                            // productThumbnail={item.thumbnail || item.variant?.product?.thumbnail}
                             orderId={order.id}
                             customerName={{
                               firstName: order.shipping_address?.first_name || order.billing_address?.first_name || 'Customer',
@@ -430,9 +437,6 @@ export default function OrderDetailsPage() {
                                 <p className="text-xs text-gray-400 mt-1">
                                   Current status: {order.fulfillment_status || 'Unknown'}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-1">
-                                  Reviews will be available when status is: delivered, fulfilled, or completed
-                                </p>
                               </div>
                             </div>
                           </div>
@@ -445,152 +449,109 @@ export default function OrderDetailsPage() {
             </div>
           )}
 
-          {/* Payment & Shipping Summary Section */}
+          {/* Payment Summary Section */}
           {order && (
-            <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
-              {/* Payment Information */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center mb-4 text-gray-700">
-                  <ReceiptIcon className="mr-2 text-green-600 w-6 h-6" /> 
-                  <span className="font-semibold text-lg">Payment Summary</span>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal:</span>
-                    <span className="font-semibold">
-                      ₹{(() => {
-                        // Debug: Log all possible price fields
-                       
-                        
-                        // Calculate from items if available
-                        if (order.items && order.items.length > 0) {
-                          const itemsTotal = order.items.reduce((sum, item) => {
-                            return sum + (item.total || (item.unit_price * item.quantity));
-                          }, 0);
-                          return itemsTotal.toFixed(2);
-                        }
-                        
-                        // Fallback to subtotal or total
-                        return (order.subtotal || order.total || 0).toFixed(2);
-                      })()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Shipping:</span>
-                    <span className="font-semibold">
-                      ₹{(() => {
-                        // Try different shipping fields
-                        if (order.shipping_total) {
-                          return order.shipping_total.toFixed(2);
-                        }
-                        if (order.shipping_methods?.[0]?.amount) {
-                          return order.shipping_methods[0].amount.toFixed(2);
-                        }
-                        if ((order as unknown as { shipping?: number }).shipping) {
-                          return (order as unknown as { shipping: number }).shipping.toFixed(2);
-                        }
-                        if ((order as unknown as { shipping_cost?: number }).shipping_cost) {
-                          return (order as unknown as { shipping_cost: number }).shipping_cost.toFixed(2);
-                        }
-                        if ((order as unknown as { shipping_amount?: number }).shipping_amount) {
-                          return (order as unknown as { shipping_amount: number }).shipping_amount.toFixed(2);
-                        }
-                        if ((order as unknown as { delivery_cost?: number }).delivery_cost) {
-                          return (order as unknown as { delivery_cost: number }).delivery_cost.toFixed(2);
-                        }
-                        if ((order as unknown as { shipping_fee?: number }).shipping_fee) {
-                          return (order as unknown as { shipping_fee: number }).shipping_fee.toFixed(2);
-                        }
-                        
-                        // Calculate from total - subtotal
-                        if (order.total && order.subtotal) {
-                          const calculatedShipping = order.total - order.subtotal;
-                          return calculatedShipping.toFixed(2);
-                        }
-                        
-                        // Default fallback
-                        return '0.00';
-                      })()}
-                    </span>
-                  </div>
-                  {order.tax_total && order.tax_total > 0 && (
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Tax:</span>
-                      <span className="font-semibold">₹{order.tax_total.toFixed(2)}</span>
+            <div className="bg-white rounded-lg shadow p-6 mb-6">
+              <div className="flex items-center mb-6 text-gray-700">
+                <ReceiptIcon className="mr-2 w-6 h-6"  /> 
+                <span className="font-semibold text-lg">Payment Summary</span>
+              </div>
+              
+              {/* Payment Status */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-sm font-medium text-gray-600">Payment Status:</span>
+                    <div className="mt-1">
+                      <Badge variant={getStatusColor(order.payment_status)} className="text-sm">
+                        {order.payment_status}
+                      </Badge>
                     </div>
-                  )}
-                  <div className="flex justify-between text-lg font-bold border-t pt-2">
-                    <span>Total:</span>
-                    <span className="text-green-600">
-                      ₹{(() => {
-                        // Calculate subtotal from items
-                        let subtotal = 0;
-                        if (order.items && order.items.length > 0) {
-                          subtotal = order.items.reduce((sum, item) => {
-                            return sum + (item.total || (item.unit_price * item.quantity));
-                          }, 0);
-                        } else {
-                          subtotal = order.subtotal || 0;
-                        }
-                        
-                        const shipping = order.shipping_total 
-                          ? order.shipping_total 
-                          : order.shipping_methods?.[0]?.amount 
-                          ? order.shipping_methods[0].amount
-                          : (order as unknown as { shipping?: number }).shipping
-                          ? (order as unknown as { shipping: number }).shipping
-                          : (order as unknown as { shipping_cost?: number }).shipping_cost
-                          ? (order as unknown as { shipping_cost: number }).shipping_cost
-                          : (order as unknown as { shipping_amount?: number }).shipping_amount
-                          ? (order as unknown as { shipping_amount: number }).shipping_amount
-                          : (order as unknown as { delivery_cost?: number }).delivery_cost
-                          ? (order as unknown as { delivery_cost: number }).delivery_cost
-                          : (order as unknown as { shipping_fee?: number }).shipping_fee
-                          ? (order as unknown as { shipping_fee: number }).shipping_fee
-                          : 0;
-                        const tax = order.tax_total || 0;
-                        return (subtotal + shipping + tax).toFixed(2);
-                      })()}
-                    </span>
                   </div>
-                </div>
-                <div className="mt-4 pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Payment Status:</span>
-                    <Badge variant={getStatusColor(order.payment_status)}>
-                      {order.payment_status}
-                    </Badge>
+                  <div className="text-right">
+                    <span className="text-sm font-medium text-gray-600">Order Total:</span>
+                    <div className="text-2xl font-bold mt-1" style={{color: '#cd8973'}}>
+                      {convertToLocale({ amount: order.total ?? 0, currency_code: order.currency_code })}
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Shipping Information */}
-              {/* <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center mb-4 text-gray-700">
-                  <ShippingIcon className="mr-2 text-blue-600 w-6 h-6" /> 
-                  <span className="font-semibold text-lg">Shipping Information</span>
+              {/* Payment Collection Details */}
+              {order.payment_collections && order.payment_collections.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium text-gray-700">Payment Details</h4>
+                  {order.payment_collections.map((payment, index) => (
+                    <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div>
+                          <span className="text-gray-500">Amount:</span>
+                          <div className="font-medium text-gray-900">
+                            {convertToLocale({ amount: payment.amount || 0, currency_code: payment.currency_code })}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Authorized:</span>
+                          <div className="font-medium text-gray-900">
+                            {convertToLocale({ amount: payment.authorized_amount || 0, currency_code: payment.currency_code })}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Captured:</span>
+                          <div className="font-medium text-gray-900">
+                            {convertToLocale({ amount: payment.captured_amount || 0, currency_code: payment.currency_code })}
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Status:</span>
+                          <div className="mt-1">
+                            <Badge variant={payment.status === 'authorized' ? 'info' : payment.status === 'completed' ? 'success' : 'warning'}>
+                              {payment.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Fulfillment Status:</span>
-                    <Badge variant={getStatusColor(order.fulfillment_status)}>
-                      {order.fulfillment_status}
-                    </Badge>
+              )}
+
+              {/* Order Summary */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-4">Order Summary</h4>
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Items ({order.items?.length || 0}):</span>
+                      <span className="font-medium">
+                        {convertToLocale({ amount: order.original_item_subtotal || order.subtotal || 0, currency_code: order.currency_code })}
+                      </span>
+                    </div>
+                    {(order as any).discount_subtotal && (order as any).discount_subtotal > 0 && (
+                      <div className="flex justify-between" style={{color: '#cd8973'}}>
+                        <span>Discount:</span>
+                        <span className="font-medium">-{convertToLocale({ amount: (order as any).discount_subtotal, currency_code: order.currency_code })}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Shipping:</span>
+                      <span className="font-medium">
+                        {convertToLocale({ amount: order.shipping_subtotal || 0, currency_code: order.currency_code })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tax:</span>
+                      <span className="font-medium">
+                        {convertToLocale({ amount: order.tax_total || 0, currency_code: order.currency_code })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold border-t pt-2" style={{color: '#cd8973'}}>
+                      <span>Total:</span>
+                      <span>{convertToLocale({ amount: order.total || 0, currency_code: order.currency_code })}</span>
+                    </div>
                   </div>
-                  {order.shipping_methods && order.shipping_methods.length > 0 && (
-                    <div className="text-sm text-gray-600">
-                      <span className="font-medium">Shipping Method:</span><br />
-                      {order.shipping_methods[0].name || 'Standard Shipping'}
-                    </div>
-                  )}
-                  {order.shipping_address?.company && (
-                    <div className="text-sm text-gray-600">
-                      <span className="font-medium">Company:</span><br />
-                      {order.shipping_address.company}
-                    </div>
-                  )}
                 </div>
-              </div> */}
+              </div>
             </div>
           )}
 

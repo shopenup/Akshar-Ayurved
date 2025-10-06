@@ -1,7 +1,7 @@
 import * as React from "react"
 
 import { isManual } from "@lib/constants"
-import { UiRadio, UiRadioBox, UiRadioLabel } from "@components/ui/Radio"
+import { UiRadio } from "@components/ui/Radio"
 import PaymentTest from "@modules/checkout/components/payment-test"
 
 type PaymentContainerProps = {
@@ -29,26 +29,27 @@ const PaymentContainer: React.FC<PaymentContainerProps> = ({
 
   return (
     <UiRadio
-      key={paymentProviderId}
-      value={paymentProviderId}
       variant="outline"
-      className={`gap-4 transition-all duration-200 ${isSelected ? 'border-green-500 bg-green-50 shadow-md' : 'border-gray-200 hover:border-gray-300'} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+      className={`transition-all duration-300 hover:scale-[1.02] ${
+        isSelected ? 'ring-2 ring-[#cd8973]/20' : ''
+      }`}
       onPress={handleSelect}
     >
-      <UiRadioBox 
-        value={paymentProviderId}
-        isSelected={isSelected}
-        isDisabled={disabled}
-        onChange={onSelect}
-      />
-      <UiRadioLabel className="flex-1">
-        {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
-
-        {isManual(paymentProviderId) && isDevelopment && <PaymentTest />}
-      </UiRadioLabel>
-      <span className="ml-auto text-lg">
-        {paymentInfoMap[paymentProviderId]?.icon}
-      </span>
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-3">
+          <div className="flex flex-col">
+            <h3 className="font-normal text-gray-900 text-[16px] md:text-base">
+              {paymentInfoMap[paymentProviderId]?.title || paymentProviderId}
+            </h3>
+            {isManual(paymentProviderId) && isDevelopment && <PaymentTest />}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 ml-auto">
+          <span className="text-2xl">
+            {paymentInfoMap[paymentProviderId]?.icon}
+          </span>
+        </div>
+      </div>
     </UiRadio>
   )
 }

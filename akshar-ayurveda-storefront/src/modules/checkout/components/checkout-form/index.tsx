@@ -18,8 +18,8 @@ const Review = React.lazy(() => import("@modules/checkout/components/review"))
 const CheckoutComponentLoader = () => (
   <div className="flex items-center justify-center py-8">
     <div className="text-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-2"></div>
-      <p className="text-gray-600 text-sm">Loading...</p>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#cd8973] mx-auto mb-2"></div>
+      <p className="text-gray-700 text-sm">Loading...</p>
     </div>
   </div>
 )
@@ -48,8 +48,8 @@ export const CheckoutForm = withReactQueryProvider<{
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading checkout form...</p>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#cd8973] mx-auto mb-4"></div>
+          <p className="text-gray-700">Loading checkout form...</p>
         </div>
       </div>
     )
@@ -58,7 +58,7 @@ export const CheckoutForm = withReactQueryProvider<{
   if (!finalCart) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-600">No cart data available</p>
+        <p className="text-gray-700">No cart data available</p>
       </div>
     )
   }

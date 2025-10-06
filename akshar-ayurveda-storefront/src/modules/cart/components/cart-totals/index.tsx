@@ -98,9 +98,9 @@ const CartTotals: React.FC<CartTotalsProps> = ({
           isPartOfCartDrawer && "my-4 md:my-4"
         )}
       />
-      <div className="flex justify-between text-md font-semibold">
+      <div className="flex justify-between text-md font-semibold text-[#cd8973]">
         <p>Total:</p>
-        <p data-testid="cart-total" data-value={total || 0}>
+        <p data-testid="cart-total" className="text-[#cd8973]" data-value={total || 0}>
           {convertToLocale({ amount: total ?? 0, currency_code })}
         </p>
       </div>

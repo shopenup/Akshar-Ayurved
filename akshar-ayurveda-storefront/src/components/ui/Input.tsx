@@ -42,10 +42,10 @@ const Input: React.FC<InputProps> = ({
   };
   
   const widthClass = fullWidth ? 'w-full' : '';
-  const errorClass = error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-green-400 focus:ring-green-400';
+  const errorClass = error ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : 'border-gray-200 focus:border-[#CD8973] focus:ring-[#CD8973]';
   const disabledClass = disabled ? 'opacity-50 cursor-not-allowed bg-gray-50' : '';
   
-  const inputClasses = `block ${widthClass} ${sizeClasses[size]} border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 ${errorClass} ${disabledClass} ${className}`;
+  const inputClasses = `block ${widthClass} ${sizeClasses[size]} border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 text-black placeholder-gray-400 ${errorClass} ${disabledClass} ${className}`;
   
   return (
     <div className={fullWidth ? 'w-full' : ''}>
@@ -67,6 +67,7 @@ const Input: React.FC<InputProps> = ({
         disabled={disabled}
         required={required}
         className={inputClasses}
+        style={{ color: '#000000' }}
       />
       {error && (
         <p className="mt-1 text-sm text-red-600">{error}</p>

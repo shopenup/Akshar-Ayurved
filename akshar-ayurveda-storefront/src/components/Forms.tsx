@@ -16,6 +16,7 @@ import {
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import CountrySelect from "@modules/checkout/components/country-select"
+import StateSelect from "@modules/checkout/components/state-select"
 
 export type FormProps<T extends z.ZodTypeAny> = UseFormProps<z.infer<T>> & {
   schema: T
@@ -55,7 +56,7 @@ export const Form = <T extends z.ZodTypeAny>({
       (event) => {
         event.preventDefault()
         event.stopPropagation()
-        form.handleSubmit(submitHandler, (err) => console.log(err))(event)
+        form.handleSubmit(submitHandler)(event)
       },
       [form, submitHandler]
     )
@@ -89,27 +90,13 @@ export const getInputClassNames = ({
   const successClasses = isSuccess ? "border-green-500 pr-7" : ""
 
   return twJoin(
-    "peer block w-full rounded-xs transition-all outline-none px-4 placeholder:invisible border border-grayscale-200 hover:border-grayscale-500 focus:border-grayscale-500 bg-transparent disabled:pointer-events-none disabled:bg-grayscale-50 [&:autofill]:bg-clip-text aria-[invalid=true]:border-red-primary aria-[invalid=true]:focus:border-red-900 aria-[invalid=true]:hover:border-red-900",
+    "peer block w-full rounded-xs transition-all outline-none px-4 placeholder:text-gray-400 border border-grayscale-200 hover:border-grayscale-500 focus:border-grayscale-500 bg-transparent disabled:pointer-events-none disabled:bg-grayscale-50 [&:autofill]:bg-clip-text aria-[invalid=true]:border-red-primary aria-[invalid=true]:focus:border-red-900 aria-[invalid=true]:hover:border-red-900",
     sizeClasses[uiSize],
     visuallyDisabledClasses,
     successClasses
   )
 }
 
-export const getPlaceholderClassNames = ({
-  uiSize = "lg",
-}: Pick<InputOwnProps, "uiSize">): string => {
-  const sizeClasses = {
-    lg: "peer-focus:top-2.5 peer-[:not(:placeholder-shown)]:top-2.5 peer-[:autofill]:top-2.5 peer-focus:text-xs peer-[:not(:placeholder-shown)]:text-xs peer-[:autofill]:text-xs",
-    md: "peer-focus:top-1 peer-[:not(:placeholder-shown)]:top-1 peer-[:autofill]:top-1 peer-focus:text-xs peer-[:not(:placeholder-shown)]:text-xs peer-[:autofill]:text-xs",
-    sm: "peer-focus:top-1 peer-[:not(:placeholder-shown)]:top-1 peer-[:autofill]:top-1 text-xs peer-focus:text-2xs peer-[:not(:placeholder-shown)]:text-2xs peer-[:autofill]:text-2xs",
-  }
-
-  return twJoin(
-    "absolute -translate-y-1/2 peer-placeholder-shown:top-1/2 left-4 peer-[:not(:placeholder-shown)]:translate-y-0 peer-[:autofill]:translate-y-0 peer-focus:translate-y-0 text-grayscale-400 pointer-events-none transition-all",
-    sizeClasses[uiSize]
-  )
-}
 
 /**
  * Label
@@ -195,11 +182,6 @@ export const Input = React.forwardRef<
         )}
         placeholder={placeholder}
       />
-      {placeholder && (
-        <span className={getPlaceholderClassNames({ uiSize })}>
-          {placeholder}
-        </span>
-      )}
       {isSuccess && (
         <Icon
           name="check"
@@ -294,6 +276,47 @@ export const CountrySelectField: React.FC<CountrySelectFieldProps> = ({
       >
         {children}
       </CountrySelect>
+      {fieldState.error && (
+        <div className="pt-2 text-red-900 text-small-regular">
+          <span>{fieldState.error.message}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+
+export interface StateSelectFieldProps {
+  className?: string
+  name: string
+  label?: string
+  selectProps?: Omit<
+    React.ComponentProps<typeof StateSelect>,
+    "name" | "onChange" | "onBlur" | "value" | "disabled" | keyof ControllerRenderProps
+  >
+  isRequired?: boolean
+}
+
+export const StateSelectField: React.FC<StateSelectFieldProps> = ({
+  className,
+  name,
+  selectProps,
+}) => {
+  const { field, fieldState } = useController<{ __name__: string }, "__name__">(
+    { name: name as "__name__" }
+  )
+
+  return (
+    <div className={className}>
+      {React.createElement(StateSelect as any, {
+        ...selectProps,
+        selectedKey: field.value ?? "",
+        name: name,
+        onChange: field.onChange,
+        onBlur: field.onBlur,
+        value: field.value,
+        disabled: field.disabled,
+      })}
       {fieldState.error && (
         <div className="pt-2 text-red-900 text-small-regular">
           <span>{fieldState.error.message}</span>

@@ -50,7 +50,6 @@ export class SMSService {
    * Test method to verify headers generation
    */
   async testHeaders(): Promise<Record<string, string>> {
-    //console.log('🧪 Testing headers generation...');
     return await this.getCompleteHeaders();
   }
 
@@ -74,7 +73,6 @@ export class SMSService {
         // Try SDK client first, fallback to direct fetch if needed
         try {
           const headers = await this.getCompleteHeaders();
-          //console.log('📡 Making SDK call to /store/notifications/sms with headers:', headers);
 
           await sdk.client.fetch('/store/notifications/sms', {
             method: 'POST',
@@ -86,10 +84,9 @@ export class SMSService {
               channel: 'sms'
             }),
           });
-          //console.log('✅ SMS sent successfully via SDK:', result);
           return true;
         } catch (sdkError) {
-          console.warn('⚠️ SDK client failed, falling back to direct fetch:', sdkError);
+          // Handle SDK error silently
 
           // Fallback to direct fetch with proper headers
           const backendUrl = process.env.NEXT_PUBLIC_SHOPENUP_BACKEND_URL || 'http://localhost:9000';
@@ -111,7 +108,6 @@ export class SMSService {
           }
 
           await response.json();
-          //console.log('✅ SMS sent successfully via direct fetch:', result);
           return true;
         }
       } else {
@@ -135,11 +131,9 @@ export class SMSService {
         }
 
         await response.json();
-        //console.log('✅ SMS sent successfully via local API:', result);
         return true;
       }
     } catch (error) {
-      console.error('❌ Error sending SMS:', error);
       return false;
     }
   }
@@ -155,7 +149,6 @@ export class SMSService {
         // If using backend, trigger the subscriber
         try {
           const headers = await this.getCompleteHeaders();
-          //console.log('📡 Making SDK call to /store/orders/notify with headers:', headers);
 
           await sdk.client.fetch(`/store/orders/${orderData.order_id}/notify`, {
             method: 'POST',
@@ -171,10 +164,9 @@ export class SMSService {
               }
             }),
           });
-          //console.log('✅ Order notification sent through subscriber system via SDK');
           return true;
         } catch (subscriberError) {
-          console.warn('⚠️ SDK subscriber failed, trying direct fetch:', subscriberError);
+          // Handle subscriber error silently
 
           // Try direct fetch as fallback
           try {
@@ -197,13 +189,12 @@ export class SMSService {
             });
 
             if (response.ok) {
-              //console.log('✅ Order notification sent through direct fetch');
               return true;
             } else {
               throw new Error(`Direct fetch failed: ${response.status}`);
             }
           } catch (directError) {
-            console.warn('⚠️ Direct fetch also failed, falling back to SMS:', directError);
+            // Handle direct fetch error silently
             // Final fallback to direct SMS sending
             return this.sendSMS({
               phone,
@@ -221,7 +212,6 @@ export class SMSService {
         data: { ...orderData } as Record<string, unknown>
       });
     } catch (error) {
-      console.error('❌ Error sending order confirmation SMS:', error);
       return false;
     }
   }
@@ -298,14 +288,12 @@ export class SMSService {
     status: string;
   }): Promise<boolean> {
     try {
-      //console.log('🎯 Triggering order.placed event for subscriber:', orderData);
 
       // Use SDK client for backend calls, fallback to direct SMS for development
       if (process.env.NODE_ENV === 'production') {
         try {
           // Send to subscriber system via SDK
           const headers = await this.getCompleteHeaders();
-          //console.log('📡 Making SDK call to /store/events/order.placed with headers:', headers);
 
           await sdk.client.fetch('/store/events/order.placed', {
             method: 'POST',
@@ -327,10 +315,9 @@ export class SMSService {
             }),
           });
 
-          //console.log('✅ Order placed event triggered successfully via SDK');
           return true;
         } catch (subscriberError) {
-          console.warn('⚠️ SDK failed, trying direct fetch:', subscriberError);
+          // Handle subscriber error silently
 
           // Try direct fetch as fallback
           try {
@@ -358,13 +345,12 @@ export class SMSService {
             });
 
             if (response.ok) {
-              //console.log('✅ Order placed event triggered successfully via direct fetch');
               return true;
             } else {
               throw new Error(`Direct fetch failed: ${response.status}`);
             }
           } catch (directError) {
-            console.warn('⚠️ Direct fetch also failed, falling back to SMS:', directError);
+            // Handle direct fetch error silently
             // Final fallback to direct SMS
             return this.sendOrderConfirmationSMS(
               orderData.customer.phone,
@@ -379,7 +365,6 @@ export class SMSService {
         }
       } else {
         // Development mode - use local API
-        //console.log('🔄 Development mode: Using local SMS API');
         return this.sendOrderConfirmationSMS(
           orderData.customer.phone,
           {
@@ -391,7 +376,7 @@ export class SMSService {
         );
       }
     } catch (error) {
-      console.error('❌ Error triggering order placed event:', error);
+      // Handle error silently
       // Fallback to direct SMS
       return this.sendOrderConfirmationSMS(
         orderData.customer.phone,

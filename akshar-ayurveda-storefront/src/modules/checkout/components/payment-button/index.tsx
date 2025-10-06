@@ -2,7 +2,7 @@
 
 import { OnApproveActions, OnApproveData } from "@paypal/paypal-js"
 import { PayPalButtons, usePayPalScriptReducer } from "@paypal/react-paypal-js"
-import React, { useState, useContext } from "react"
+import React, { useState, useContext, useEffect } from "react"
 import { HttpTypes } from "@shopenup/types"
 import { useRouter } from "next/navigation"
 import { RazorpayPaymentButton } from "./razorpay-payment-button"
@@ -54,12 +54,26 @@ const PaymentButton: React.FC<PaymentButtonProps> = ({
     default:
       return (
         <Button
-          className="w-full bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors"
+          className="w-full bg-gradient-to-r from-[#cd8973] via-[#cd8973] to-[#cd8973]/80 text-white px-10 rounded-2xl text-xl font-bold shadow-2xl hover:shadow-3xl transform hover:scale-[1.03] transition-all duration-500 border-0 focus:ring-8 focus:ring-[#cd8973]/30 relative overflow-hidden group"
           onClick={() => {
             selectPaymentMethod()
           }}
         >
-          Select a payment method
+          <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+          <div className="relative flex items-center justify-center space-x-4">
+            <div className="p-2 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors duration-300">
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+              </svg>
+            </div>
+            <span className="tracking-wide">Select a Payment Method</span>
+            <div className="p-2 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors duration-300 group-hover:translate-x-1 transition-transform duration-300">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </div>
+          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
         </Button>
       )
   }
@@ -213,9 +227,23 @@ const StripePaymentButton = ({
       <Button
         disabled={disabled || notReady}
         onClick={handlePayment}
-        className="w-full"
+        className="w-full bg-gradient-to-r from-[#cd8973] via-[#cd8973] to-[#cd8973]/80 text-white px-10 rounded-2xl text-xl font-bold shadow-2xl hover:shadow-3xl transform hover:scale-[1.03] transition-all duration-500 border-0 focus:ring-8 focus:ring-[#cd8973]/30 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none relative overflow-hidden group"
       >
-        Place order
+        <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="relative flex items-center justify-center space-x-4"  style={{backgroundColor: '#cd8973', borderRadius: 10}}>
+          <div className="p-2 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors duration-300">
+            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+          </div>
+          <span className="tracking-wide">Place Order</span>
+          <div className="p-2 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors duration-300 group-hover:translate-x-1 transition-transform duration-300">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
+          </div>
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
       </Button>
       <ErrorMessage error={errorMessage} />
     </>
@@ -324,8 +352,50 @@ const PayPalPaymentButton = ({
 const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
+  const [loadingStep, setLoadingStep] = useState<string>('')
   const [orderStatus, setOrderStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle')
   const router = useRouter()
+
+  // Add timeout to prevent infinite processing
+  useEffect(() => {
+    if (isProcessing) {
+      const timeout = setTimeout(() => {
+        setIsProcessing(false)
+        setOrderStatus('error')
+        setErrorMessage('Order processing timed out. Please try again.')
+      }, 15000) // 15 second timeout for manual payment
+
+      return () => clearTimeout(timeout)
+    }
+  }, [isProcessing])
+
+  // Add timeout for navigation loading overlay
+  useEffect(() => {
+    if (isNavigating) {
+      const timeout = setTimeout(() => {
+        setIsNavigating(false)
+        setLoadingStep('')
+      }, 5000) // 5 second timeout for navigation
+
+      return () => clearTimeout(timeout)
+    }
+  }, [isNavigating])
+
+  // Listen for order processing events
+  useEffect(() => {
+    const handleOrderProcessing = (event: CustomEvent) => {
+      if (event.detail?.step) {
+        setLoadingStep(event.detail.step)
+      }
+    }
+
+    window.addEventListener('order-processing', handleOrderProcessing as EventListener)
+    
+    return () => {
+      window.removeEventListener('order-processing', handleOrderProcessing as EventListener)
+    }
+  }, [])
 
   const placeOrder = usePlaceOrder({
     onSuccess: async (data) => {
@@ -334,6 +404,12 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
         setIsProcessing(false)
         
         if (data?.type === "order" && data.order) {
+          setLoadingStep('Preparing your order confirmation...')
+          setIsNavigating(true)
+          
+          // Navigate immediately but show loading overlay
+          router.push(`/order-confirmation/${data.order.id}`)
+          
           // Send SMS notification through subscriber system
           try {
             if (data.order.shipping_address?.phone) {
@@ -341,6 +417,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
                 ? data.order.shipping_address.phone 
                 : `+91${data.order.shipping_address.phone}`;
               
+              setLoadingStep('Sending confirmation...')
               await triggerOrderPlacedEvent({
                 id: data.order.id,
                 customer: {
@@ -357,8 +434,6 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
           } catch {
             // Continue with order placement even if SMS fails
           }
-          
-          router.push(`/order-confirmation/${data.order.id}`)
         } else if (data?.type === "cart" && (data as { error: { message: string } }).error) {
           setErrorMessage(data.error.message)
         } else {
@@ -368,10 +443,13 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
         setErrorMessage(error.message)
         setOrderStatus('error')
         setIsProcessing(false)
+        setIsNavigating(false)
+        setLoadingStep('')
       },
     })
 
   const onPaymentCompleted = () => {
+    setLoadingStep('Processing your order...')
     setIsProcessing(true)
     setOrderStatus('processing')
     setErrorMessage(null)
@@ -385,6 +463,8 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
   const resetOrder = () => {
     setOrderStatus('idle')
     setIsProcessing(false)
+    setIsNavigating(false)
+    setLoadingStep('')
     setErrorMessage(null)
   }
 
@@ -392,47 +472,109 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
     switch (orderStatus) {
       case 'processing':
         return (
-          <div className="flex items-center justify-center space-x-2">
-            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+          <div className="flex items-center justify-center space-x-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
             <span>Processing Order...</span>
           </div>
         )
       case 'success':
         return (
-          <div className="flex items-center justify-center space-x-2">
-            <div className="animate-pulse">✅</div>
+          <div className="flex items-center justify-center space-x-3">
+            <svg className="w-6 h-6 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
             <span>Order Placed!</span>
           </div>
         )
       case 'error':
         return (
-          <div className="flex items-center justify-center space-x-2">
-            <div className="animate-bounce">❌</div>
+          <div className="flex items-center justify-center space-x-3">
+            <svg className="w-6 h-6 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
             <span>Try Again</span>
           </div>
         )
       default:
-        return 'Place Order'
+        return (
+          <>
+            {/* <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div> */}
+            <div
+              className="relative flex items-center justify-center space-x-4"
+              style={{ backgroundColor: '#cd8973', borderRadius: 10 }}
+            >
+              <div className="p-2 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors duration-300">
+                <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                </svg>
+              </div>
+              <span className="tracking-wide" >Place Order</span>
+              <div className="p-2 bg-white/20 rounded-full group-hover:bg-white/30 transition-colors duration-300 group-hover:translate-x-1 transition-transform duration-300">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </div>
+            </div>
+            {/* <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div> */}
+          </>
+        )
     }
   }
 
   const getButtonStyles = () => {
-    const baseStyles = "px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium transition-all duration-300 w-full transform"
+    const baseStyles = "px-10 rounded-2xl text-xl font-bold shadow-2xl transition-all duration-500 w-full transform border-0 focus:ring-8 relative overflow-hidden group"
     
     switch (orderStatus) {
       case 'processing':
-        return `${baseStyles} bg-blue-600 text-white hover:bg-blue-700 animate-pulse`
+        return `${baseStyles} bg-gradient-to-r from-blue-600 via-blue-600 to-blue-700 text-white hover:shadow-3xl animate-pulse focus:ring-blue-300`
       case 'success':
-        return `${baseStyles} bg-green-600 text-white hover:bg-green-700 scale-105`
+        return `${baseStyles} bg-gradient-to-r from-[#cd8973] via-[#cd8973] to-[#cd8973]/80 text-white hover:shadow-3xl scale-105 focus:ring-[#cd8973]/30`
       case 'error':
-        return `${baseStyles} bg-red-600 text-white hover:bg-red-700 animate-pulse`
+        return `${baseStyles} bg-gradient-to-r from-red-600 via-red-600 to-red-700 text-white hover:shadow-3xl animate-pulse focus:ring-red-300`
       default:
-        return `${baseStyles} bg-green-600 text-white hover:bg-green-700 hover:scale-105`
+        return `${baseStyles} bg-gradient-to-r from-[#cd8973] via-[#cd8973] to-[#cd8973]/80 text-white hover:shadow-3xl hover:scale-[1.03] focus:ring-[#cd8973]/30`
     }
   }
 
   return (
     <>
+      {/* Loading Overlay */}
+      {(isNavigating || isProcessing) && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl">
+            <div className="mb-6">
+              <div className="w-16 h-16 mx-auto mb-4 relative">
+                <div className="w-16 h-16 border-4 border-[#cd8973]/20 rounded-full"></div>
+                <div className="w-16 h-16 border-4 border-[#cd8973] border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                {isProcessing ? 'Processing Your Order...' : 'Order Successful! 🎉'}
+              </h3>
+              <p className="text-gray-600 mb-4">{loadingStep}</p>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>Payment processed</span>
+              </div>
+              <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                <div className={`w-2 h-2 rounded-full animate-pulse ${isProcessing ? 'bg-[#cd8973]' : 'bg-green-500'}`} style={{animationDelay: '0.5s'}}></div>
+                <span>{isProcessing ? 'Completing order...' : 'Order confirmed'}</span>
+              </div>
+              <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
+                <div className={`w-2 h-2 rounded-full animate-pulse ${isProcessing ? 'bg-gray-300' : 'bg-blue-500'}`} style={{animationDelay: '1s'}}></div>
+                <span>{isProcessing ? 'Please wait...' : 'Preparing confirmation'}</span>
+              </div>
+            </div>
+            
+            <div className="mt-6 text-xs text-gray-400">
+              {isProcessing ? 'This may take a few moments...' : 'Please wait while we redirect you...'}
+            </div>
+          </div>
+        </div>
+      )}
+      
       <Button
         disabled={notReady || isProcessing}
         onClick={handlePayment}
@@ -454,7 +596,7 @@ const ManualTestPaymentButton = ({ notReady }: { notReady: boolean }) => {
       
       {orderStatus === 'success' && (
         <div className="mt-2 text-center animate-fade-in">
-          <div className="text-sm text-green-600 font-medium">
+          <div className="text-sm text-[#cd8973] font-medium">
             🎉 Order placed successfully! Redirecting...
           </div>
         </div>

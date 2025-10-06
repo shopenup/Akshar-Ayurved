@@ -61,7 +61,6 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        ////console.log('GlobalSearch - Fetching products...');
 
         // Use the correct store products endpoint
         let productsData;
@@ -74,12 +73,10 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
             },
           });
         } catch {
-          ////console.log('GlobalSearch - API call failed:', error);
           // Fallback to empty array if API fails
           productsData = { products: [] };
         }
 
-        ////console.log('GlobalSearch - Products data:', productsData);
 
         let productsArray: ApiProduct[] = [];
         if (Array.isArray(productsData)) {
@@ -105,10 +102,8 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
           }));
 
           setAllProducts(mappedProducts);
-          ////console.log('GlobalSearch - Mapped products:', mappedProducts);
         }
       } catch (error) {
-        console.error('GlobalSearch - Error fetching products:', error);
         // Fallback to sample products if API fails
         const fallbackProducts = [
           {
@@ -142,7 +137,6 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
           }
         ];
         setAllProducts(fallbackProducts);
-        ////console.log('GlobalSearch - Using fallback products:', fallbackProducts);
       }
     };
 
@@ -153,9 +147,6 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
   const searchProducts = (searchQuery: string): Product[] => {
     if (!searchQuery.trim()) return [];
 
-    ////console.log('GlobalSearch - Searching for:', searchQuery);
-    ////console.log('GlobalSearch - Available products:', allProducts.length);
-    ////console.log('GlobalSearch - All products:', allProducts);
 
     const query = searchQuery.toLowerCase();
     const filteredProducts = allProducts.filter(product => {
@@ -166,7 +157,6 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
       return nameMatch || categoryMatch || descriptionMatch;
     });
 
-    ////console.log('GlobalSearch - Filtered results:', filteredProducts);
     return filteredProducts.slice(0, 6); // Limit to 6 results for dropdown
   };
 
@@ -240,7 +230,7 @@ export default function GlobalSearch({ className = '' }: GlobalSearchProps) {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Search products..."
-            className="w-4/5 pl-12 pr-10 py-2.5 text-base border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none hover:bg-white transition-all duration-200 placeholder-gray-500"
+            className="w-4/5 pl-12 pr-10 py-2.5 text-base border border-gray-200 rounded-full bg-gray-50 focus:bg-white focus:ring-2 focus:ring-[#CD8973] focus:border-[#CD8973] outline-none hover:bg-white transition-all duration-200 placeholder-gray-500"
           />
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

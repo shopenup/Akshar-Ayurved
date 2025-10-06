@@ -12,6 +12,7 @@ import {
   UiRadioGroup,
   UiRadioLabel,
 } from "@components/ui/Radio"
+import { UiCheckboxCard } from "@components/ui/Checkbox"
 import { useCartShippingMethods, useSetShippingMethod } from "hooks/cart"
 import { StoreCart } from "@shopenup/types"
 
@@ -51,7 +52,7 @@ const Shipping = ({ cart }: { cart: StoreCart }) => {
         <div>
           <p
             className={twJoin(
-              "transition-fontWeight duration-75 text-green-800 font-semibold",
+              "transition-fontWeight duration-75 text-[#cd8973] font-semibold",
               isOpen && "font-semibold"
             )}
           >
@@ -67,7 +68,7 @@ const Shipping = ({ cart }: { cart: StoreCart }) => {
               onPress={() => {
                 router.push("/checkout?step=shipping", { scroll: false })
               }}
-               className={"text-green-600"}
+               className={"text-[#cd8973]"}
             >
               Change
             </Button>
@@ -83,35 +84,48 @@ const Shipping = ({ cart }: { cart: StoreCart }) => {
           </div>
         ) : (
           <div>
-            <UiRadioGroup
-              className="flex flex-col gap-4 mb-8"
-              value={selectedShippingMethod?.id}
-              onChange={set}
-              aria-label="Shipping methods"
-            >
-              {availableShippingMethods?.map((option) => (
-                <UiRadio
-                  key={option.id}
-                  variant="outline"
-                  value={option.id}
-                  className={`gap-4 ${selectedShippingMethod?.id === option.id ? 'border-green-500 bg-green-50' : ''}`}
-                  onPress={() => set(option.id)}
-                >
-                  <UiRadioBox 
-                    value={option.id}
-                    isSelected={selectedShippingMethod?.id === option.id}
-                    onChange={set}
-                  />
-                  <UiRadioLabel>{option.name}</UiRadioLabel>
-                  <UiRadioLabel className="ml-auto group-data-[selected=true]:font-normal">
-                    {convertToLocale({
-                      amount: option.amount!,
-                      currency_code: cart?.currency_code,
-                    })}
-                  </UiRadioLabel>
-                </UiRadio>
-              ))}
-            </UiRadioGroup>
+            <div className="flex flex-col gap-4 mb-8">
+              {availableShippingMethods?.map((option) => {
+                const isSelected = selectedShippingMethod?.id === option.id
+                return (
+                  <UiCheckboxCard
+                    key={option.id}
+                    isSelected={isSelected}
+                    onPress={() => set(option.id)}
+                    className={`transition-all duration-300 hover:scale-[1.02] ${
+                      isSelected ? 'ring-2 ring-[#cd8973]/20' : ''
+                    }`}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-3">
+                        <div className="flex flex-col">
+                          <h3 className="font-semibold text-gray-900 text-lg">
+                            {option.name}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            {option.name === 'Standard Shipping' ? 'Standard delivery service' : 'Express delivery service'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-2xl">🚚</span>
+                        <div className="text-right">
+                          <div className="font-semibold text-gray-900 text-lg">
+                            {convertToLocale({
+                              amount: option.amount!,
+                              currency_code: cart?.currency_code,
+                            })}
+                          </div>
+                        </div>
+                        {isSelected && (
+                          <div className="w-2 h-2 bg-[#cd8973] rounded-full animate-pulse"></div>
+                        )}
+                      </div>
+                    </div>
+                  </UiCheckboxCard>
+                )
+              })}
+            </div>
 
             <ErrorMessage error={error} />
 
@@ -119,7 +133,7 @@ const Shipping = ({ cart }: { cart: StoreCart }) => {
               onPress={handleSubmit}
               isLoading={isPending}
               isDisabled={!cart.shipping_methods?.[0]}
-              className={"bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors"}
+              className={"bg-[#cd8973] text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-[#cd8973]/90 transition-colors"}
             >
               Next
             </Button>

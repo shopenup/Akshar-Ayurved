@@ -70,7 +70,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
         <p className="text-gray-600 mt-2">Sign in to your account</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 text-black">
         <Input
           label="Email Address"
           name="email"

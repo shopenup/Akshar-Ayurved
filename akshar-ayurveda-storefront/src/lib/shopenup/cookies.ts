@@ -57,6 +57,7 @@ export const getCartId = async () => {
 }
 
 export const setCartId = async (cartId: string) => {
+  
   const cookieOptions = {
     expires: 7, // 7 days
     sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax" as "strict" | "lax",
@@ -85,11 +86,9 @@ export const removeCartId = async () => {
 export const clearAllCartData = async () => {
   await removeCartId()
   await removeAuthToken()
-  //console.log('🧹 All cart and auth data cleared')
 }
 
 // Function to clear only auth data (for logout without clearing cart)
 export const clearAuthDataOnly = async () => {
   await removeAuthToken()
-  //console.log('🔐 Auth data cleared, cart data preserved')
 }

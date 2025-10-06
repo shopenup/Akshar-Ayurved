@@ -71,7 +71,7 @@ const SimpleImageZoom: React.FC<SimpleImageZoomProps> = ({
     const y = e.clientY - rect.top;
     
     setMousePosition({ x, y });
-  }, []);
+  }, [isZooming]);
 
   // Touch handlers for mobile
   const handleTouchStart = useCallback((e: React.TouchEvent<HTMLDivElement>) => {
@@ -130,30 +130,32 @@ const SimpleImageZoom: React.FC<SimpleImageZoomProps> = ({
           className="object-contain transition-transform duration-300 ease-out"
           style={{
             transform: isZooming ? `scale(${getDeviceZoomLevel()})` : 'scale(1)',
-            transformOrigin: `${(mousePosition.x / currentDimensions.width) * 100}% ${(mousePosition.y / currentDimensions.height) * 100}%`
+            transformOrigin: `${(mousePosition.x / currentDimensions.width) * 100}% ${(mousePosition.y / currentDimensions.height) * 100}%`,
+            cursor: isZooming ? 'zoom-out' : 'zoom-in'
           }}
           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 80vw, 50vw"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
             target.src = '/placeholder-product.jpg';
           }}
+          priority={true}
         />
         
         {/* Zoom Overlay */}
         {isZooming && (
-          <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 pointer-events-none z-10">
             <div 
-              className="absolute w-8 h-8 bg-white rounded-full shadow-lg border-2 border-green-600 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 z-10"
+              className="absolute w-12 h-12 bg-white/90 backdrop-blur-sm rounded-full shadow-xl border-2 border-green-500 flex items-center justify-center transform -translate-x-1/2 -translate-y-1/2 animate-pulse"
               style={{
                 left: mousePosition.x,
                 top: mousePosition.y,
               }}
             >
-              <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <div className="absolute inset-0 bg-black bg-opacity-5"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-blue-500/10"></div>
           </div>
         )}
       </div>

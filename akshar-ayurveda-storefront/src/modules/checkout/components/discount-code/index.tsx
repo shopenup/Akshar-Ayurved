@@ -40,18 +40,18 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
     <>
       {activePromotion ? (
         <div className="mb-6">
-        <div className="flex items-center rounded-lg border border-green-200 bg-green-50 p-4 gap-4">
-          <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+        <div className="flex items-center rounded-lg border border-[#cd8973]/20 bg-[#cd8973]/5 p-4 gap-4">
+          <svg className="w-5 h-5 text-[#cd8973] flex-shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
-          <span className="font-semibold text-green-700 text-base mr-2">
+          <span className="font-semibold text-[#cd8973] text-base mr-2">
             {activePromotion.application_method?.type === 'percentage'
               ? `${activePromotion.application_method.value}% off applied!`
               : activePromotion.application_method?.type === 'fixed' && activePromotion.application_method.currency_code
                 ? `₹${activePromotion.application_method.value} off applied!`
                 : 'Discount applied!'}
           </span>
-          <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded ml-2">Code: {activePromotion.code}</span>
+          <span className="bg-[#cd8973]/10 text-[#cd8973] text-xs px-3 py-1 rounded ml-2">Code: {activePromotion.code}</span>
           <button
             onClick={handleRemovePromotion}
             className="ml-auto text-red-600 text-sm font-medium hover:underline"
@@ -69,12 +69,12 @@ const DiscountCode: React.FC<DiscountCodeProps> = ({ cart }) => {
               inputProps={{
                 autoFocus: false,
                 className:
-                  "block px-4 py-2 text-base border border-gray-300 rounded-l-lg transition-colors focus:outline-none focus:ring-2 focus:ring-green-400 w-full",
+                  "block px-4 py-2 text-base text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-l-lg transition-colors focus:outline-none focus:ring-2 focus:ring-[#cd8973] w-full",
               }}
               placeholder="Enter discount code"
               className="flex-1"
             />
-            <SubmitButton className="bg-green-600 text-white px-4 py-2 rounded-r-lg text-sm font-medium hover:bg-green-700 transition-colors">
+            <SubmitButton className="bg-[#cd8973] text-white px-4 py-2 rounded-r-lg text-sm font-medium hover:bg-[#cd8973]/90 transition-colors">
               Apply
             </SubmitButton>
           </div>

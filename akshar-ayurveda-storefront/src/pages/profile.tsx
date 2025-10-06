@@ -3,6 +3,12 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Button, Card, Badge, Input, Modal } from '@components/ui';
+import Breadcrumb from '@components/about/Breadcrumb';
+import CountrySelect from '@modules/checkout/components/country-select';
+import StateSelect from '@modules/checkout/components/state-select';
+import { useCart } from '@hooks/cart';
+
+
 import { useCustomer, useUpdateCustomer, useSignout, useAddressMutation, useDeleteCustomerAddress } from '@hooks/customer';
 import { toast } from 'sonner';
 import { useAppContext } from '../context/AppContext';
@@ -28,6 +34,7 @@ function ClientOnly({ children, fallback = null }: { children: React.ReactNode; 
 export default function ProfilePage() {
   const router = useRouter();
   const { data: customer, isLoading: customerLoading } = useCustomer();
+  const { data: cart } = useCart({ enabled: true });
   const { resetAppState } = useAppContext();
   const updateCustomer = useUpdateCustomer();
   const signout = useSignout();
@@ -55,6 +62,7 @@ export default function ProfilePage() {
     country_code: 'IN',
     phone: ''
   });
+  const [countryCode, setCountryCode] = useState('IN');
   const addAddress = useAddressMutation();
   const updateAddress = useAddressMutation(editingAddressId || undefined);
   const deleteAddress = useDeleteCustomerAddress();
@@ -107,7 +115,7 @@ export default function ProfilePage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#cc8972] mx-auto"></div>
           <p className="mt-4 text-gray-600">Loading profile...</p>
         </div>
       </div>
@@ -125,67 +133,64 @@ export default function ProfilePage() {
         <meta name="description" content="Manage your profile, addresses, and view order history" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
-          <div className="mb-8">
-            <Link href="/">
-              <Button variant="outline" size="sm" className="mb-4">
-                ← Back to Home
-              </Button>
-            </Link>
-            <h1 className="text-3xl font-bold text-gray-900">My Profile</h1>
-            <p className="text-gray-600 mt-2">
-              Welcome back, {customer.first_name}!
-            </p>
-          </div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-full px-0 sm:px-6 lg:px-8">
+          <Breadcrumb 
+            title="My Profile"
+            crumbs={[{ label: 'Home', href: '/' }, { label: 'My Profile' }]}
+            imageSrc="/assets/images/bredcrumb-bg.jpg"
+          />
+         
+
+       
 
           {/* Navigation Tabs */}
-          <div className="mb-8">
-            <nav className="flex space-x-8 border-b border-gray-200">
+          <div className="mb-4 mt-6 sm:mt-10">
+            <div className="flex space-x-1 rounded-lg p-1 mb-6 container mx-auto">
               {[
-                { id: 'profile', label: 'Profile', icon: '👤' },
-                // { id: 'orders', label: 'Orders', icon: '📦' },
-                { id: 'addresses', label: 'Addresses', icon: '📍' },
-                { id: 'security', label: 'Security', icon: '🔒' }
+                { key: 'profile', label: 'Profile' },
+                // { key: 'orders', label: 'Orders' },
+                { key: 'addresses', label: 'Addresses' },
+                // { key: 'security', label: 'Security' }
               ].map((tab) => (
                 <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm ${
-                    activeTab === tab.id
-                      ? 'border-green-500 text-green-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`py-2 px-3 sm:px-4 rounded-md w-[50%] sm:w-[12.5%] text-xs sm:text-sm font-medium transition-colors ${
+                    activeTab === tab.key
+                      ? 'bg-[#C88370] text-white'
+                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                   }`}
                 >
-                  <span className="mr-2">{tab.icon}</span>
                   {tab.label}
                 </button>
               ))}
-            </nav>
+            </div>
+              
+            </div>
           </div>
 
           {/* Profile Tab */}
           {activeTab === 'profile' && (
-            <Card className="p-0 overflow-hidden">
+            <Card className="p-0 overflow-hidden container mx-auto">
               {/* Decorative header */}
               <div className="h-20" />
 
               <div className="p-6 -mt-14">
                 {/* Header with avatar, name and actions */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="flex items-center gap-3 sm:gap-4">
                     {/* Avatar */}
-                    <div className="h-20 w-20 rounded-full ring-4 ring-white bg-emerald-600 flex items-center justify-center text-white text-2xl font-semibold shadow-md">
+                    <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-full ring-4 ring-white bg-[#cc8972] flex items-center justify-center text-white text-xl sm:text-2xl font-semibold shadow-md">
                       {(customer.first_name?.[0] || 'A').toUpperCase()}
                     </div>
-                    <div>
-                      <h2 className="text-2xl font-semibold text-gray-900">
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-lg sm:text-2xl font-semibold text-gray-900 truncate">
                         {customer.first_name} {customer.last_name}
                       </h2>
-                      <div className="mt-1 flex items-center gap-2">
-                        <Badge variant="success">Member</Badge>
-                        <span className="text-gray-500 text-sm">Joined{' '}
+                      <div className="mt-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                        <Badge className="bg-[#cc8972]/10 text-[#cc8972] border border-[#cc8972]/30 text-xs w-fit">Member</Badge>
+                        <span className="text-gray-500 text-xs sm:text-sm">Joined{' '}
                           {customer.created_at ? (
                             <ClientOnly fallback="Loading...">{formatDate(customer.created_at)}</ClientOnly>
                           ) : 'N/A'}
@@ -195,11 +200,11 @@ export default function ProfilePage() {
                   </div>
 
                 {!isEditing && (
-                    <div className="flex items-center gap-3">
-                      <Badge className="bg-gray-100 text-gray-700 border border-gray-200">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3">
+                      <Badge className="bg-gray-100 text-gray-700 border border-gray-200 text-xs break-all">
                         {customer.email}
                       </Badge>
-                      <Button variant="outline" onClick={() => setIsEditing(true)}>
+                      <Button variant="outline" onClick={() => setIsEditing(true)} size="sm" className="w-full sm:w-auto">
                     Edit Profile
                   </Button>
                     </div>
@@ -207,40 +212,43 @@ export default function ProfilePage() {
               </div>
 
                 {/* Body */}
-                <div className="mt-8">
+                <div className="mt-6 sm:mt-8">
               {isEditing ? (
-                    <form onSubmit={handleEditSubmit} className="space-y-6">
+                    <form onSubmit={handleEditSubmit} className="space-y-4 sm:space-y-6">
                       {/* Match display layout: info cards grid */}
-                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                         {/* Left: editable details in cards */}
-                        <div className="lg:col-span-3 lg:col-start-1 space-y-6">
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                        <div className="lg:col-span-3 lg:col-start-1 space-y-4 sm:space-y-6">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="p-3 sm:p-4 rounded-lg border border-gray-200 bg-white">
                               <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">First Name</p>
                       <Input
+                        className="text-gray-900 w-full"
                         value={editForm.first_name}
                         onChange={(e) => setEditForm({ ...editForm, first_name: e.target.value })}
                                 placeholder="Enter your first name"
                         required
                       />
                     </div>
-                            <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                            <div className="p-3 sm:p-4 rounded-lg border border-gray-200 bg-white">
                               <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Last Name</p>
                       <Input
+                        className="text-gray-900 w-full"
                         value={editForm.last_name}
                         onChange={(e) => setEditForm({ ...editForm, last_name: e.target.value })}
                                 placeholder="Enter your last name"
                         required
                       />
                     </div>
-                            <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                            <div className="p-3 sm:p-4 rounded-lg border border-gray-200 bg-white sm:col-span-2">
                               <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Email</p>
-                              <Input value={customer.email} disabled className="bg-gray-50" />
-                    <p className="text-sm text-gray-500 mt-1">Email cannot be changed</p>
+                              <Input value={customer.email} disabled className="bg-gray-50 text-gray-900 w-full" />
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1">Email cannot be changed</p>
                   </div>
-                            <div className="p-4 rounded-lg border border-gray-200 bg-white">
+                            <div className="p-3 sm:p-4 rounded-lg border border-gray-200 bg-white sm:col-span-2">
                               <p className="text-xs uppercase tracking-wide text-gray-500 mb-2">Phone</p>
                     <Input
+                      className="text-gray-900 w-full"
                       value={editForm.phone}
                       onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                       placeholder="Enter phone number"
@@ -251,11 +259,11 @@ export default function ProfilePage() {
                       </div>
 
                       {/* Bottom right actions */}
-                      <div className="flex justify-end gap-2">
-                    <Button type="submit" disabled={updateCustomer.isPending}>
+                      <div className="flex flex-col sm:flex-row justify-end gap-2">
+                    <Button type="submit" disabled={updateCustomer.isPending} className="w-full sm:w-auto">
                       {updateCustomer.isPending ? 'Saving...' : 'Save Changes'}
                     </Button>
-                        <Button type="button" variant="outline" onClick={() => setIsEditing(false)}>
+                        <Button type="button" variant="outline" onClick={() => setIsEditing(false)} className="w-full sm:w-auto">
                       Cancel
                     </Button>
                   </div>
@@ -290,36 +298,11 @@ export default function ProfilePage() {
             </Card>
           )}
 
-          {/* Orders Tab */}
-          {activeTab === 'orders' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-gray-900">Order History</h2>
-                <Link href="/orders">
-                  <Button variant="outline">View All Orders</Button>
-                </Link>
-              </div>
-
-              <div className="text-center py-8">
-                <div className="text-gray-400 mb-4">
-                  <svg className="mx-auto h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.172 13H4m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.172 13H4" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Order History</h3>
-                <p className="text-gray-600 mb-4">Order history functionality coming soon...</p>
-                <Link href="/products">
-                  <Button>Browse Products</Button>
-                </Link>
-              </div>
-            </div>
-          )}
-
           {/* Addresses Tab */}
           {activeTab === 'addresses' && (
-            <Card className="p-6">
+            <Card className="p-6 container mx-auto">
               {/* Delete confirmation modal */}
-              <Modal
+              <Modal className='mt-40'
                 isOpen={deleteDialog.open}
                 onClose={() => setDeleteDialog({ open: false })}
                 title="Delete address?"
@@ -329,7 +312,7 @@ export default function ProfilePage() {
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setDeleteDialog({ open: false })}>Cancel</Button>
                   <Button
-                    className="bg-red-600 text-white hover:bg-red-700"
+                    className="bg-red-600 text-white hover:bg-red-700 "
                     onClick={async () => {
                       if (!deleteDialog.id) return
                       try {
@@ -390,6 +373,7 @@ export default function ProfilePage() {
 
                           setIsAddingAddress(false)
                           setEditingAddressId(null)
+                          setCountryCode('IN')
                           setAddressForm({
                             first_name: '',
                             last_name: '',
@@ -486,11 +470,13 @@ export default function ProfilePage() {
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">State/Province</label>
-                            <Input
-                              className="w-full min-w-[320px]"
-                              value={addressForm.province}
-                              onChange={(e) => setAddressForm({ ...addressForm, province: e.target.value })}
-                              placeholder="e.g., Gujarat"
+                            <StateSelect
+                              placeholder="Select State/Province"
+                              countryCode={countryCode}
+                              selectedKey={addressForm.province}
+                              onSelectionChange={(value) => {
+                                setAddressForm({ ...addressForm, province: value as string });
+                              }}
                             />
                           </div>
                           <div>
@@ -512,13 +498,16 @@ export default function ProfilePage() {
                         <h4 className="text-sm font-semibold text-gray-900 mb-3">Contact</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Country Code <span className="text-red-600">*</span></label>
-                            <Input
-                              className="w-full min-w-[320px]"
-                              value={addressForm.country_code}
-                              onChange={(e) => setAddressForm({ ...addressForm, country_code: e.target.value.toUpperCase() })}
-                              placeholder="e.g., IN"
-                              required
+                            <label className="block text-sm font-medium text-gray-700 mb-2">Country <span className="text-red-600">*</span></label>
+                            <CountrySelect
+                              placeholder="Select Country"
+                              region={cart?.region}
+                              selectedKey={addressForm.country_code}
+                              onSelectionChange={(value) => {
+                                const countryCode = value as string;
+                                setAddressForm({ ...addressForm, country_code: countryCode, province: '' });
+                                setCountryCode(countryCode);
+                              }}
                             />
                           </div>
                           <div>
@@ -534,7 +523,11 @@ export default function ProfilePage() {
                       </div>
 
                       <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={() => { setIsAddingAddress(false); setEditingAddressId(null) }}>
+                        <Button type="button" variant="outline" onClick={() => { 
+                          setIsAddingAddress(false); 
+                          setEditingAddressId(null);
+                          setCountryCode('IN');
+                        }}>
                           Cancel
                         </Button>
                         <Button type="submit" disabled={addAddress.isPending || updateAddress.isPending}>
@@ -574,8 +567,10 @@ export default function ProfilePage() {
                             variant="outline"
                             size="sm"
                             onClick={() => {
+                              const addressCountryCode = (address as { country_code?: string }).country_code || 'IN';
                               setIsAddingAddress(false)
                               setEditingAddressId((address as { id?: string }).id || null)
+                              setCountryCode(addressCountryCode);
                               setAddressForm({
                                 first_name: (address as { first_name?: string }).first_name || '',
                                 last_name: (address as { last_name?: string }).last_name || '',
@@ -585,7 +580,7 @@ export default function ProfilePage() {
                                 city: (address as { city?: string }).city || '',
                                 postal_code: (address as { postal_code?: string }).postal_code || '',
                                 province: (address as { province?: string }).province || '',
-                                country_code: (address as { country_code?: string }).country_code || 'IN',
+                                country_code: addressCountryCode,
                                 phone: (address as { phone?: string }).phone || '',
                               })
                             }}
@@ -622,15 +617,23 @@ export default function ProfilePage() {
           )}
 
           {/* Security Tab */}
-          {activeTab === 'security' && (
+          {/* {activeTab === 'security' && (
             <Card className="p-6">
               <h2 className="text-xl font-semibold text-gray-900 mb-6">Security Settings</h2>
               
               <div className="space-y-6">
-                <div className="border-b border-gray-200 pb-4">
+                <div className="border-gray-200 pb-4">
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Password</h3>
                   <p className="text-gray-600 mb-4">Change your password to keep your account secure.</p>
                   <Button variant="outline">Change Password</Button>
+                  <Button
+                      variant="outline"
+                      className="text-red-600 hover:text-red-700 mx-10"
+                      onClick={handleSignout}
+                      disabled={signout.isPending}
+                    >
+                      {signout.isPending ? 'Signing out...' : 'Sign Out'}
+                    </Button>
                 </div>
 
                 <div className="border-b border-gray-200 pb-4">
@@ -656,8 +659,8 @@ export default function ProfilePage() {
                 </div>
               </div>
             </Card>
-          )}
-        </div>
+          )} */}
+        
       </div>
     </>
   );

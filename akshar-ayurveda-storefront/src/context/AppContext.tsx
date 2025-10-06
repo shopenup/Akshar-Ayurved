@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { getAuthHeaders } from '@lib/shopenup/cookies';
 import { getCustomer } from '@lib/shopenup/customer';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface AppContextType {
   cartItemCount: number;
@@ -25,6 +26,7 @@ export function AppProvider({ children }: AppProviderProps) {
   const [favouriteCount, setFavouriteCount] = useState(0);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   // Check authentication status on mount and when needed
   const checkAuthStatus = async () => {
@@ -32,9 +34,24 @@ export function AppProvider({ children }: AppProviderProps) {
       const headers = await getAuthHeaders();
       if ('authorization' in headers && headers.authorization) {
         // Check if the token is valid by trying to get customer data
+        console.log("this")
         const customer = await getCustomer();
+        console.log("this")
+
         if (customer) {
           setIsLoggedIn(true);
+          
+          // Sync cart when user is authenticated
+          try {
+            const { syncCartOnLogin } = await import('@lib/shopenup/cart-sync');
+            const cartSyncResult = await syncCartOnLogin();
+            if (cartSyncResult.success) {
+              // Invalidate cart queries to trigger refetch and update cart count
+              await queryClient.invalidateQueries({ queryKey: ["cart"] });
+            }
+          } catch (error) {
+            console.warn('⚠️ Cart sync failed on auth check:', error);
+          }
         } else {
           setIsLoggedIn(false);
         }
@@ -66,11 +83,19 @@ export function AppProvider({ children }: AppProviderProps) {
     setIsLoggedIn(loggedIn);
   };
 
-  const resetAppState = () => {
+  const resetAppState = async () => {
     setCartItemCount(0);
     setFavouriteCount(0);
     setIsLoggedIn(false);
-    ////console.log('🔄 App state reset - user logged out');
+    
+    // Clear cart data on logout
+    try {
+      const { clearCartOnLogout } = await import('@lib/shopenup/cart-sync');
+      await clearCartOnLogout();
+    } catch (error) {
+      console.warn('⚠️ Failed to clear cart on logout:', error);
+    }
+    
   };
 
   const value = {

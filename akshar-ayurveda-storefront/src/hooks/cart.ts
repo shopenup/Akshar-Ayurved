@@ -2,6 +2,7 @@ import React from "react"
 import {
   addToCart,
   applyPromotions,
+  clearCheckoutData,
   deleteLineItem,
   getCartQuantity,
   getPaymentMethod,
@@ -43,8 +44,8 @@ export const useCart = ({ enabled }: { enabled: boolean }) => {
     refetchInterval: 300000,
     // Cache for 2 minutes to reduce API calls
     staleTime: 120000,
-    // Don't always refetch on mount
-    refetchOnMount: false,
+    // Enable refetch on mount to ensure we get fresh data
+    refetchOnMount: true,
     // Refetch when the component becomes visible again
     refetchOnReconnect: true,
   })
@@ -84,11 +85,22 @@ export const useCartQuantity = () => {
 
 export const useCartShippingMethods = (cartId: string) => {
   return useQuery({
-    queryKey: [cartId],
+    queryKey: ['shipping-methods', cartId],
     queryFn: async () => {
       const res = await listCartShippingMethods(cartId)
       return res
     },
+    enabled: !!cartId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes (garbage collection time)
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 2,
+    // Add network mode to prevent duplicate requests
+    networkMode: 'online',
+    // Add structural sharing to prevent unnecessary re-renders
+    structuralSharing: true,
   })
 }
 
@@ -218,6 +230,34 @@ export const useSetShippingMethod = (
     onSuccess: async function (...args) {
       // Use debounced invalidation to prevent rapid API calls
       debouncedCartInvalidation(queryClient)
+      
+      await options?.onSuccess?.(...args)
+    },
+    ...options,
+  })
+}
+
+
+export const useClearCheckoutData = (
+  options?: UseMutationOptions<
+    { success: boolean; error: string | null },
+    Error,
+    void,
+    unknown
+  >
+) => {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationKey: ["clear-checkout-data"],
+    mutationFn: async () => {
+      const response = await clearCheckoutData()
+      return response
+    },
+    onSuccess: async function (...args) {
+      // Invalidate all cart-related queries
+      await queryClient.invalidateQueries({ queryKey: ["cart"] })
+      await queryClient.invalidateQueries({ queryKey: ["shipping-methods"] })
+      await queryClient.invalidateQueries({ queryKey: ["payment-methods"] })
       
       await options?.onSuccess?.(...args)
     },
@@ -432,6 +472,14 @@ export const usePlaceOrder = (
     },
     ...options,
     onSuccess: async function (...args) {
+      // Clear cart data from storage and metadata after successful order
+      try {
+        const { clearCartAfterOrder } = await import('@lib/shopenup/cart-sync')
+        await clearCartAfterOrder()
+      } catch (error) {
+        console.warn('⚠️ Failed to clear cart data after order:', error)
+      }
+      
       // Invalidate cart queries to trigger refetch
       await queryClient.invalidateQueries({
         exact: false,

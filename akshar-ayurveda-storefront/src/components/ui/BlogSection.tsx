@@ -262,85 +262,86 @@ const BlogSection: React.FC<BlogSectionProps> = ({
   }
 
   return (
-    <section className={`py-16 bg-gray-50 ${className}`}>
+    <section className={`relative py-16 ${className}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">{title}</h2>
-          {subtitle && (
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">{subtitle}</p>
-          )}
+        {/* Header styled like template */}
+        <div className="text-center mb-10">
+          <span className="inline-block px-4 py-1 rounded-full bg-[#F4E5DF] text-[#C77B62] text-sm font-semibold mb-3">Blog</span>
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-800">Our Latest News</h2>
         </div>
 
-        {/* Blog Posts Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {posts.map((post, index) => (
-            <article key={post.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
-              {/* Image */}
-              <div className="relative h-48">
-                <Image
-                  src={post.image}
-                  alt={post.title}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                  priority={index < 3} 
-                  loading={index < 3 ? "eager" : "lazy"} 
-                  quality={75} 
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.src = '/assets/homeimage1.jpg';
-                  }}
-                />
-                <div className="absolute top-4 left-4">
-                  <span className="bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-                    {post.category}
-                  </span>
-                </div>
+        {/* Three-column layout: two large cards + right inline list */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          {/* Left large card */}
+          {posts[0] && (
+            <article className="rounded-2xl border border-gray-100 shadow-md">
+              <div className="relative h-64 rounded-xl overflow-hidden m-4 mb-0">
+                <Image src={posts[0].image} alt={posts[0].title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 33vw" />
               </div>
-
-              {/* Content */}
-              <div className="p-6">
-                <div className="flex items-center text-sm text-gray-500 mb-3">
-                  <span>{post.author}</span>
-                  <span className="mx-2">•</span>
-                  <span>{post.date}</span>
-                  <span className="mx-2">•</span>
-                  <span>{post.readTime}</span>
+              <div className="px-6 pb-6 pt-4">
+                <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                  <h4 className="font-semibold text-[#C77B62]">{posts[0].category}</h4>
+                  <p className="text-gray-500">{posts[0].date}</p>
                 </div>
-
-                <h3 className="text-xl font-semibold text-gray-900 mb-3 line-clamp-2">
-                  {post.title}
+                <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                  <Link href={`/blogs/${posts[0].id}`}>{posts[0].title}</Link>
                 </h3>
-
-                <p className="text-gray-600 mb-4 line-clamp-3">
-                  {post.excerpt}
-                </p>
-
-                <Link href={`/blogs/${post.id}`}>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
-                  >
-                    Read More
-                  </Button>
-                </Link>
+                <p className="text-gray-600 line-clamp-2">{posts[0].excerpt}</p>
               </div>
             </article>
-          ))}
+          )}
+
+          {/* Middle large card */}
+          {posts[1] && (
+            <article className="bg-white rounded-2xl border border-gray-100 shadow-md">
+              <div className="relative h-64 rounded-xl overflow-hidden m-4 mb-0">
+                <Image src={posts[1].image} alt={posts[1].title} fill className="object-cover" sizes="(max-width: 1024px) 100vw, 33vw" />
+              </div>
+              <div className="px-6 pb-6 pt-4">
+                <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
+                  <h4 className="font-semibold text-[#C77B62]">{posts[1].category}</h4>
+                  <p className="text-gray-500">{posts[1].date}</p>
+                </div>
+                <h3 className="text-xl font-semibold text-slate-800 mb-2">
+                  <Link href={`/blogs/${posts[1].id}`}>{posts[1].title}</Link>
+                </h3>
+                <p className="text-gray-600 line-clamp-2">{posts[1].excerpt}</p>
+              </div>
+            </article>
+          )}
+
+          {/* Right stacked inline list */}
+          <div className="space-y-4">
+            {[posts[2], posts[3], posts[4]].filter(Boolean).map((post, idx) => (
+              <article key={(post as any).id || idx} className="bg-white rounded-2xl border border-gray-100 shadow-md overflow-hidden flex">
+                <div className="relative w-28 h-20 md:w-36 md:h-24 flex-shrink-0">
+                  <Image src={(post as any).image} alt={(post as any).title} fill className="object-cover" sizes="(max-width: 768px) 112px, 144px" />
+                </div>
+                <div className="p-4 flex-1">
+                  <h4 className="text-xs font-semibold text-[#C77B62] mb-1">{(post as any).category}</h4>
+                  <h3 className="text-base font-semibold text-slate-800 leading-snug hover:text-[#C77B62] transition-colors">
+                    <Link href={`/blogs/${(post as any).id}`}>{(post as any).title}</Link>
+                  </h3>
+                </div>
+              </article>
+            ))}
+          </div>
         </div>
 
-        {/* View All Button */}
+        {/* Optional View All */}
         {showViewAll && (
           <div className="text-center mt-12">
             <Link href="/blogs">
-              <Button variant="primary" size="lg">
-                View All Blogs
-              </Button>
+              <Button className="bg-[#cc8972] hover:bg-[#9b624f] text-white px-6 py-3 rounded-full">View All Blogs</Button>
             </Link>
           </div>
         )}
+      </div>
+
+      {/* Background shapes */}
+      <div className="pointer-events-none select-none absolute inset-0 -z-10">
+        {/* <Image src="/assets/images/bg-shape6.png" alt="bg shape" width={420} height={220} className="hidden md:block absolute left-0 top-0 opacity-80" /> */}
+        <Image src="/assets/images/bg-leaf6.png" alt="bg leaf" width={100} height={100} className="hidden md:block absolute left-4 bottom-0" />
       </div>
     </section>
   );

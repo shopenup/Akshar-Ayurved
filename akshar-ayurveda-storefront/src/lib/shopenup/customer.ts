@@ -21,7 +21,6 @@ const revalidateTag = (_tag: string) => {
   // In client-side context, we'll trigger a page refresh or use other methods
   if (typeof window !== 'undefined') {
     // Optionally trigger a page refresh or use other client-side cache invalidation
-    console.log(`Revalidating tag: ${_tag}`)
   }
 }
 
@@ -137,10 +136,22 @@ export async function login(formData: z.infer<typeof loginFormSchema>) {
     await setAuthToken(token)
     revalidateTag("customer")
 
-    const cartId = await getCartId()
-    if (cartId) {
-      await sdk.store.cart.transferCart(cartId, {}, await getAuthHeaders())
-      revalidateTag("cart")
+    // Import cart sync function dynamically to avoid circular dependencies
+    const { syncCartOnLogin } = await import("./cart-sync")
+    
+    // Sync cart on login
+    const cartSyncResult = await syncCartOnLogin()
+    if (!cartSyncResult.success) {
+      console.warn('⚠️ Cart sync failed on login:', cartSyncResult.message)
+    }
+    
+    revalidateTag("cart")
+    
+    // Also invalidate React Query cache for cart
+    if (typeof window !== 'undefined') {
+      // Import queryClient dynamically to avoid circular dependencies
+      const { useQueryClient } = await import('@tanstack/react-query')
+      // Note: This won't work in server context, but will work in client context
     }
     return { success: true, redirectUrl: redirectUrl || "/" }
   } catch (error) {
@@ -153,12 +164,17 @@ export async function login(formData: z.infer<typeof loginFormSchema>) {
 
 export async function signout(countryCode: string) {
   await sdk.auth.logout()
+  
+  // Import cart sync function dynamically to avoid circular dependencies
+  const { clearCartOnLogout } = await import("./cart-sync")
+  
+  // Clear cart data on logout
+  await clearCartOnLogout()
   await clearAuthDataOnly()
   revalidateTag("customer")
   // try {
   //   const { clearCartEmail } = await import("./cart")
   //   await clearCartEmail()
-  //   console.log('🧹 Cart email cleared on signout')
   // } catch (error) {
   //   console.warn('⚠️ Failed to clear cart email on signout:', error)
   // }

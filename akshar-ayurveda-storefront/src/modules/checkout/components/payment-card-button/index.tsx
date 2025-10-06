@@ -134,7 +134,7 @@ const StripeCardPaymentButton = ({
     <Button
       className="mt-6"
       onPress={handleSubmit}
-      isLoading={isLoading}
+      // isLoading={isLoading}
       isDisabled={!cardComplete}
       data-testid="submit-payment-button"
     >
@@ -163,7 +163,6 @@ const PaymentMethodButton = ({
   const initiatePaymentSession = useInitiatePaymentSession()
 
   const handleSubmit = () => {
-    //console.log("🚀 Initiating payment session for:", selectedPaymentMethod)
     setIsLoading(true)
     initiatePaymentSession.mutate(
       {
@@ -171,7 +170,6 @@ const PaymentMethodButton = ({
       },
       {
         onSuccess: () => {
-          //console.log("✅ Payment session initiated successfully:", data)
           if (!isStripe(selectedPaymentMethod)) {
             return router.push(
               pathname + "?" + createQueryString("step", "review"),
@@ -183,7 +181,6 @@ const PaymentMethodButton = ({
           setIsLoading(false)
         },
         onError: (err) => {
-          console.error("❌ Payment session initiation failed:", err)
           setError(err instanceof Error ? err.message : `${err}`)
           setIsLoading(false)
         },
@@ -193,9 +190,9 @@ const PaymentMethodButton = ({
 
   return (
     <Button
-      className="mt-6 bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors"
+      className="mt-6 bg-[#cd8973] text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-[#cd8973]/90 transition-colors"
       onPress={handleSubmit}
-      isLoading={isLoading}
+      // isLoading={isLoading}
       data-testid="submit-payment-button"
       isDisabled={!selectedPaymentMethod}
     >

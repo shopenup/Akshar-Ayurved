@@ -33,10 +33,21 @@ const Hero: React.FC<HeroProps> = ({
     ? { backgroundImage: `url(${backgroundImage})` }
     : {};
 
+
+    const isTailwindClass =
+    backgroundGradient?.startsWith("bg-") || backgroundGradient?.includes("from-");
+
   return (
-    <section 
-      className={`relative py-20 ${backgroundGradient} ${className}`}
-      style={backgroundStyle}
+    // <section 
+    //   className={`relative py-20 ${backgroundGradient} ${className}`}
+    //   style={backgroundStyle}
+    // >
+    <section
+      className={`relative py-20 ${isTailwindClass ? backgroundGradient : ""} ${className}`}
+      style={{
+        ...backgroundStyle,
+        background: !isTailwindClass ? backgroundGradient : undefined,
+      }}
     >
       {backgroundImage && (
         <div className="absolute inset-0 bg-black bg-opacity-50"></div>

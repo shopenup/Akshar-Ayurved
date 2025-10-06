@@ -149,7 +149,7 @@ export class ShopenupProductService {
       this.productModule = await getProductModule() as Record<string, unknown>;
       this.inventoryModule = await getInventoryModule() as Record<string, unknown>;
     } catch (error) {
-      console.error('Failed to initialize product modules:', error);
+      // Handle error silently
     }
   }
 
@@ -227,7 +227,6 @@ export class ShopenupProductService {
         };
       });
     } catch (error) {
-      console.error('Failed to get products:', error);
       throw error;
     }
   }
@@ -321,7 +320,6 @@ export class ShopenupProductService {
         updatedAt: product.updated_at || new Date().toISOString(),
       };
     } catch (error) {
-      console.error('Failed to get product:', error);
       throw error;
     }
   }
@@ -344,7 +342,6 @@ export class ShopenupProductService {
         q: query
       });
     } catch (error) {
-      console.error('Failed to search products:', error);
       throw error;
     }
   }
@@ -360,7 +357,6 @@ export class ShopenupProductService {
       );
       return response;
     } catch (error) {
-      console.error('Failed to fetch product prices:', error);
       return null;
     }
   }
@@ -374,7 +370,6 @@ export class ShopenupProductService {
         limit
       });
     } catch (error) {
-      console.error('Failed to get new arrivals:', error);
       throw error;
     }
   }
@@ -387,7 +382,6 @@ export class ShopenupProductService {
         limit
       });
     } catch (error) {
-      console.error('Failed to get featured products:', error);
       throw error;
     }
   }
@@ -398,7 +392,6 @@ export class ShopenupProductService {
       const products = await this.getProducts({ limit });
       return products.filter(product => product.originalPrice && product.originalPrice > product.price);
     } catch (error) {
-      console.error('Failed to get products on sale:', error);
       throw error;
     }
   }
@@ -424,7 +417,6 @@ export class ShopenupProductService {
         children: category.children as unknown as ProductCategory[] | undefined,
       }));
     } catch (error) {
-      console.error('Failed to get categories:', error);
       throw error;
     }
   }
@@ -450,7 +442,6 @@ export class ShopenupProductService {
         children: category.children as unknown as ProductCategory[] | undefined,
       };
     } catch (error) {
-      console.error('Failed to get category:', error);
       throw error;
     }
   }
@@ -474,7 +465,6 @@ export class ShopenupProductService {
         products: [], // You can fetch products for each collection if needed
       }));
     } catch (error) {
-      console.error('Failed to get collections:', error);
       throw error;
     }
   }
@@ -498,7 +488,6 @@ export class ShopenupProductService {
         products: [], // You can fetch products for this collection if needed
       };
     } catch (error) {
-      console.error('Failed to get collection:', error);
       throw error;
     }
   }
@@ -539,7 +528,6 @@ export class ShopenupProductService {
       });
       });
     } catch (error) {
-      console.error('Failed to get product recommendations:', error);
       throw error;
     }
   }
@@ -565,7 +553,6 @@ export class ShopenupProductService {
         lowStockThreshold: Number(inventory.low_stock_threshold ?? 0),
       };
     } catch (error) {
-      console.error('Failed to get product inventory:', error);
       throw error;
     }
   }
@@ -592,7 +579,6 @@ export class ShopenupProductService {
 
       return response.products || [];
     } catch (error) {
-      console.error('Error fetching products by ID:', error);
       return [];
     }
   }
@@ -633,7 +619,6 @@ export class ShopenupProductService {
   
       return response;
     } catch (error) {
-      console.error('Failed to get product reviews:', error);
       return { reviews: [], average_rating: 0, limit: params.limit || 10, offset: params.offset || 0, count: 0 };
     }
   }
@@ -680,12 +665,6 @@ export class ShopenupProductService {
 
       return ratingsMap;
     } catch (error) {
-      console.error('Failed to fetch bulk product ratings:', error);
-      console.error('Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        status: (error as any)?.status,
-        statusText: (error as any)?.statusText
-      });
       return {};
     }
   }
@@ -712,7 +691,6 @@ export class ShopenupProductService {
   
       return response;
     } catch (error) {
-      console.error('Failed to add product review:', error);
       return null;
     }
   }
@@ -738,7 +716,6 @@ export class ShopenupProductService {
   
       return response;
     } catch (error) {
-      console.error('Failed to update product review:', error);
       return null;
     }
   }

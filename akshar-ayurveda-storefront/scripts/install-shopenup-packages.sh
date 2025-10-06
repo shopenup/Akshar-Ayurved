@@ -150,7 +150,7 @@ install_package "@shopenup/telemetry" "Analytics"
 
 show_progress $INSTALLED_PACKAGES $TOTAL_PACKAGES
 
-echo -e "${BLUE}🎛️ Installing Admin Packages (8 packages)${NC}"
+echo -e "${BLUE}🎛️ Installing Admin Packages (7 packages)${NC}"
 echo "=================================================="
 
 # Admin Packages
@@ -159,7 +159,6 @@ install_package "@shopenup/admin-sdk" "Admin"
 install_package "@shopenup/admin-shared" "Admin"
 install_package "@shopenup/dashboard" "Admin"
 install_package "@shopenup/ui" "Admin"
-install_package "@shopenup/ui-preset" "Admin"
 install_package "@shopenup/icons" "Admin"
 
 show_progress $INSTALLED_PACKAGES $TOTAL_PACKAGES

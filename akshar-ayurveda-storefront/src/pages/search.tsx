@@ -254,7 +254,6 @@ export default function SearchPage() {
 
   // const handleAddToCart = () => {
   //   // Add to cart logic here
-  //   // console.log('Added to cart:', productId);
   // };
 
   const clearFilters = () => {

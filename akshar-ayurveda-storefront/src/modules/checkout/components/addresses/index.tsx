@@ -119,7 +119,7 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
         <div>
           <p
             className={twJoin(
-              "transition-fontWeight duration-75 text-green-800 font-semibold",
+              "transition-fontWeight duration-75 text-[#cd8973] font-semibold",
               isOpen && "font-semibold"
             )}
           >
@@ -132,7 +132,7 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
             onPress={() => {
               router.push("/checkout?step=delivery")
             }}
-             className={"text-green-600"}
+             className={"text-[#cd8973]"}
           >
             Change
           </Button>
@@ -206,11 +206,15 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
                 />
 
                 {!sameAsBilling && (
-                  <BillingAddress cart={cart} customer={customer || null} />
+                  <BillingAddress 
+                  cart={cart} 
+                  customer={customer || null}
+                  shippingAddress={shippingData}
+                />
                 )}
 
                 <SubmitButton
-                  className="bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors mt-8"
+                  className="bg-[#cd8973] text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-[#cd8973]/90 transition-colors mt-8"
                   isLoading={isPending}
                   isDisabled={isDisabled}
                   
@@ -227,7 +231,7 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
           {/* Header with Change button */}
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <span className="text-green-600">📍</span>
+              <span className="text-[#cd8973]">📍</span>
               Delivery Address
             </h3>
             <Button
@@ -236,7 +240,7 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
               onPress={() => {
                 router.push("/checkout?step=delivery")
               }}
-              className="text-green-600 border-green-200 hover:bg-green-50 hover:border-green-300"
+              className="text-[#cd8973] border-[#cd8973]/20 hover:bg-[#cd8973]/5 hover:border-[#cd8973]/30"
             >
               Change Address
             </Button>
@@ -246,8 +250,8 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
           <div className="space-y-4">
             <div className="bg-gray-50 rounded-lg p-4">
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                  <span className="text-green-600 text-sm font-medium">
+                <div className="w-8 h-8 bg-[#cd8973]/10 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                  <span className="text-[#cd8973] text-sm font-medium">
                     {cart.shipping_address.first_name?.[0]?.toUpperCase() || 'A'}
                   </span>
                 </div>
@@ -260,7 +264,7 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
                       .filter(Boolean)
                       .join(" ")}
                   </h4>
-                  <div className="text-gray-600 space-y-1">
+                  <div className="text-gray-800 space-y-1">
                     <p>
                       {[
                         cart.shipping_address.address_1,
@@ -278,7 +282,7 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
                       {cart.shipping_address.country_code?.toUpperCase()}
                     </p>
                     {cart.shipping_address.phone && (
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-600">
                         📞 {cart.shipping_address.phone}
                       </p>
                     )}
@@ -296,9 +300,9 @@ const Addresses = ({ cart }: { cart: StoreCart }) => {
                   </div>
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900 mb-2">Billing Address</h4>
-                    <div className="text-gray-600">
+                    <div className="text-gray-800">
                       {sameAsBilling ? (
-                        <p className="text-green-600 font-medium">Same as delivery address</p>
+                        <p className="text-[#cd8973] font-medium">Same as delivery address</p>
                       ) : (
                         <div className="space-y-1">
                           <p>

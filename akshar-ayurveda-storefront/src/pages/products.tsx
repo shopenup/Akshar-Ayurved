@@ -9,6 +9,7 @@ import { HttpTypes } from '@shopenup/types';
 import { getCategoriesList } from '@lib/shopenup/categories';
 import { useAddLineItem } from '../hooks/cart';
 import { useAppContext } from '../context/AppContext';
+import Breadcrumb from '@components/about/Breadcrumb';
 
 interface ProductVariant {
   id: string;
@@ -90,13 +91,13 @@ export default function ProductsPage() {
   const router = useRouter();
   const { mutateAsync: addLineItem } = useAddLineItem();
   const { showToast } = useToast();
-  
+
   const [showFilters, setShowFilters] = useState(false);
   const [wishlist, setWishlist] = useState<Wishlist | null>(null);
-  const [wishlistLoading, setWishlistLoading] = useState(true); 
-  const { updateFavouriteCount ,isLoggedIn} = useAppContext();
+  const [wishlistLoading, setWishlistLoading] = useState(true);
+  const { updateFavouriteCount, isLoggedIn } = useAppContext();
 
-  
+
   // Filter states
   const [filters, setFilters] = useState<FilterState>({
     category: '',
@@ -107,32 +108,32 @@ export default function ProductsPage() {
   });
 
 
-// Fetch wishlist
-useEffect(() => {
-  const fetchWishlist = async () => {
-    if (!isLoggedIn) { // reset to empty for guests
-      setLoading(false);
-      return;
-    }
-    try {
-      setWishlistLoading(true);
-      const response = await sdk.client.fetch<{ wishlist: Wishlist }>(
-        '/store/customers/me/wishlists',
-        {
-          next: { tags: ['wishlist'] },
-        }
-      );
+  // Fetch wishlist
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      if (!isLoggedIn) { // reset to empty for guests
+       // setLoading(false);
+          return;
+      }
+      try {
+        setWishlistLoading(true);
+        const response = await sdk.client.fetch<{ wishlist: Wishlist }>(
+          '/store/customers/me/wishlists',
+          {
+            next: { tags: ['wishlist'] },
+          }
+        );
 
-      setWishlist(response.wishlist || null);
-    } catch (err: any) {
-      console.error('Error fetching wishlist:', err);
-    } finally {
-      setWishlistLoading(false);
-    }
-  };
+        setWishlist(response.wishlist || null);
+      } catch (err: any) {
+        console.error('Error fetching wishlist:', err);
+      } finally {
+        setWishlistLoading(false);
+      }
+    };
 
-  fetchWishlist();
-}, [updateFavouriteCount]);
+    fetchWishlist();
+  }, [updateFavouriteCount]);
 
 
   // Use React Query for categories to avoid duplicate API calls
@@ -159,12 +160,12 @@ useEffect(() => {
     isLoading: productsLoading,
     error: productsError,
   } = useQuery({
-    queryKey: ['products', { 
-      limit: 100, 
-      offset: 0, 
+    queryKey: ['products', {
+      limit: 100,
+      offset: 0,
       fields: '*variants.calculated_price,*categories',
       category_id: filters.category,
-      q: filters.searchQuery 
+      q: filters.searchQuery
     }],
     queryFn: async () => {
       const query: Record<string, unknown> = {
@@ -172,17 +173,17 @@ useEffect(() => {
         offset: 0,
         fields: '*variants.calculated_price,*categories',
       };
-      
+
       // Add category filter
       if (filters.category) {
         query.category_id = filters.category;
       }
-      
+
       // Add search query
       if (filters.searchQuery) {
         query.q = filters.searchQuery;
       }
-      
+
       const response = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[]; count: number }>(
         '/store/products',
         {
@@ -190,7 +191,7 @@ useEffect(() => {
           next: { tags: ['products'] },
         }
       );
-      
+
       return response;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -201,11 +202,11 @@ useEffect(() => {
 
   const products: Product[] = React.useMemo(() => {
     if (!productsData?.products) return [];
-    
+
     return productsData.products.map((p) => {
       // Try different ways to get the price
       let price = 0;
-      
+
       // Method 1: Try variants[0].calculated_price.calculated_amount
       if (p.variants && p.variants[0] && p.variants[0].calculated_price && typeof p.variants[0].calculated_price.calculated_amount === 'number') {
         price = p.variants[0].calculated_price.calculated_amount;
@@ -226,18 +227,18 @@ useEffect(() => {
       else if (typeof (p as { original_price?: number }).original_price === 'number') {
         price = (p as { original_price?: number }).original_price!;
       }
-      
+
       return {
         id: p.id,
         title: p.title,
         description: p.description || undefined,
         price: price,
         original_price: (p as { original_price?: number }).original_price || undefined,
-        images: (p.images || []).map((img: unknown, index: number) => 
-          typeof img === 'string' ? { id: `img-${index}`, url: img } : 
-          img && typeof img === 'object' && 'url' in img ? 
-            { id: `img-${index}`, url: (img as { url: string }).url } : 
-            { id: `img-${index}`, url: '' }
+        images: (p.images || []).map((img: unknown, index: number) =>
+          typeof img === 'string' ? { id: `img-${index}`, url: img } :
+            img && typeof img === 'object' && 'url' in img ?
+              { id: `img-${index}`, url: (img as { url: string }).url } :
+              { id: `img-${index}`, url: '' }
         ),
         thumbnail: p.thumbnail || undefined,
         status: p.status,
@@ -253,22 +254,22 @@ useEffect(() => {
 
   // Filter and sort products
   const filteredAndSortedProducts = React.useMemo(() => {
-    
+
     const filtered = products.filter(() => {
       // Temporarily disable all filters for debugging
       return true;
-      
+
       // Stock filter
       // if (filters.inStock && product.status !== 'published') {
       //   return false;
       // }
-      
+
       // Price range filter
       // const price = product.price || 0;
       // if (price < filters.priceRange[0] || price > filters.priceRange[1]) {
       //   return false;
       // }
-      
+
       // return true;
     });
 
@@ -303,10 +304,10 @@ useEffect(() => {
     if (product) {
       showToast(`${product.title} successfully added to cart!`, 'success');
     }
-    
+
     // Note: Cart addition logic is commented out - only showing toast
     // Uncomment the following code if you want actual cart functionality:
-    
+
     try {
       // Get the first variant ID (most products have only one variant)
       const variantId = (product?.variants?.[0] as { id?: string })?.id;
@@ -314,20 +315,20 @@ useEffect(() => {
         return;
       }
 
-     
-      
+
+
       await addLineItem({
         variantId,
         quantity: 1,
         countryCode: 'in' // Default to India
       });
 
-    
+
     } catch (error) {
       console.error('Error adding to cart:', error);
       showToast('Failed to add item to cart. Please try again.', 'error');
     }
-    
+
   };
 
   const handleFilterChange = (key: keyof FilterState, value: unknown) => {
@@ -347,9 +348,9 @@ useEffect(() => {
     });
   };
 
-  const hasActiveFilters = filters.category || 
-    filters.searchQuery || 
-    filters.priceRange[0] > 0 || 
+  const hasActiveFilters = filters.category ||
+    filters.searchQuery ||
+    filters.priceRange[0] > 0 ||
     filters.priceRange[1] < 10000 ||
     !filters.inStock;
 
@@ -358,9 +359,14 @@ useEffect(() => {
       <Head>
         <title>Products - AKSHAR AYURVED</title>
         <meta name="description" content="Explore our collection of authentic Ayurvedic products." />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <link rel="icon" type="image/png" href="/assets/images/favicon.png" />
       </Head>
-      
+
       <div className="min-h-screen bg-gray-50">
+        {/* Breadcrumb Section */}
+        <Breadcrumb title="products" crumbs={[{ label: 'Home', href: '/' }, { label: 'products' }]} imageSrc="/assets/images/bredcrumb-bg.jpg" />
+
         {/* Header */}
         <div className="bg-white shadow-sm border-b">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -371,7 +377,7 @@ useEffect(() => {
                   Discover our authentic Ayurvedic products
                 </p>
               </div>
-              
+
               {/* Search Bar */}
               <div className="mt-4 sm:mt-0 sm:ml-6">
                 <div className="relative">
@@ -380,7 +386,7 @@ useEffect(() => {
                     placeholder="Search products..."
                     value={filters.searchQuery}
                     onChange={(e) => handleFilterChange('searchQuery', e.target.value)}
-                    className="w-full sm:w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full sm:w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#cd8973] focus:border-transparent"
                   />
                   <svg
                     className="absolute left-3 top-2.5 h-5 w-5 text-gray-400"
@@ -401,132 +407,151 @@ useEffect(() => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex flex-col lg:flex-row gap-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
             {/* Filters Sidebar */}
             <div className="lg:w-64 flex-shrink-0">
-              <div className="bg-white rounded-lg shadow-sm border p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="lg:hidden"
-                  >
-                    {showFilters ? 'Hide' : 'Show'}
-                  </Button>
-                </div>
-
-                <div className={`space-y-6 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-                  {/* Categories */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-3">Categories</h3>
-                    {categoriesLoading ? (
-                      <div className="space-y-2">
-                        {[...Array(5)].map((_, i) => (
-                          <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
-                        ))}
-                      </div>
-                    ) : categoriesError ? (
-                      <div className="text-sm text-red-600">Error loading categories</div>
-                    ) : (
-                      <div className="space-y-2">
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            name="category"
-                            value=""
-                            checked={filters.category === ''}
-                            onChange={(e) => handleFilterChange('category', e.target.value)}
-                            className="mr-2"
-                          />
-                          <span className="text-sm text-gray-700">All Categories</span>
-                        </label>
-                        {categories.map((category) => (
-                          <label key={category.id} className="flex items-center">
-                            <input
-                              type="radio"
-                              name="category"
-                              value={category.id}
-                              checked={filters.category === category.id}
-                              onChange={(e) => handleFilterChange('category', e.target.value)}
-                              className="mr-2"
-                            />
-                            <span className="text-sm text-gray-700">{category.name}</span>
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Price Range */}
-                  {/* <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-3">Price Range</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-gray-600">₹{filters.priceRange[0]}</span>
-                        <span className="text-sm text-gray-600">₹{filters.priceRange[1]}</span>
-                      </div>
-                      <input
-                        type="range"
-                        min="0"
-                        max="10000"
-                        step="100"
-                        value={filters.priceRange[1]}
-                        onChange={(e) => handleFilterChange('priceRange', [filters.priceRange[0], parseInt(e.target.value)])}
-                        className="w-full"
-                      />
-                    </div>
-                  </div> */}
-
-                  {/* Stock Filter */}
-                  {/* <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-3">Availability</h3>
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={filters.inStock}
-                        onChange={(e) => handleFilterChange('inStock', e.target.checked)}
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-700">In Stock Only</span>
-                    </label>
-                  </div> */}
-
-                  {/* Sort Options */}
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900 mb-3">Sort By</h3>
-                    <select
-                      value={filters.sortBy}
-                      onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md text-sm"
-                    >
-                      <option value="created_at">Newest First</option>
-                      <option value="price_asc">Price: Low to High</option>
-                      <option value="price_desc">Price: High to Low</option>
-                      <option value="name_asc">Name: A to Z</option>
-                      <option value="name_desc">Name: Z to A</option>
-                    </select>
-                  </div>
-
-                  {/* Clear Filters */}
-                  {hasActiveFilters && (
+              <div className="sticky top-24">
+                <div className="bg-white rounded-lg shadow-sm border p-6">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={clearFilters}
-                      className="w-full"
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="lg:hidden"
                     >
-                      Clear All Filters
+                      {showFilters ? "Hide" : "Show"}
                     </Button>
-                  )}
+                  </div>
+
+                  {/* Filters Body */}
+                  <div className={`space-y-6 ${showFilters ? "block" : "hidden lg:block"}`}>
+                    {/* Categories with Checkboxes */}
+                    <div>
+                      <h3 className="text-sm font-medium text-gray-900 mb-3">Categories</h3>
+                      {categoriesLoading ? (
+                        <div className="space-y-2">
+                          {[...Array(5)].map((_, i) => (
+                            <div key={i} className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                          ))}
+                        </div>
+                      ) : categoriesError ? (
+                        <div className="text-sm text-red-600">Error loading categories</div>
+                      ) : (
+                        <div className="space-y-2">
+                          {categories.map((category) => (
+                            <label
+                              key={category.id}
+                              className="flex items-center cursor-pointer group space-x-3"
+                            >
+                              <input
+                                type="checkbox"
+                                checked={filters.category?.includes(category.id)}
+                                onChange={(e) => {
+                                  const currentCategories: string[] = Array.isArray(filters.category)
+                                    ? filters.category
+                                    : filters.category
+                                    ? [filters.category]
+                                    : [];
+                                  const newCategories = e.target.checked
+                                    ? [...currentCategories, category.id]
+                                    : currentCategories.filter((c: string) => c !== category.id);
+                                  handleFilterChange("category", newCategories);
+                                }}
+                                className="hidden peer"
+                              />
+                              <div className="w-5 h-5 flex items-center justify-center rounded-md border-2 border-gray-300 peer-checked:border-[#cd8973] peer-checked:bg-[#cd8973] transition-colors">
+                                <svg
+                                  className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={3}
+                                    d="M5 13l4 4L19 7"
+                                  />
+                                </svg>
+                              </div>
+                              <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                                {category.name}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Availability */}
+                    {/* <div>
+                      <h3 className="text-sm font-medium text-gray-900 mb-3">Availability</h3>
+                      <label className="flex items-center cursor-pointer group space-x-3">
+                        <input
+                          type="checkbox"
+                          checked={filters.inStock}
+                          onChange={(e) => handleFilterChange("inStock", e.target.checked)}
+                          className="hidden peer"
+                        />
+                        <div className="w-5 h-5 flex items-center justify-center rounded-md border-2 border-gray-300 peer-checked:border-green-500 peer-checked:bg-green-500 transition-colors">
+                          <svg
+                            className="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={3}
+                              d="M5 13l4 4L19 7"
+                            />
+                          </svg>
+                        </div>
+                        <span className="text-sm text-gray-700 group-hover:text-gray-900">
+                          In Stock Only
+                        </span>
+                      </label>
+                    </div> */}
+
+                    {/* Sort Options */}
+                    <div>
+                      <h3 className="text-sm font-medium text-black-900 mb-3">Sort By</h3>
+                      <select
+                        value={filters.sortBy}
+                        onChange={(e) => handleFilterChange("sortBy", e.target.value)}
+                        className="text-black w-full p-2 border border-black-300 rounded-md text-sm focus:ring-2 focus:ring-[#cd8973] focus:border-[#cd8973]"
+                      >
+                        <option value="created_at">Newest First</option>
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="name_asc">Name: A to Z</option>
+                        <option value="name_desc">Name: Z to A</option>
+                      </select>
+                    </div>
+
+                    {/* Clear Filters */}
+                    {hasActiveFilters && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="w-full"
+                      >
+                        Clear All Filters
+                      </Button>
+                    )}
+                  </div>
                 </div>
+
               </div>
             </div>
 
             {/* Products Grid */}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0 overflow-y-auto max-h-[calc(100vh-6rem)] pr-2">
               {/* Results Header */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                 <div className="mb-4 sm:mb-0">
@@ -539,7 +564,7 @@ useEffect(() => {
                     </p>
                   )}
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Button
                     variant="outline"
@@ -594,8 +619,8 @@ useEffect(() => {
                       </div>
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No Products Found</h3>
                       <p className="text-gray-600 mb-4">
-                        {hasActiveFilters 
-                          ? 'Try adjusting your filters or search terms.' 
+                        {hasActiveFilters
+                          ? 'Try adjusting your filters or search terms.'
                           : 'No products are currently available.'
                         }
                       </p>
@@ -606,7 +631,7 @@ useEffect(() => {
                       )}
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-3 gap-4 sm:gap-6">
                       {filteredAndSortedProducts.map((product) => (
                         <ProductCard
                           key={product.id}
@@ -637,4 +662,3 @@ useEffect(() => {
   );
 }
 
-         

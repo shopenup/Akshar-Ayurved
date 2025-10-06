@@ -147,7 +147,7 @@ export const UiRadioBox: React.FC<{
     checked={isSelected}
     disabled={isDisabled}
     onChange={() => onChange?.(value || '')}
-    className={`w-5 h-5 text-green-600 border-gray-300 focus:ring-green-500 focus:ring-2 ${
+    className={`w-5  text-[#cd8973] border-gray-300 focus:ring-[#cd8973] focus:ring-2 ${
       isDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
     } ${className}`}
   />

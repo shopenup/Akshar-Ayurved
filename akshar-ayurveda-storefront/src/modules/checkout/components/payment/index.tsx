@@ -24,11 +24,18 @@ import {
 } from "hooks/cart"
 import { StoreCart, StorePaymentSession } from "@shopenup/types"
 
-// Payment info map for available methods - only include what's actually configured
+// Payment info map for available methods - override admin labels only on UI
 const paymentInfoMap: Record<string, { title: string; icon: React.ReactNode }> = {
-  // pp_stripe_stripe: { title: "Credit Card", icon: "💳" },
-  // pp_razorpay_razorpay: { title: "Razorpay", icon: "💳" },
-  // pp_system_default: { title: "Manual Payment", icon: "📝" },
+  // Stripe generic card
+  'pp_stripe_stripe': { title: 'Credit/Debit Card', icon: '💳' },
+  // Stripe alternative methods
+  'pp_stripe-bancontact_stripe': { title: 'Bancontact', icon: '🏦' },
+  'pp_stripe-blik_stripe': { title: 'BLIK', icon: '📱' },
+  'pp_stripe-giropay_stripe': { title: 'Giropay', icon: '🏦' },
+  // Razorpay
+  'pp_razorpay_razorpay': { title: 'Razorpay (UPI / Cards / Wallets)', icon: '💳' },
+  // System/manual
+  'pp_system_default': { title: 'Manual Payment', icon: '📝' },
 }
 
 const Payment = ({ cart }: { cart: StoreCart }) => {
@@ -94,6 +101,19 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
     [availablePaymentMethods]
   )
 
+  // Initialize selected payment method from cart's payment collection
+  useEffect(() => {
+    if (cart?.payment_collection?.payment_sessions && cart.payment_collection.payment_sessions.length > 0 && !selectedPaymentMethod) {
+      const currentPaymentSession = cart.payment_collection.payment_sessions[0]
+      if (currentPaymentSession?.provider_id && allowedProviderIds.includes(currentPaymentSession.provider_id)) {
+        setSelectedPaymentMethod(currentPaymentSession.provider_id)
+      }
+    } else if (!selectedPaymentMethod && allowedProviderIds.length > 0) {
+      // If no payment session exists, select the first available payment method
+      setSelectedPaymentMethod(allowedProviderIds[0])
+    }
+  }, [cart?.payment_collection?.payment_sessions, selectedPaymentMethod, allowedProviderIds])
+
   // Reset selection if it isn't allowed anymore (prevents stale defaults like pp_razorpay)
   useEffect(() => {
     if (
@@ -108,21 +128,6 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
   const hasValidSelection =
     !!selectedPaymentMethod && allowedProviderIds.includes(selectedPaymentMethod)
   
-  // Debug: Log available payment methods
-  
-  // Filter to only show Stripe and Manual Payment
-  // const supportedPaymentMethods = availablePaymentMethods?.filter(method => 
-  //   method.type === 'pp_stripe_stripe' || 
-  //   method.type === 'pp_razorpay_razorpay' || 
-  //   method.type === 'pp_system_default'
-  // ) || []
-  
-  // // Add Manual Payment if not already present (for testing purposes)
-  // const finalPaymentMethods = supportedPaymentMethods.length > 0 ? supportedPaymentMethods : [
-  //   { type: 'pp_system_default', id: 'manual' }
-  // ]
-  
-  // Debug: Log filtered payment methods
 
   const isStripe = isStripeFunc(selectedPaymentMethod)
   const stripeReady = useContext(StripeContext)
@@ -180,7 +185,7 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
         <div>
           <p
             className={twJoin(
-              "transition-fontWeight duration-75 text-green-800 font-semibold",
+              "transition-fontWeight duration-75 text-[#cd8973] font-semibold",
               isOpen && "font-semibold"
             )}
           >
@@ -188,7 +193,7 @@ const Payment = ({ cart }: { cart: StoreCart }) => {
           </p>
         </div>
         {!isOpen && paymentReady && (
-          <Button variant="link" onPress={handleEdit}  className={"text-green-600"}>
+          <Button variant="link" onPress={handleEdit}  className={"text-[#cd8973]"}>
             Change
           </Button>
         )}

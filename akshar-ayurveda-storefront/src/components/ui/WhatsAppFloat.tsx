@@ -20,11 +20,11 @@ const WhatsAppFloat: React.FC<WhatsAppFloatProps> = ({
   return (
     <button
       onClick={handleClick}
-      className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 w-12 h-12 sm:w-14 sm:h-14 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-all duration-300 z-50 flex items-center justify-center hover:scale-110 ${className}`}
+      className={`fixed bottom-4 right-2 sm:bottom-6 sm:right-6 w-10 h-10 sm:w-14 sm:h-14 bg-green-500 text-white rounded-full shadow-lg hover:bg-green-600 transition-all duration-300 z-50 flex items-center justify-center hover:scale-110 ${className}`}
       aria-label="Chat with us on WhatsApp"
     >
       <svg
-        className="w-6 h-6 sm:w-7 sm:h-7"
+        className="w-4 h-4 sm:w-7 sm:h-7"
         fill="currentColor"
         viewBox="0 0 24 24"
         aria-hidden="true"

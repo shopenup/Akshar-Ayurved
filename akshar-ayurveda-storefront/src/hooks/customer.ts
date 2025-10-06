@@ -50,6 +50,7 @@ export const useLogin = (
     },
     onSuccess: async (...args) => {
       await queryClient.invalidateQueries({ queryKey: ["customer"] })
+      await queryClient.invalidateQueries({ queryKey: ["cart"] })
       await options?.onSuccess?.(...args)
     },
     ...options,
@@ -67,24 +68,14 @@ export const useSignout = (
       return signout(countryCode)
     },
     onSuccess: async (...args) => {
-      //console.log('🔄 Clearing queries after signout (keeping cart data)...')
-      
-      // Only invalidate customer-related queries, keep cart data
+      // Clear all cart-related queries since cart is cleared on logout
+      await queryClient.invalidateQueries({ queryKey: ["cart"] })
+      await queryClient.invalidateQueries({ queryKey: ["cart-quantity"] })
       await queryClient.invalidateQueries({ queryKey: ["customer"] })
-      
-      // Don't clear cart queries - keep cart data for when user logs back in
-      // await queryClient.invalidateQueries({ queryKey: ["cart"] })
-      // await queryClient.invalidateQueries({ queryKey: ["cart-quantity"] })
-      
-      // Don't clear cart data - only clear auth token
-      // await clearAllCartData()
-      
-      //console.log('✅ Customer queries cleared, cart data preserved')
       
       await options?.onSuccess?.(...args)
     },
     onError: async (error, variables, context) => {
-      console.error('❌ Error during signout:', error)
       await options?.onError?.(error, variables, context)
     },
     ...options,

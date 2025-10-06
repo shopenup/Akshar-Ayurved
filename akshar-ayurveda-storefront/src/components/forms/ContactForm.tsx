@@ -70,6 +70,16 @@ const ContactForm: React.FC<ContactFormProps> = ({
     
     if (validateForm()) {
       onSubmit(formData);
+       // 👇 reset fields after submit
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      subject: '',
+      message: '',
+    });
+    setErrors({});
+  
     }
   };
 
@@ -85,6 +95,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
             error={errors.name}
             required
             fullWidth
+            className="focus:border-[#CD8973] focus:ring-[#CD8973]"
           />
           
           <Input
@@ -131,11 +142,13 @@ const ContactForm: React.FC<ContactFormProps> = ({
             rows={6}
             value={formData.message}
             onChange={(e) => handleChange('message', e.target.value)}
-            className={`block w-full px-4 py-2 border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-              errors.message 
-                ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
-                : 'border-gray-300 focus:border-green-500 focus:ring-green-500'
-            }`}
+            className={`block w-full px-4 py-2 border rounded-lg transition-colors
+            focus:outline-none focus:ring-2 focus:ring-offset-2
+            ${errors.message
+                ? 'border-red-500 focus:border-red-500 focus:ring-red-500'
+                : 'border-gray-300 focus:border-[#CD8973] focus:ring-[#CD8973]'
+              }`}
+
             placeholder="Tell us how we can help you..."
             required
           />
@@ -150,6 +163,7 @@ const ContactForm: React.FC<ContactFormProps> = ({
           size="lg"
           disabled={loading}
           fullWidth
+          className='!bg-[#CD8973] !hover:bg-[#CD8973] text-white px-6 py-3 rounded-full focus:outline-none focus:ring-2 focus:ring-[#CD8973] focus:ring-offset-2'
         >
           {loading ? 'Sending Message...' : 'Send Message'}
         </Button>

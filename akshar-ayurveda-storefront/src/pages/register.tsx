@@ -5,6 +5,7 @@ import { Button, Input, Card } from '../components/ui';
 import { useSignup } from '../hooks/customer';
 import { useAppContext } from '../context/AppContext';
 import { sdk } from "@lib/config";
+import { Checkbox } from '@shopenup/ui';
 
 const getCookie = (name: string) => {
     if (typeof document === 'undefined') return null;
@@ -93,6 +94,7 @@ export default function Register() {
     confirmPassword: '',
   });
   const [error, setError] = useState('');
+  const [isChecked, setIsChecked] = useState(true);
   const router = useRouter();
   const { mutate: signup, isPending } = useSignup();
   const { setLoggedIn } = useAppContext();
@@ -102,6 +104,10 @@ export default function Register() {
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const handleCheckboxClick = (checked: boolean) => {
+    setIsChecked(checked);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -116,6 +122,11 @@ export default function Register() {
 
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
+      return;
+    }
+
+    if (!isChecked) {
+      setError('Please agree to the Terms of Service and Privacy Policy');
       return;
     }
 
@@ -149,11 +160,11 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#E7E4D1] to-[#D8BFA3] flex items-center justify-center py-20 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-green-800">Create Account</h1>
-          <p className="mt-2 text-gray-600">Join AKSHAR AYURVED today</p>
+          <h1 className="text-3xl font-bold text-[#3C2415]">Join AKSHAR AYURVED Today</h1>
+          <p className="mt-2 text-[#5D4037]">Create your account to start your shopping journey</p>
         </div>
 
         <Card className="p-8">
@@ -166,7 +177,7 @@ export default function Register() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="firstName" className="block text-sm font-medium text-[#3C2415] mb-2">
                   First Name
                 </label>
                 <Input
@@ -181,7 +192,7 @@ export default function Register() {
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="lastName" className="block text-sm font-medium text-[#3C2415] mb-2">
                   Last Name
                 </label>
                 <Input
@@ -198,7 +209,7 @@ export default function Register() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-[#3C2415] mb-2">
                 Email Address
               </label>
               <Input
@@ -214,7 +225,7 @@ export default function Register() {
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-[#3C2415] mb-2">
                 Password
               </label>
               <Input
@@ -230,7 +241,7 @@ export default function Register() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-[#3C2415] mb-2">
                 Confirm Password
               </label>
               <Input
@@ -246,20 +257,23 @@ export default function Register() {
             </div>
 
             <div className="flex items-center">
-              <input
-                id="agree-terms"
+              <Checkbox
                 name="agree-terms"
-                type="checkbox"
-                required
-                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                checked={isChecked}
+                // onChange={(e) => handleCheckboxClick((e.target as HTMLInputElement).checked)}
+                onClick={() => handleCheckboxClick(!isChecked)}
+                className="w-5 h-5 border-2 border-[#5D4037] rounded-md checked:bg-[#5D4037] focus:ring-2 focus:ring-[#5D4037] cursor-pointer"
               />
-              <label htmlFor="agree-terms" className="ml-2 block text-sm text-gray-700">
+              <label 
+                htmlFor="agree-terms" 
+                className="ml-3 block text-sm text-[#3C2415] cursor-pointer"
+              >
                 I agree to the{' '}
-                <Link href="/terms" className="text-green-600 hover:text-green-500">
+                <Link href="/terms" className="text-[#5D4037] hover:text-[#3C2415]">
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link href="/privacy" className="text-green-600 hover:text-green-500">
+                <Link href="/privacy" className="text-[#5D4037] hover:text-[#3C2415]">
                   Privacy Policy
                 </Link>
               </label>
@@ -276,9 +290,9 @@ export default function Register() {
             </Button>
 
             <div className="text-center">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-[#5D4037]">
                 Already have an account?{' '}
-                <Link href="/login" className="text-green-600 hover:text-green-500 font-medium">
+                <Link href="/login" className="text-[#3C2415] hover:text-[#5D4037] font-medium">
                   Sign in here
                 </Link>
               </p>
@@ -286,11 +300,6 @@ export default function Register() {
           </form>
         </Card>
 
-        <div className="text-center">
-          <Link href="/" className="text-green-600 hover:text-green-500 text-sm">
-            ← Back to Home
-          </Link>
-        </div>
       </div>
     </div>
   );

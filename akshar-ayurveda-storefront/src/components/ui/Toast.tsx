@@ -31,7 +31,7 @@ export const Toast: React.FC<ToastProps> = ({
     
     switch (type) {
       case 'success':
-        return `${baseStyles} bg-green-50 text-green-600 border-green-200 hover:border-green-300`;
+        return `${baseStyles} bg-[#f8f5f2] text-[#cc8972] border-[#cc8972] hover:border-[#b8755f]`;
       case 'error':
         return `${baseStyles} bg-red-50 text-red-600 border-red-200 hover:border-red-300`;
       case 'warning':

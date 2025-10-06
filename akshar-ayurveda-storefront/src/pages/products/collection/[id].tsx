@@ -109,11 +109,11 @@ export default function CollectionPage() {
   };
 
   const handleAddToCart = () => {
-    //console.log('Add to cart:', productId);
+    // Add to cart logic
   };
 
   const handleSearch = () => {
-    //console.log('Search:', query);
+    // Search logic
   };
 
   const filteredProducts = products.filter(product => 

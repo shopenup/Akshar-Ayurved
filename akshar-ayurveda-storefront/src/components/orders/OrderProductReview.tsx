@@ -50,6 +50,8 @@ export default function OrderProductReview({
           offset: 0
         })
         
+        // Check if current user has already reviewed this product
+        // Use customer_id for reliable and accurate matching
         
         const userReview = reviews.find(review => {
           if (review.product_id !== productId) return false
@@ -70,7 +72,7 @@ export default function OrderProductReview({
           setJustSubmitted(false)
         }
       } catch (error) {
-        console.error('Failed to check existing review:', error)
+        // Handle error silently
       }
     }
 
@@ -137,7 +139,7 @@ export default function OrderProductReview({
         onReviewSubmitted()
       }
     } catch (error) {
-      console.error('Failed to submit review:', error)
+      // Handle error silently
       
       // Handle specific error cases
       if (error instanceof Error) {
@@ -239,7 +241,7 @@ export default function OrderProductReview({
         onReviewSubmitted()
       }
     } catch (error) {
-      console.error('Failed to update review:', error)
+      // Handle error silently
       
       // Handle specific error cases
       if (error instanceof Error) {

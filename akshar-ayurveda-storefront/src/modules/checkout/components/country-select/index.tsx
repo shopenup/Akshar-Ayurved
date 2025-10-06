@@ -48,7 +48,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
   if (true) {
     return (
       <select
-        className="w-full h-14 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400"
+        className="w-full h-12 sm:h-14 text-sm sm:text-base text-gray-900 placeholder:text-gray-400 border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-[#cd8973] focus:ring-[#cd8973]"
         value={props.selectedKey || ""}
         onChange={(e) => {
           if (props.onSelectionChange) {
@@ -56,7 +56,7 @@ const CountrySelect: React.FC<CountrySelectProps> = ({
           }
         }}
       >
-        <option value="" className="color-green-200">{placeholder}</option>
+        <option value="" className="color-[#cd8973]/20">{placeholder}</option>
         {countryOptions?.map(({ value, label }) => (
           <option key={value} value={value}>
             {label}

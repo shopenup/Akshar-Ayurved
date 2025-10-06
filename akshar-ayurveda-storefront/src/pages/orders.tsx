@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { Button, Card, Badge } from '../components/ui';
+import Breadcrumb from '@components/about/Breadcrumb';
 import { formatDate } from '@lib/util/date';
 import { sdk } from '@lib/config';
 import { getAuthHeaders } from '@lib/shopenup/cookies';
@@ -14,6 +15,8 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 5;
 
   // Load orders from Shopenup API
   useEffect(() => {
@@ -66,6 +69,11 @@ export default function OrdersPage() {
 
     fetchOrders();
   }, []);
+
+  // Reset to first page when filters or data change
+  useEffect(() => {
+    setPage(1);
+  }, [activeTab, orders.length]);
 
   const TABS = [
     { key: 'all', label: 'All Orders' },
@@ -122,24 +130,36 @@ export default function OrdersPage() {
         )
         : orders.filter((order) => order.fulfillment_status === 'delivered');
 
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / PAGE_SIZE));
+  const startIndex = (page - 1) * PAGE_SIZE;
+  const endIndex = startIndex + PAGE_SIZE;
+  const paginatedOrders = filteredOrders.slice(startIndex, endIndex);
+
   return (
     <>
       <Head>
         <title>My Orders - AKSHAR</title>
         <meta name="description" content="View and track your orders" />
       </Head>
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">My Orders</h1>
+
+      <Breadcrumb 
+        title="My Orders"
+        crumbs={[{ label: 'Home', href: '/' }, { label: 'My Orders' }]}
+        imageSrc="/assets/images/bredcrumb-bg.jpg"
+      />
+
+      <div className="bg-gray-50 min-h-screen overflow-x-hidden">
+        <div className="max-w-full mx-auto px-4 sm:px-0 sm:px-6 lg:px-8">
+          <div className="mb-4 mt-6 sm:mt-10 mx-auto container">
+            
             {/* Enhanced Tabs */}
-            <div className="flex space-x-1 bg-white rounded-lg p-1 shadow-sm mb-6">
+            <div className="flex space-x-1 bg-white rounded-lg p-1 shadow-sm mb-6 container mx-auto">
               {TABS.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${activeTab === tab.key
-                      ? 'bg-green-600 text-white'
+                  className={`flex-1 py-2 px-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors ${activeTab === tab.key
+                      ? 'bg-[#C88370] text-white'
                       : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
                     }`}
                 >
@@ -151,7 +171,7 @@ export default function OrdersPage() {
 
           {/* Orders List */}
           {isLoading ? (
-            <div className="text-center py-12">
+            <div className="text-center py-12 container mx-auto">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
               <p className="mt-4 text-gray-600">Loading orders...</p>
             </div>
@@ -169,22 +189,22 @@ export default function OrdersPage() {
               </Button>
             </div>
           ) : (
-            <div className="space-y-6">
-              {filteredOrders.map((order) => (
-                <Card key={order.id} className="p-6 flex flex-col md:flex-row md:items-center md:justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
+            <div className="space-y-4 sm:space-y-6 container mx-auto pb-6">
+              {paginatedOrders.map((order) => (
+                <Card key={order.id} className="p-4 sm:p-6 flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div className="flex-1 mb-4 md:mb-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+                      <h3 className="text-sm sm:text-lg font-semibold text-gray-900">
                         Order #{order.id}
                       </h3>
-                      <Badge variant={getFulfillmentStatusColor(order.fulfillment_status)}>
+                      <Badge variant={getFulfillmentStatusColor(order.fulfillment_status)} className="w-fit">
                         {getFulfillmentStatusText(order.fulfillment_status)}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-600 mb-1">
+                    <p className="text-xs sm:text-sm text-gray-600 mb-1">
                       Placed on {formatDate(order.created_at)}
                     </p>
-                    <div className="text-sm text-gray-800 mb-2">
+                    <div className="text-xs sm:text-sm text-gray-800 mb-2">
                       {order.items && order.items.length > 0 && (
                         <>
                           {order.items[0].title} (Qty: {order.items[0].quantity})
@@ -195,17 +215,17 @@ export default function OrdersPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex flex-col items-end space-y-2 min-w-[160px]">
-                    <div className="text-lg font-bold text-gray-900">
+                  <div className="flex flex-col sm:flex-row md:flex-col items-start sm:items-center md:items-end space-y-2 sm:space-y-0 sm:space-x-4 md:space-x-0 md:space-y-2 min-w-[160px]">
+                    <div className="text-base sm:text-lg font-bold text-gray-900">
                       ₹{order.total?.toFixed(2)}
                     </div>
                     {order.item_total && (
-                      <div className="text-sm text-gray-500">
+                      <div className="text-xs sm:text-sm text-gray-500">
                         ₹{order.item_total?.toFixed(2)}
                       </div>
                     )}
                     <Link href={`/order-details/${order.id}`}>
-                      <Button variant="outline" size="sm" className="w-full">
+                      <Button variant="outline" size="sm" className="w-full sm:w-auto">
                         View Details
                       </Button>
                     </Link>
@@ -229,6 +249,78 @@ export default function OrdersPage() {
                   <Link href="/">
                     <Button variant="primary">Start Shopping</Button>
                   </Link>
+                </div>
+              )}
+
+              {/* Pagination Controls */}
+              {filteredOrders.length > 0 && totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between pt-6 pb-2 gap-4">
+                  <div className="text-sm text-gray-600 text-center sm:text-left">
+                    Showing {filteredOrders.length === 0 ? 0 : startIndex + 1}–{Math.min(endIndex, filteredOrders.length)} of {filteredOrders.length}
+                  </div>
+                  
+                  {/* Page Numbers and Navigation */}
+                  <div className="flex items-center gap-2">
+                    {/* Previous Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page <= 1}
+                      aria-label="Previous page"
+                      className="w-11 h-10 p-0 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed border-gray-300"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </Button>
+                    
+                    {/* Page Numbers */}
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (page <= 3) {
+                          pageNum = i + 1;
+                        } else if (page >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = page - 2 + i;
+                        }
+                        
+                        return (
+                          <Button
+                            key={pageNum}
+                            variant={page === pageNum ? "primary" : "outline"}
+                            size="sm"
+                            onClick={() => setPage(pageNum)}
+                            className={`w-10 h-10 p-0 flex items-center justify-center text-sm font-medium ${
+                              page === pageNum
+                                ? 'bg-[#C88370] text-white border-[#C88370]'
+                                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50 border-gray-300'
+                            }`}
+                          >
+                            {pageNum}
+                          </Button>
+                        );
+                      })}
+                    </div>
+                    
+                    {/* Next Button */}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page >= totalPages}
+                      aria-label="Next page"
+                      className="w-11 h-10 p-0 flex items-center justify-center text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed border-gray-300"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

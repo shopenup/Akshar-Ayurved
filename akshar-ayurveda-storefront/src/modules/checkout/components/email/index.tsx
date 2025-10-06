@@ -56,7 +56,7 @@ const Email = ({
           <div>
             <p
               className={twJoin(
-                "transition-fontWeight duration-75 text-green-800 font-semibold",
+                "transition-fontWeight duration-75 text-[#cd8973] font-semibold",
                 isOpen && "font-semibold",
               )}
             >
@@ -70,7 +70,7 @@ const Email = ({
             onPress={() => {
               router.push("/checkout?step=email")
             }}
-            className={"text-green-600"}
+            className={"text-[#cd8973]"}
           >
             Change
           </Button>
@@ -83,27 +83,31 @@ const Email = ({
           formProps={{
             id: `email`,
           }}
-          defaultValues={{ email: "" }}
+          defaultValues={{ email: cart?.email || "" }}
         >
           {({ watch }) => {
             const formValue = watch("email")
             return (
               <>
-                <InputField
-                  placeholder="Email"
-                  name="email"
-                  inputProps={{
-                    autoComplete: "email",
-                    title: "Enter a valid email address.",
-                    className:"block  px-4 py-2 text-base border rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-offset-1 border-gray-200 focus:border-green-400 focus:ring-green-400  w-full",
-                  }}
-                  data-testid="shipping-email-input"
-                  
-                />
+                <div className="space-y-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                    Email Address <span className="text-red-500">*</span>
+                  </label>
+                  <InputField
+                    placeholder="Enter your email address"
+                    name="email"
+                    inputProps={{
+                      autoComplete: "email",
+                      title: "Enter a valid email address.",
+                      className:"block px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base text-gray-900 placeholder:text-gray-400 border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 border-gray-300 focus:border-[#cd8973] focus:ring-[#cd8973] w-full shadow-sm hover:border-gray-400",
+                    }}
+                    data-testid="shipping-email-input"
+                  />
+                </div>
                 <SubmitButton
                   isLoading={isPending}
                   isDisabled={!formValue}
-                  className="bg-green-600 text-white px-2 xl:px-3 py-1 xl:py-2 rounded-md text-xs xl:text-sm font-medium hover:bg-green-700 transition-colors mt-2"
+                  className="bg-[#cd8973] text-white px-6 py-3 rounded-lg text-sm font-medium hover:bg-[#cd8973]/90 transition-colors mt-4 w-full"
                 >
                   Next
                 </SubmitButton>
@@ -111,10 +115,10 @@ const Email = ({
                 
                 {/* Optional login for guest users */}
                 {isOpen && !customer && !customerPending && (
-                  <div className="mt-4 text-center text-sm text-gray-500">
+                  <div className="mt-4 text-center text-sm text-gray-600">
                     <p>
                       Already have an account?{" "}
-                      <Link href="/login" className="text-green-600 hover:text-green-500 font-medium">
+                      <Link href="/login" className="text-[#cd8973] hover:text-[#cd8973]/80 font-medium">
                         Login
                       </Link>
                       {" "}or continue as guest

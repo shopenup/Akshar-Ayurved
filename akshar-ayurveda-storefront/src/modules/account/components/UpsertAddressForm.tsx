@@ -7,7 +7,8 @@ import { z } from "zod"
 import { SubmitButton } from "../../common/components/submit-button"
 import { customerAddressSchema, useAddressMutation } from "hooks/customer"
 import { withReactQueryProvider } from "@lib/util/react-query"
-import { Form, InputField, CountrySelectField } from "@components/Forms"
+import { Form, InputField, CountrySelectField, StateSelectField } from "@components/Forms"
+import { useWatch } from "react-hook-form"
 import { UiCloseButton } from "@components/Dialog"
 
 export const UpsertAddressForm = withReactQueryProvider<{
@@ -58,6 +59,7 @@ export const UpsertAddressForm = withReactQueryProvider<{
     >
       {(form) => {
         const watchedValues = form.watch()
+        const countryCode = useWatch({ control: form.control, name: "country_code" })
         const isDisabled =
           !Object.values(watchedValues).some((value) => value) ||
           (defaultValues
@@ -137,11 +139,14 @@ export const UpsertAddressForm = withReactQueryProvider<{
                 />
               </div>
               <div className="flex max-xs:flex-col gap-4 md:gap-6">
-                <InputField
-                  placeholder="Province (Optional)"
+              <StateSelectField
                   name="province"
                   className="flex-1"
-                  inputProps={{ autoComplete: "address-level1" }}
+                  selectProps={{
+                    placeholder: "State/Province (Optional)",
+                    countryCode: countryCode,
+                    autoComplete: "address-level1",
+                  }}
                 />
                 <CountrySelectField
                   name="country_code"

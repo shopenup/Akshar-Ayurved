@@ -164,7 +164,7 @@ const nextConfig = {
   },
 
   // Output configuration for better memory management
-  output: 'standalone',
+  // output: process.env.NODE_ENV === 'production' ? 'standalone' : undefined,
   
   // Compiler options for memory optimization
   compiler: {

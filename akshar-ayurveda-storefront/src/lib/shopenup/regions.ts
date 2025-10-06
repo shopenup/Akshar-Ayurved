@@ -11,7 +11,6 @@ export const listRegions = async function () {
     })
     .then(({ regions }) => {
 
-      //console.log(`regions: `+ JSON.stringify(regions))
       return regions
     })
     .catch(shopenupError)
@@ -32,7 +31,6 @@ const regionMap = new Map<string, HttpTypes.StoreRegion>()
 
 export const getRegion = async function (countryCode: string) {
   try {
-    //console.log(`countryCode: `+ regionMap)
     if (regionMap.has(countryCode)) {
       return regionMap.get(countryCode)
     }

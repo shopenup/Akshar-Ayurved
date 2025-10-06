@@ -21,7 +21,6 @@ const revalidateTag = (_tag: string) => {
   // In client-side context, we'll trigger a page refresh or use other methods
   if (typeof window !== 'undefined') {
     // Optionally trigger a page refresh or use other client-side cache invalidation
-    ////console.log(`Revalidating tag: ${_tag}`)
   }
 }
 
@@ -32,57 +31,36 @@ export async function retrieveCart() {
   const authHeaders = await getAuthHeaders()
   const isLoggedIn = 'authorization' in authHeaders && authHeaders.authorization
 
+
   if (isLoggedIn) {
-    // User is logged in - fetch customer's cart directly
-    try {
-      // Get customer data to ensure we have a valid session
+    // User is logged in - get cart ID from local storage
+    const cartId = await getCartId()
+
+    if (cartId) {
+      // Try to fetch cart using stored cart ID
       const completeHeaders = await getCompleteHeaders()
-      const customer = await sdk.client
-        .fetch<{ customer: HttpTypes.StoreCustomer }>(`/store/customers/me`, {
+      const cart = await sdk.client
+        .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${cartId}`, {
           headers: completeHeaders,
           cache: "no-store",
         })
-        .then(({ customer }) => customer)
-        .catch(() => {
+        .then(({ cart }) => cart)
+        .catch((error) => {
+          console.error('🛒 Error fetching cart by ID:', error)
           return null
         })
 
-      if (!customer) {
-        return await retrieveCartById()
-      }
-
-      // Try to get cart ID from storage first
-      const cartId = await getCartId()
-
-      if (cartId) {
-        // Try to fetch cart using stored cart ID
-        const cart = await sdk.client
-          .fetch<HttpTypes.StoreCartResponse>(`/store/carts/${cartId}`, {
-            headers: completeHeaders,
-            cache: "no-store",
-          })
-          .then(({ cart }) => cart)
-          .catch(() => {
-            return null
-          })
-
-        if (cart) {
-          if (cart?.items && cart.items.length && cart.region_id) {
-            cart.items = await enrichLineItems(cart.items, cart.region_id)
-          }
-          
-          return cart
+      if (cart) {
+        if (cart?.items && cart.items.length && cart.region_id) {
+          cart.items = await enrichLineItems(cart.items, cart.region_id)
         }
+        
+        return cart
       }
-
-      // If no cart found, skip the problematic endpoint and return null
-      // This avoids CORS preflight issues with /store/customers/me/carts
-      return null
-
-    } catch {
-      // Fall back to cart ID approach
-      return await retrieveCartById()
     }
+
+    // No cart found in storage - return null (cart will be created when user adds item)
+    return null
   }
 
   // User is not logged in - use cart ID approach
@@ -106,7 +84,8 @@ async function retrieveCartById() {
     .then(({ cart }) => {
       return cart
     })
-    .catch(() => {
+    .catch((error) => {
+      console.error('🛒 Error fetching cart by ID:', error)
       return null
     })
 
@@ -159,6 +138,15 @@ export async function getOrSetCart(input: unknown) {
         )
         cart = cartResp.cart
         await setCartId(cart.id)
+        
+        // Store the cart ID in customer metadata for persistence across sessions
+        try {
+          const { storeCartInCustomerMetadata } = await import('./cart-sync')
+          await storeCartInCustomerMetadata(cart.id)
+        } catch (error) {
+          console.warn('🛒 getOrSetCart - failed to store cart ID in customer metadata:', error)
+        }
+        
         revalidateTag("cart")
       } else if (cart.region_id !== (await getRegion(countryCode))?.id) {
         // Update region if different
@@ -175,7 +163,8 @@ export async function getOrSetCart(input: unknown) {
       }
       
       return cart
-    } catch {
+    } catch (error) {
+      console.error('🛒 getOrSetCart - error in logged-in flow:', error)
       // Fall back to guest cart approach
     }
   }
@@ -525,6 +514,59 @@ export async function setAddresses(
   }
 }
 
+export async function clearCheckoutData() {
+  try {
+    const cartId = await getCartId()
+    if (!cartId) {
+      return { success: true, error: null }
+    }
+
+    // Clear addresses by setting them to empty values
+    await updateCart({
+      shipping_address: {
+        first_name: "",
+        last_name: "",
+        company: "",
+        address_1: "",
+        address_2: "",
+        city: "",
+        postal_code: "",
+        province: "",
+        country_code: "",
+        phone: "",
+      },
+      billing_address: {
+        first_name: "",
+        last_name: "",
+        company: "",
+        address_1: "",
+        address_2: "",
+        city: "",
+        postal_code: "",
+        province: "",
+        country_code: "",
+        phone: "",
+      },
+    })
+
+    // Clear email
+    await updateCart({ email: "" })
+
+    // Clear promo codes
+    await updateCart({ promo_codes: [] })
+
+    revalidateTag("cart")
+    revalidateTag("shipping")
+    revalidateTag("payment")
+    
+    return { success: true, error: null }
+  } catch (e) {
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : "Could not clear checkout data",
+    }
+  }
+}
 
 export async function placeOrder() {
   const cartId = await getCartId()
@@ -616,9 +658,24 @@ export async function placeOrder() {
       localStorage.setItem('_shopenup_jwt_backup', authToken)
     }
     
+    // Add a small delay to show loading state
+    if (typeof window !== 'undefined') {
+      // Dispatch custom event to show loading progress
+      window.dispatchEvent(new CustomEvent('order-processing', { 
+        detail: { step: 'Completing your order...' } 
+      }))
+    }
+    
     const cartRes = await sdk.store.cart
       .complete(cartId, {}, await getCompleteHeaders())
       .then(async (cartRes) => {
+        
+        // Dispatch event to show completion progress
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('order-processing', { 
+            detail: { step: 'Order completed successfully!' } 
+          }))
+        }
         
         // // Restore auth token if it was cleared by backend (non-blocking)
         // if (authToken) {
@@ -642,7 +699,6 @@ export async function placeOrder() {
 
     if (cartRes?.type === "order") {
       await clearAllCartData()
-      //console.log('✅ Cart data cleared after successful order placement')
       return cartRes
     } else if (cartRes?.type === "cart") {
       if (cartRes.cart.payment_collection?.payment_sessions) {
@@ -650,14 +706,12 @@ export async function placeOrder() {
           (session: any) => session.status === 'error' || !session.data || Object.keys(session.data).length === 0
         )
         if (failedSessions.length > 0) {
-          //console.log('❌ Found failed payment sessions:', failedSessions)
           throw new Error('Payment sessions failed. Please try again with a different payment method.')
         }
       }
       
       throw new Error('Order completion failed. Cart was not converted to order. Please check payment status.')
     } else {
-      //console.log('❌ Unexpected response type:', cartRes)  
       throw new Error('Unexpected response from order completion')
     }
 

@@ -11,8 +11,10 @@ import ProductVariantSelector from '@components/products/ProductVariantSelector'
 import { useAddLineItem, useCartWithSync } from '@hooks/cart';
 import { useCountryCode } from '@hooks/country-code';
 import { useAppContext } from '../../context/AppContext';
+import Breadcrumb from '@components/about/Breadcrumb';
 import ProductReviews from "../../components/products/product-reviews"
 import { useProductRating } from '../../hooks/useProductRating';
+// import { useProductRating } from '../../hooks/useProductRating';
 
 
 // Product interface based on Shopenup API response
@@ -246,8 +248,8 @@ const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({
   useEffect(() => {
     const fetchWishlist = async () => {
       if (!isLoggedIn) { 
-      setLoading(false);
-      return;
+ setWishlistLoading(false);
+ return;
     }
       try {
         setWishlistLoading(true);
@@ -422,7 +424,7 @@ useEffect(() => {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#b8755f] mx-auto mb-4"></div>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Loading...</h1>
             <p className="text-gray-600">Please wait while we prepare the page.</p>
           </div>
@@ -432,15 +434,6 @@ useEffect(() => {
   }
 
 
-  // Log the complete product structure for debugging
-  if (product) {
-    // console.log('🔍 Complete product structure:', JSON.stringify(product, null, 2));
-  }
-  
-  // Success log
-  if (product) {
-    // console.log('✅ Product page rendered successfully');
-  }
 
   // Handle loading state
   if (loading) {
@@ -448,7 +441,7 @@ useEffect(() => {
       <div className="min-h-screen bg-gray-50 py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-green-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#b8755f] mx-auto mb-4"></div>
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Loading Product...</h1>
             <p className="text-gray-600">Please wait while we fetch the product details.</p>
           </div>
@@ -534,7 +527,7 @@ useEffect(() => {
   const shelfLife = metadata.shelf_life || '24 months';
   const storage = metadata.storage || 'Store in cool, dry place';
   const origin = metadata.origin || 'India';
-  // Use dynamic rating if available, otherwise fallback to metadata, but don't show default rating if no reviews
+  // Use dynamic rating if available, otherwise fallback to metadata
   const rating = dynamicRating || metadata.rating || 0;
   const reviewCount = dynamicReviewCount || metadata.review_count || 0;
 
@@ -555,6 +548,20 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+     
+
+      {/* Breadcrumb Section */}
+      <Breadcrumb
+        title={product.title}
+        crumbs={[
+          { label: 'Home', href: '/' },
+          { label: 'Products', href: '/products' },
+          { label: product.title }
+        ]}
+        imageSrc="/assets/images/bredcrumb-bg.jpg"
+      />
+
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="mb-8">
@@ -578,7 +585,7 @@ useEffect(() => {
                 onClick={() => setIs360ViewActive(false)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   !is360ViewActive
-                    ? 'bg-green-600 text-white'
+                    ? 'bg-[#b8755f] text-white'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
@@ -656,16 +663,22 @@ useEffect(() => {
                     
                     if (imageSrc && typeof imageSrc === 'string') {
                       return (
-                        <SimpleImageZoom
-                          src={imageSrc}
-                          alt={product.title}
-                          width={600}
-                          height={400}
-                          zoomLevel={2.5}
-                          className="w-full h-96"
-                          containerClassName="relative"
-                          responsive={true}
-                        />
+                        <div className="relative group">
+                          <SimpleImageZoom
+                            src={imageSrc}
+                            alt={product.title}
+                            width={600}
+                            height={400}
+                            zoomLevel={2.5}
+                            className="w-full h-96 rounded-lg"
+                            containerClassName="relative rounded-lg"
+                            responsive={true}
+                          />
+                          {/* Zoom indicator */}
+                          <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-gray-700 shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            🔍 Hover to zoom
+                          </div>
+                        </div>
                       );
                     } else {
                       return (
@@ -814,7 +827,7 @@ useEffect(() => {
                   <svg
                     key={i}
                     className={`w-5 h-5 ${
-                      !ratingLoading && reviewCount > 0 && i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'
+                      i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-300'
                     }`}
                     fill="currentColor"
                     viewBox="0 0 20 20"
@@ -825,7 +838,7 @@ useEffect(() => {
               </div>
               <span className="text-sm text-gray-600 ml-2">
                 {ratingLoading ? (
-                  '0.0 (0 reviews)'
+                  <span className="text-gray-400">Loading rating...</span>
                 ) : (
                   `${rating.toFixed(1)} (${reviewCount} reviews)`
                 )}
@@ -1068,7 +1081,7 @@ useEffect(() => {
                   onClick={() => setActiveTab(tab)}
                   className={`py-4 px-1 border-b-2 font-medium text-sm capitalize ${
                     activeTab === tab
-                      ? 'border-green-600 text-green-600'
+                      ? 'border-green-600 text-[#b8755f]'
                       : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                   }`}
                 >

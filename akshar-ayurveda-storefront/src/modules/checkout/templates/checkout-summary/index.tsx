@@ -44,7 +44,7 @@ const CheckoutSummary = ({ cart }: { cart: HttpTypes.StoreCart }) => {
             Order — {numOfItems} item{numOfItems > 1 ? "s" : ""}
           </p>
         </div>
-        <LocalizedButtonLink href="/cart" variant="link" className="text-green-600">
+        <LocalizedButtonLink href="/cart" variant="link" className="text-[#cd8973]">
           Edit cart
         </LocalizedButtonLink>
       </div>

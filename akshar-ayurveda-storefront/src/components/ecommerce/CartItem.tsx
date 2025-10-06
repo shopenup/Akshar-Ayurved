@@ -1,5 +1,5 @@
 import React from 'react';
-import Image from 'next/image';
+import CompressedImage from '@components/CompressedImageClient'; 
 import { Button, Badge } from '../ui';
 
 interface CartItemProps {
@@ -40,12 +40,14 @@ const CartItem: React.FC<CartItemProps> = ({
     <div className={`flex items-center gap-4 p-4 bg-white rounded-lg border ${className}`}>
       {/* Product Image */}
       <div className="relative w-20 h-20 flex-shrink-0">
-        <Image
+        <CompressedImage
           src={item.image}
           alt={item.name}
           fill
+          useCase="card"
           className="object-cover rounded-md"
           sizes="80px"
+          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
         />
         {discountPercentage > 0 && (
           <Badge 

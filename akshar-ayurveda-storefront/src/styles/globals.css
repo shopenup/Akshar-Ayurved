@@ -1,3 +1,41 @@
+@keyframes leafFloatLeft {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(6px, 4px) rotate(1deg);
+  }
+  50% {
+    transform: translate(0, 8px) rotate(0deg);
+  }
+  75% {
+    transform: translate(-6px, 4px) rotate(-1deg);
+  }
+}
+
+@keyframes leafFloatRight {
+  0%, 100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate(-6px, -4px) rotate(-1deg);
+  }
+  50% {
+    transform: translate(0, -8px) rotate(0deg);
+  }
+  75% {
+    transform: translate(6px, -4px) rotate(1deg);
+  }
+}
+
+.float-left-leaf {
+  animation: leafFloatLeft 6s ease-in-out infinite;
+}
+
+.float-right-leaf {
+  animation: leafFloatRight 7s ease-in-out infinite;
+}
+@import url('/assets/css/style.css');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -9,7 +47,10 @@
   }
   
   body {
-    @apply bg-gray-50 text-gray-900;
+    /* Match template's warm paper background instead of pure white */
+    background-color: #f7f2ee;
+    color: #111827; /* tailwind gray-900 */
+    overflow-x: hidden;
   }
 }
 
@@ -78,6 +119,16 @@
 }
 
 @layer utilities {
+  /* Force input text to be black */
+  input[type="text"], 
+  input[type="email"], 
+  input[type="password"], 
+  input[type="number"], 
+  input[type="tel"], 
+  input[type="url"] {
+    color: #000000 !important;
+  }
+  
   /* Text truncation */
   .text-truncate-2 {
     display: -webkit-box;
@@ -110,6 +161,24 @@
   .shadow-dosha {
     box-shadow: 0 10px 15px -3px rgba(34, 197, 94, 0.1), 0 4px 6px -2px rgba(34, 197, 94, 0.05);
   }
+
+  /* Hover card with subtle lift and shadow */
+  .hover-card {
+    transition: transform 300ms ease, box-shadow 300ms ease, filter 300ms ease;
+  }
+  .hover-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 35px -10px rgba(0,0,0,0.15);
+  }
+
+  /* Flip icon effect for why-section cards */
+  .flip-icon {
+    transition: transform 500ms ease;
+    transform-style: preserve-3d;
+  }
+  .group:hover .flip-icon {
+    transform: rotateY(180deg);
+  }
 }
 
 /* Custom keyframes */
@@ -130,6 +199,36 @@
   to {
     transform: translateY(0);
     opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes continuousSlide {
+  0% {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  10% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  90% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-100%);
+    opacity: 0;
   }
 }
 
@@ -155,4 +254,12 @@
   .print-only {
     display: block !important;
   }
+}
+
+.checkbox-circle {
+  height: 20px !important;
+  width: 20px !important;
+  border-radius: 50% !important;
+  padding: 5px !important;
+  color: #CD8973 !important;
 }
